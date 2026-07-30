@@ -1,0 +1,24 @@
+{
+  "name": "ca-tempo",
+  "private": true,
+  "packageManager": "pnpm@11.18.0",
+  "scripts": {
+    "dev": "pnpm --filter @ca-tempo/web dev",
+    "build": "pnpm --filter @ca-tempo/web build",
+    "start": "pnpm --filter @ca-tempo/web start",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm --filter @ca-tempo/domain test",
+    "test:e2e": "playwright test",
+    "db:types": "supabase gen types typescript --local > packages/db/src/types.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.52.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "wait-on": "^8.0.3"
+  }
+}

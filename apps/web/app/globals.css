@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink-950: #0a0a0a;
+  --color-ink-900: #141414;
+  --color-ink-800: #1f1f1f;
+  --color-ink-700: #2e2e2e;
+  --color-ink-600: #4a4a4a;
+  --color-ink-500: #6b6b6b;
+  --color-ink-400: #909090;
+  --color-ink-300: #bdbdbd;
+  --color-ink-200: #dedede;
+  --color-ink-100: #f0f0f0;
+  --color-ink-50: #fafafa;
+  --color-paper: #ffffff;
+
+  --color-accent-100: #f5edda;
+  --color-accent-500: #c8a24a;
+  --color-accent-600: #a8853a;
+
+  --color-success: #16794a;
+  --color-warning: #b45309;
+  --color-danger: #b02a2a;
+  --color-info: #1f5f8b;
+
+  --font-display: 'Bebas Neue', 'Oswald', sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-card: 12px;
+  --spacing-touch: 56px;
+
+  --color-border: var(--color-ink-200);
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink-950);
+  --color-card: var(--color-paper);
+  --color-card-foreground: var(--color-ink-950);
+  --color-primary: var(--color-accent-500);
+  --color-primary-foreground: var(--color-ink-950);
+  --color-secondary: var(--color-ink-100);
+  --color-secondary-foreground: var(--color-ink-900);
+  --color-muted: var(--color-ink-100);
+  --color-muted-foreground: var(--color-ink-500);
+  --color-accent: var(--color-accent-100);
+  --color-accent-foreground: var(--color-ink-900);
+  --color-destructive: var(--color-danger);
+  --color-destructive-foreground: var(--color-paper);
+  --color-input: var(--color-ink-200);
+  --color-ring: var(--color-accent-500);
+}
+
+@layer base {
+  :root {
+    --background: var(--color-paper);
+    --foreground: var(--color-ink-950);
+    --card: var(--color-paper);
+    --card-foreground: var(--color-ink-950);
+    --primary: var(--color-accent-500);
+    --primary-foreground: var(--color-ink-950);
+    --secondary: var(--color-ink-100);
+    --secondary-foreground: var(--color-ink-900);
+    --muted: var(--color-ink-100);
+    --muted-foreground: var(--color-ink-500);
+    --accent: var(--color-accent-100);
+    --accent-foreground: var(--color-ink-900);
+    --destructive: var(--color-danger);
+    --destructive-foreground: var(--color-paper);
+    --border: var(--color-ink-200);
+    --input: var(--color-ink-200);
+    --ring: var(--color-accent-500);
+    --radius: 8px;
+  }
+
+  .dark {
+    --background: var(--color-ink-950);
+    --foreground: var(--color-ink-50);
+    --card: var(--color-ink-900);
+    --card-foreground: var(--color-ink-50);
+    --primary: var(--color-accent-500);
+    --primary-foreground: var(--color-ink-950);
+    --secondary: var(--color-ink-800);
+    --secondary-foreground: var(--color-ink-100);
+    --muted: var(--color-ink-800);
+    --muted-foreground: var(--color-ink-400);
+    --accent: var(--color-ink-800);
+    --accent-foreground: var(--color-ink-100);
+    --destructive: var(--color-danger);
+    --destructive-foreground: var(--color-ink-50);
+    --border: var(--color-ink-700);
+    --input: var(--color-ink-700);
+    --ring: var(--color-accent-500);
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    font-size: 16px;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+  }
+}

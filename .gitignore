@@ -1,0 +1,44 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# next.js
+.next
+out
+
+# env
+.env
+.env.local
+.env.*.local
+
+# build
+dist
+*.tsbuildinfo
+
+# vercel
+.vercel
+
+# supabase
+.branches
+.temp
+
+# testing
+coverage
+playwright-report
+test-results
+
+# misc
+.DS_Store
+*.pem
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# debug
+npm-debug.log*
+pnpm-debug.log*
+
+# serwist
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js

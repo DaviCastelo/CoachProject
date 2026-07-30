@@ -1,0 +1,56 @@
+{
+  "common": {
+    "appName": "CA Tempo Training",
+    "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "schedule": "Schedule",
+    "athletes": "Athletes",
+    "billing": "Billing",
+    "settings": "Settings",
+    "account": "Account",
+    "logout": "Sign out"
+  },
+  "auth": {
+    "login": "Sign in",
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Enter your email to receive a magic link",
+    "email": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "sendMagicLink": "Send magic link",
+    "magicLinkSent": "Check your email for the sign-in link",
+    "continueWithGoogle": "Continue with Google",
+    "orDivider": "or",
+    "unauthorized": "You don't have access to this area",
+    "mfaTitle": "Two-factor authentication",
+    "mfaSubtitle": "Set up an authenticator app to secure your account",
+    "mfaEnroll": "Scan QR code with your authenticator app",
+    "mfaVerify": "Enter the 6-digit code",
+    "mfaRequired": "Owners and admins must enable two-factor authentication"
+  },
+  "coach": {
+    "dashboardTitle": "Dashboard",
+    "emptyTitle": "No sessions yet",
+    "emptyDescription": "Create your first training session to get started.",
+    "emptyAction": "Create session"
+  },
+  "family": {
+    "homeTitle": "Family Portal",
+    "emptyTitle": "No upcoming sessions",
+    "emptyDescription": "Your athlete's schedule will appear here."
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "locale": {
+    "en": "English",
+    "pt-BR": "Português",
+    "es": "Español"
+  }
+}

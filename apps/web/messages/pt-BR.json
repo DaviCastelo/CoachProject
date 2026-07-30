@@ -1,0 +1,56 @@
+{
+  "common": {
+    "appName": "CA Tempo Training",
+    "loading": "Carregando...",
+    "error": "Algo deu errado. Tente novamente.",
+    "save": "Salvar",
+    "cancel": "Cancelar"
+  },
+  "nav": {
+    "dashboard": "Painel",
+    "schedule": "Agenda",
+    "athletes": "Atletas",
+    "billing": "Financeiro",
+    "settings": "Configurações",
+    "account": "Conta",
+    "logout": "Sair"
+  },
+  "auth": {
+    "login": "Entrar",
+    "loginTitle": "Bem-vindo de volta",
+    "loginSubtitle": "Digite seu e-mail para receber um link mágico",
+    "email": "Endereço de e-mail",
+    "emailPlaceholder": "voce@exemplo.com",
+    "sendMagicLink": "Enviar link mágico",
+    "magicLinkSent": "Verifique seu e-mail para o link de acesso",
+    "continueWithGoogle": "Continuar com Google",
+    "orDivider": "ou",
+    "unauthorized": "Você não tem acesso a esta área",
+    "mfaTitle": "Autenticação de dois fatores",
+    "mfaSubtitle": "Configure um app autenticador para proteger sua conta",
+    "mfaEnroll": "Escaneie o QR code com seu app autenticador",
+    "mfaVerify": "Digite o código de 6 dígitos",
+    "mfaRequired": "Proprietários e administradores devem ativar a autenticação de dois fatores"
+  },
+  "coach": {
+    "dashboardTitle": "Painel",
+    "emptyTitle": "Nenhuma sessão ainda",
+    "emptyDescription": "Crie sua primeira sessão de treino para começar.",
+    "emptyAction": "Criar sessão"
+  },
+  "family": {
+    "homeTitle": "Portal da Família",
+    "emptyTitle": "Nenhuma sessão próxima",
+    "emptyDescription": "A agenda do seu atleta aparecerá aqui."
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema"
+  },
+  "locale": {
+    "en": "English",
+    "pt-BR": "Português",
+    "es": "Español"
+  }
+}
