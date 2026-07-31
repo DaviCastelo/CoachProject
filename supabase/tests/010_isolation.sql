@@ -10,9 +10,7 @@ values
   ('00000000-0000-0000-0000-000000000001', 'a@a.com', crypt('password', gen_salt('bf')), now(), now(), now(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-000000000002', 'b@b.com', crypt('password', gen_salt('bf')), now(), now(), now(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated');
 
-insert into profiles (id, email) values
-  ('00000000-0000-0000-0000-000000000001', 'a@a.com'),
-  ('00000000-0000-0000-0000-000000000002', 'b@b.com');
+-- profiles are created by on_auth_user_created trigger
 
 insert into memberships (organization_id, user_id, role) values
   ('00000000-0000-0000-0000-0000000000a1','00000000-0000-0000-0000-000000000001','owner'),
