@@ -54,6 +54,7 @@ pnpm test:e2e         # Playwright
 
 - **Vercel:** `ca-tempo.vercel.app`
 - **Supabase:** projeto `ca-tempo-production`
+- **Vercel monorepo:** definir **Root Directory** = `apps/web` — ver [docs/vercel-deploy.md](docs/vercel-deploy.md)
 - Ver [docs/setup-auth.md](docs/setup-auth.md) para configurar auth e serviços externos.
 
 ## Usuários de teste (seed local)
