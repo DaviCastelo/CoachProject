@@ -33,7 +33,7 @@ values
     '{"full_name": "Carlos Assistant"}'::jsonb
   ),
   (
-    'g3333333-3333-3333-3333-333333333333',
+    'f3333333-3333-3333-3333-333333333333',
     'guardian@catempo.test',
     crypt('testpassword123', gen_salt('bf')),
     now(), now(), now(),
@@ -47,36 +47,36 @@ on conflict (id) do nothing;
 insert into profiles (id, email, full_name) values
   ('a1111111-1111-1111-1111-111111111111', 'arthur@catempo.test', 'Arthur Coach'),
   ('c2222222-2222-2222-2222-222222222222', 'coach@catempo.test', 'Carlos Assistant'),
-  ('g3333333-3333-3333-3333-333333333333', 'guardian@catempo.test', 'Maria Guardian')
+  ('f3333333-3333-3333-3333-333333333333', 'guardian@catempo.test', 'Maria Guardian')
 on conflict (id) do update set full_name = excluded.full_name;
 
 -- Memberships
 insert into memberships (organization_id, user_id, role, status, accepted_at) values
   ('e45be439-217d-467e-a4fa-a9001738b83b', 'a1111111-1111-1111-1111-111111111111', 'owner', 'active', now()),
   ('e45be439-217d-467e-a4fa-a9001738b83b', 'c2222222-2222-2222-2222-222222222222', 'coach', 'active', now()),
-  ('e45be439-217d-467e-a4fa-a9001738b83b', 'g3333333-3333-3333-3333-333333333333', 'guardian', 'active', now())
+  ('e45be439-217d-467e-a4fa-a9001738b83b', 'f3333333-3333-3333-3333-333333333333', 'guardian', 'active', now())
 on conflict do nothing;
 
 -- Household
 insert into households (id, organization_id, name, primary_email) values
-  ('h4444444-4444-4444-4444-444444444444', 'e45be439-217d-467e-a4fa-a9001738b83b', 'Silva Family', 'guardian@catempo.test')
+  ('b4444444-4444-4444-4444-444444444444', 'e45be439-217d-467e-a4fa-a9001738b83b', 'Silva Family', 'guardian@catempo.test')
 on conflict (id) do nothing;
 
 -- Guardian
 insert into guardians (id, organization_id, household_id, user_id, first_name, last_name, email, is_primary) values
-  ('gd555555-5555-5555-5555-555555555555', 'e45be439-217d-467e-a4fa-a9001738b83b', 'h4444444-4444-4444-4444-444444444444', 'g3333333-3333-3333-3333-333333333333', 'Maria', 'Silva', 'guardian@catempo.test', true)
+  ('d5555555-5555-5555-5555-555555555555', 'e45be439-217d-467e-a4fa-a9001738b83b', 'b4444444-4444-4444-4444-444444444444', 'f3333333-3333-3333-3333-333333333333', 'Maria', 'Silva', 'guardian@catempo.test', true)
 on conflict (id) do nothing;
 
 -- Athletes
 insert into athletes (id, organization_id, household_id, first_name, last_name, date_of_birth, status) values
-  ('at666666-6666-6666-6666-666666666661', 'e45be439-217d-467e-a4fa-a9001738b83b', 'h4444444-4444-4444-4444-444444444444', 'Lucas', 'Silva', '2015-05-01', 'active'),
-  ('at666666-6666-6666-6666-666666666662', 'e45be439-217d-467e-a4fa-a9001738b83b', 'h4444444-4444-4444-4444-444444444444', 'Sofia', 'Silva', '2017-08-20', 'active')
+  ('a6666666-6666-6666-6666-666666666661', 'e45be439-217d-467e-a4fa-a9001738b83b', 'b4444444-4444-4444-4444-444444444444', 'Lucas', 'Silva', '2015-05-01', 'active'),
+  ('a6666666-6666-6666-6666-666666666662', 'e45be439-217d-467e-a4fa-a9001738b83b', 'b4444444-4444-4444-4444-444444444444', 'Sofia', 'Silva', '2017-08-20', 'active')
 on conflict (id) do nothing;
 
 -- Guardian-Athlete links
 insert into guardian_athletes (guardian_id, athlete_id) values
-  ('gd555555-5555-5555-5555-555555555555', 'at666666-6666-6666-6666-666666666661'),
-  ('gd555555-5555-5555-5555-555555555555', 'at666666-6666-6666-6666-666666666662')
+  ('d5555555-5555-5555-5555-555555555555', 'a6666666-6666-6666-6666-666666666661'),
+  ('d5555555-5555-5555-5555-555555555555', 'a6666666-6666-6666-6666-666666666662')
 on conflict do nothing;
 
 -- Locations
