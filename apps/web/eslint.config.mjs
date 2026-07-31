@@ -10,6 +10,15 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: [
+      'next-env.d.ts',
+      '.next/**',
+      'public/sw.js',
+      'public/sw.js.map',
+      'public/swe-worker-*.js',
+    ],
+  },
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   {
     rules: {
