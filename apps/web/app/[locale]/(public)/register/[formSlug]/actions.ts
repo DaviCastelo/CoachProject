@@ -1,6 +1,6 @@
 'use server';
 
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { headers } from 'next/headers';
 import {
   parseFormSchema,
@@ -9,6 +9,7 @@ import {
   type ValidationError,
 } from '@ca-tempo/domain';
 import { createServiceClient } from '@/lib/supabase/service';
+import { buildWaiverPdf } from '@/lib/waiver-pdf';
 
 export type RegistrationExtras = {
   programOptionId?: string | null;
@@ -24,11 +25,24 @@ function str(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+type WaiverCtx = {
+  templateId: string;
+  title: string;
+  body: string;
+  documentHash: string;
+  signerName: string;
+  signerEmail: string;
+  relationship: string;
+  signatureType: string;
+  signatureData: string;
+  consent: boolean;
+};
+
 /**
  * Pipeline de inscrição (docs/04 › M1). Grava a submissão crua (passo 1 — nada
- * se perde), revalida no servidor, calcula o hash SHA-256 do texto exato do waiver
- * e roda a RPC transacional (dedupe + entidades + registration + assinatura).
- * Falhas viram dead-letter (status=rejected) e são reprocessáveis.
+ * se perde), revalida no servidor, calcula o hash SHA-256 do texto exato do waiver,
+ * roda a RPC transacional (dedupe + entidades + registration + assinatura) e gera
+ * o PDF do waiver assinado (auxiliar; a assinatura e o hash já ficam persistidos).
  */
 export async function submitRegistration(
   formVersionId: string,
@@ -64,7 +78,7 @@ export async function submitRegistration(
   // Programa vinculado a este formulário
   const { data: program } = await svc
     .from('programs')
-    .select('id, waiver_template_id')
+    .select('id, name, waiver_template_id')
     .eq('form_id', form.id)
     .eq('status', 'published')
     .maybeSingle();
@@ -88,31 +102,48 @@ export async function submitRegistration(
   const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : null;
   const userAgent = h.get('user-agent');
 
-  // Waiver: hash SHA-256 do texto exato assinado (calculado no servidor)
-  let waiverPayload: Record<string, unknown> | null = null;
+  // Waiver: carrega o template, calcula o hash do texto exato assinado
+  let waiver: WaiverCtx | null = null;
   if (extras?.waiver && program?.waiver_template_id) {
     const { data: tpl } = await svc
       .from('waiver_templates')
-      .select('body_markdown')
+      .select('name, body_markdown')
       .eq('id', program.waiver_template_id)
       .maybeSingle();
     if (tpl) {
-      const documentHash = createHash('sha256').update(tpl.body_markdown as string).digest('hex');
-      const signerName = `${str(entities.guardian.first_name)} ${str(entities.guardian.last_name)}`.trim();
-      waiverPayload = {
-        template_id: program.waiver_template_id,
-        document_hash: documentHash,
-        signature_type: extras.waiver.signatureType,
-        signature_data: extras.waiver.signatureData,
-        signer_name: signerName || 'Guardian',
-        signer_email: str(entities.guardian.email),
-        signer_relationship: str(entities.guardian.relationship) || 'guardian',
-        ip,
-        user_agent: userAgent,
+      const body = tpl.body_markdown as string;
+      const signerName =
+        `${str(entities.guardian.first_name)} ${str(entities.guardian.last_name)}`.trim() ||
+        'Guardian';
+      waiver = {
+        templateId: program.waiver_template_id,
+        title: tpl.name as string,
+        body,
+        documentHash: createHash('sha256').update(body).digest('hex'),
+        signerName,
+        signerEmail: str(entities.guardian.email),
+        relationship: str(entities.guardian.relationship) || 'guardian',
+        signatureType: extras.waiver.signatureType,
+        signatureData: extras.waiver.signatureData,
         consent: extras.waiver.consent,
       };
     }
   }
+
+  const waiverPayload = waiver
+    ? {
+        template_id: waiver.templateId,
+        document_hash: waiver.documentHash,
+        signature_type: waiver.signatureType,
+        signature_data: waiver.signatureData,
+        signer_name: waiver.signerName,
+        signer_email: waiver.signerEmail,
+        signer_relationship: waiver.relationship,
+        ip,
+        user_agent: userAgent,
+        consent: waiver.consent,
+      }
+    : null;
 
   // Passo 1: grava a submissão crua — a partir daqui nada se perde.
   const { data: inserted, error: insertError } = await svc
@@ -148,6 +179,38 @@ export async function submitRegistration(
       .update({ status: 'rejected', error: pipelineError.message })
       .eq('id', submissionId);
     return { ok: false, error: 'server_error' };
+  }
+
+  // PDF do waiver (auxiliar — assinatura e hash já persistidos pela RPC)
+  if (waiver) {
+    try {
+      const pdfBytes = await buildWaiverPdf({
+        title: waiver.title,
+        body: waiver.body,
+        signerName: waiver.signerName,
+        signerEmail: waiver.signerEmail,
+        relationship: waiver.relationship,
+        documentHash: waiver.documentHash,
+        ip,
+        signedAt: new Date(),
+        signatureType: waiver.signatureType,
+        signatureDataUrl: waiver.signatureType === 'drawn' ? waiver.signatureData : null,
+      });
+      const path = `${form.organization_id}/${randomUUID()}.pdf`;
+      const upload = await svc.storage
+        .from('waivers')
+        .upload(path, pdfBytes, { contentType: 'application/pdf', upsert: false });
+      if (!upload.error) {
+        await svc
+          .from('waiver_signatures')
+          .update({ pdf_url: path })
+          .eq('organization_id', form.organization_id)
+          .eq('waiver_template_id', waiver.templateId)
+          .eq('document_hash', waiver.documentHash);
+      }
+    } catch {
+      // PDF é auxiliar; não falha a inscrição.
+    }
   }
 
   return { ok: true };
