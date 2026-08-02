@@ -2,12 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { ZodError } from 'zod';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { parseFormSchema, slugify, ensureUniqueSlug, type FormSchema } from '@ca-tempo/domain';
 import { requireRole } from '@/lib/auth/guards';
-import { createServiceClient } from '@/lib/supabase/service';
+import { createClient } from '@/lib/supabase/server';
 
 // ---------------------------------------------------------------------------
-// Local types (service client is untyped for Phase 2 tables)
+// Local types (Phase 2 tables not yet in generated Database types)
 // ---------------------------------------------------------------------------
 
 type FormRow = {
@@ -76,6 +77,11 @@ export type FormListItem = {
 const FORM_TYPES = ['registration', 'evaluation', 'survey', 'intake'] as const;
 type FormType = (typeof FORM_TYPES)[number];
 
+/** Authenticated client; RLS `forms_staff_all` applies via the coach JWT. */
+async function getDb(): Promise<SupabaseClient> {
+  return (await createClient()) as unknown as SupabaseClient;
+}
+
 function isFormType(value: string): value is FormType {
   return (FORM_TYPES as readonly string[]).includes(value);
 }
@@ -87,8 +93,8 @@ function zodErrorMessage(err: ZodError): string {
 }
 
 async function loadFormForOrg(formId: string, orgId: string): Promise<FormRow | null> {
-  const svc = createServiceClient();
-  const { data } = await svc
+  const db = await getDb();
+  const { data } = await db
     .from('forms')
     .select(
       'id, organization_id, slug, name, description, type, status, requires_waiver, requires_payment, success_message, redirect_url',
@@ -100,8 +106,8 @@ async function loadFormForOrg(formId: string, orgId: string): Promise<FormRow | 
 }
 
 async function loadVersions(formId: string): Promise<FormVersionRow[]> {
-  const svc = createServiceClient();
-  const { data } = await svc
+  const db = await getDb();
+  const { data } = await db
     .from('form_versions')
     .select('id, form_id, version, schema, published_at')
     .eq('form_id', formId)
@@ -144,13 +150,13 @@ export async function createForm(input: {
   success_message?: string;
 }): Promise<CreateFormResult> {
   const ctx = await requireRole(['owner', 'admin']);
-  const svc = createServiceClient();
+  const db = await getDb();
 
   const name = input.name.trim();
   if (!name) return { ok: false, error: 'Name is required.' };
   if (!isFormType(input.type)) return { ok: false, error: 'Invalid form type.' };
 
-  const { data: existing } = await svc
+  const { data: existing } = await db
     .from('forms')
     .select('slug')
     .eq('organization_id', ctx.orgId);
@@ -159,7 +165,7 @@ export async function createForm(input: {
   if (!baseSlug) return { ok: false, error: 'Could not generate a valid slug from the name.' };
   const slug = ensureUniqueSlug(baseSlug, slugs);
 
-  const { data: form, error: formError } = await svc
+  const { data: form, error: formError } = await db
     .from('forms')
     .insert({
       organization_id: ctx.orgId,
@@ -178,7 +184,7 @@ export async function createForm(input: {
   }
 
   const formId = (form as { id: string }).id;
-  const { error: versionError } = await svc.from('form_versions').insert({
+  const { error: versionError } = await db.from('form_versions').insert({
     form_id: formId,
     version: 1,
     schema: { sections: [] },
@@ -206,7 +212,7 @@ export async function saveDraft(
   meta?: SaveDraftMeta,
 ): Promise<ActionResult> {
   const ctx = await requireRole(['owner', 'admin']);
-  const svc = createServiceClient();
+  const db = await getDb();
 
   const form = await loadFormForOrg(formId, ctx.orgId);
   if (!form) return { ok: false, error: 'Form not found.' };
@@ -226,7 +232,7 @@ export async function saveDraft(
     if (meta.success_message !== undefined) patch.success_message = meta.success_message;
     if (meta.requires_waiver !== undefined) patch.requires_waiver = meta.requires_waiver;
     if (Object.keys(patch).length > 0) {
-      const { error } = await svc
+      const { error } = await db
         .from('forms')
         .update(patch)
         .eq('id', formId)
@@ -239,14 +245,14 @@ export async function saveDraft(
   const latest = versions[0];
 
   if (latest && latest.published_at === null) {
-    const { error } = await svc
+    const { error } = await db
       .from('form_versions')
       .update({ schema: parsed })
       .eq('id', latest.id);
     if (error) return { ok: false, error: error.message };
   } else {
     const nextVersion = latest ? latest.version + 1 : 1;
-    const { error } = await svc.from('form_versions').insert({
+    const { error } = await db.from('form_versions').insert({
       form_id: formId,
       version: nextVersion,
       schema: parsed,
@@ -262,7 +268,7 @@ export async function saveDraft(
 
 export async function publishForm(formId: string): Promise<PublishResult> {
   const ctx = await requireRole(['owner', 'admin']);
-  const svc = createServiceClient();
+  const db = await getDb();
 
   const form = await loadFormForOrg(formId, ctx.orgId);
   if (!form) return { ok: false, error: 'Form not found.' };
@@ -279,14 +285,14 @@ export async function publishForm(formId: string): Promise<PublishResult> {
   }
 
   const now = new Date().toISOString();
-  const { error: versionError } = await svc
+  const { error: versionError } = await db
     .from('form_versions')
     .update({ published_at: now })
     .eq('id', draft.id);
   if (versionError) return { ok: false, error: versionError.message };
 
   if (form.status !== 'published') {
-    const { error: formError } = await svc
+    const { error: formError } = await db
       .from('forms')
       .update({ status: 'published' })
       .eq('id', formId)
@@ -314,7 +320,7 @@ export async function getForm(formId: string): Promise<FormDetail | null> {
   } else if (latestPublished) {
     editableVersion = toVersionInfo(latestPublished);
   } else {
-  const fallback = versions[versions.length - 1];
+    const fallback = versions[versions.length - 1];
     if (!fallback) return null;
     editableVersion = toVersionInfo(fallback);
   }
@@ -329,9 +335,9 @@ export async function getForm(formId: string): Promise<FormDetail | null> {
 
 export async function listForms(): Promise<FormListItem[]> {
   const ctx = await requireRole(['owner', 'admin']);
-  const svc = createServiceClient();
+  const db = await getDb();
 
-  const { data: formsData } = await svc
+  const { data: formsData } = await db
     .from('forms')
     .select('id, slug, name, type, status')
     .eq('organization_id', ctx.orgId)

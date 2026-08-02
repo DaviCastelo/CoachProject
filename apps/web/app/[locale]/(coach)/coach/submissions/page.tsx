@@ -1,5 +1,6 @@
 import { requireRole } from '@/lib/auth/guards';
-import { createServiceClient } from '@/lib/supabase/service';
+import { createClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { SubmissionsTable, type SubmissionRow } from './submissions-table';
 
 export const dynamic = 'force-dynamic';
@@ -18,9 +19,9 @@ type RawWaiver = { athlete_id: string; pdf_url: string | null };
 
 export default async function SubmissionsPage() {
   const ctx = await requireRole(['owner', 'admin', 'coach', 'staff']);
-  const svc = createServiceClient();
+  const db = (await createClient()) as unknown as SupabaseClient;
 
-  const { data: regsData } = await svc
+  const { data: regsData } = await db
     .from('registrations')
     .select(
       'id, status, created_at, athlete_id, athletes(first_name, last_name, date_of_birth), programs(name), program_options(name)',
@@ -29,7 +30,7 @@ export default async function SubmissionsPage() {
     .order('created_at', { ascending: false })
     .limit(200);
 
-  const { data: waiverData } = await svc
+  const { data: waiverData } = await db
     .from('waiver_signatures')
     .select('athlete_id, pdf_url')
     .eq('organization_id', ctx.orgId)

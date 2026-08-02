@@ -1,17 +1,23 @@
 'use server';
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { requireRole } from '@/lib/auth/guards';
+import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 
 export type StatusResult = { ok: true } | { ok: false; error: string };
 
-/** Aprova/rejeita uma inscrição. Só owner/admin. Escopo garantido pela org ativa. */
+async function getDb(): Promise<SupabaseClient> {
+  return (await createClient()) as unknown as SupabaseClient;
+}
+
+/** Aprova/rejeita uma inscrição. Só owner/admin. Escopo garantido pela org ativa + RLS. */
 export async function setRegistrationStatus(
   id: string,
   status: 'approved' | 'rejected',
 ): Promise<StatusResult> {
   const ctx = await requireRole(['owner', 'admin']);
-  const svc = createServiceClient();
+  const db = await getDb();
 
   const patch: Record<string, unknown> = {
     status,
@@ -26,7 +32,7 @@ export async function setRegistrationStatus(
     patch.cancellation_reason = 'rejected by staff';
   }
 
-  const { error } = await svc
+  const { error } = await db
     .from('registrations')
     .update(patch)
     .eq('id', id)
@@ -39,9 +45,9 @@ export async function setRegistrationStatus(
 /** Gera uma URL assinada (2 min) do PDF do waiver mais recente do atleta. */
 export async function getWaiverUrl(athleteId: string): Promise<string | null> {
   const ctx = await requireRole(['owner', 'admin', 'coach', 'staff']);
-  const svc = createServiceClient();
+  const db = await getDb();
 
-  const { data } = await svc
+  const { data } = await db
     .from('waiver_signatures')
     .select('pdf_url')
     .eq('organization_id', ctx.orgId)
@@ -54,6 +60,8 @@ export async function getWaiverUrl(athleteId: string): Promise<string | null> {
   const path = (data as { pdf_url: string | null } | null)?.pdf_url;
   if (!path) return null;
 
+  // Storage signed URLs require service role (no RLS on bucket access via user JWT).
+  const svc = createServiceClient();
   const { data: signed } = await svc.storage.from('waivers').createSignedUrl(path, 120);
   return signed?.signedUrl ?? null;
 }
