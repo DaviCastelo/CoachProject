@@ -181,6 +181,7 @@
     "reviewSteps": "Please review the earlier steps.",
     "fixFields": "Please fix the highlighted fields.",
     "closed": "Registration for this form is closed.",
+    "incompleteMapping": "This form is not fully configured yet (athlete name and date of birth must be mapped). Please contact the organizer.",
     "genericError": "Something went wrong. Please try again.",
     "checkboxYes": "Yes",
     "errors": {

@@ -283,7 +283,13 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
         setFieldErrors(map);
         setFormError(t('fixFields'));
       } else {
-        setFormError(res.error === 'closed' ? t('closed') : t('genericError'));
+        const messageKey =
+          res.error === 'closed'
+            ? 'closed'
+            : res.error === 'incomplete_mapping'
+              ? 'incompleteMapping'
+              : 'genericError';
+        setFormError(t(messageKey));
       }
     });
   }

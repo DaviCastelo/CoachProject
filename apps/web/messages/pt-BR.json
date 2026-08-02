@@ -181,6 +181,7 @@
     "reviewSteps": "Por favor, revise as etapas anteriores.",
     "fixFields": "Por favor, corrija os campos destacados.",
     "closed": "As inscrições para este formulário estão encerradas.",
+    "incompleteMapping": "Este formulário ainda não está configurado corretamente (nome e data de nascimento do atleta precisam estar mapeados). Entre em contato com a organização.",
     "genericError": "Algo deu errado. Tente novamente.",
     "checkboxYes": "Sim",
     "errors": {

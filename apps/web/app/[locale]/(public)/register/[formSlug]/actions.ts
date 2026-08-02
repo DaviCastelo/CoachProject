@@ -18,11 +18,33 @@ export type RegistrationExtras = {
 
 export type SubmitResult =
   | { ok: true }
-  | { ok: false; error: 'not_found' | 'closed' | 'server_error' }
+  | { ok: false; error: 'not_found' | 'closed' | 'server_error' | 'incomplete_mapping' }
   | { ok: false; errors: ValidationError[] };
 
 function str(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+/** Normaliza datas para ISO (YYYY-MM-DD) antes da RPC Postgres. */
+function normalizeDate(value: unknown): string | null {
+  const raw = str(value).trim();
+  if (!raw) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const dmy = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(raw);
+  if (dmy) return `${dmy[3]}-${dmy[2]}-${dmy[1]}`;
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+  return raw;
+}
+
+function hasRequiredAthleteMapping(entities: ReturnType<typeof mapSubmissionToEntities>): boolean {
+  return Boolean(
+    str(entities.athlete.first_name) &&
+      str(entities.athlete.last_name) &&
+      normalizeDate(entities.athlete.date_of_birth),
+  );
 }
 
 type WaiverCtx = {
@@ -74,6 +96,13 @@ export async function submitRegistration(
   if (!result.ok) return { ok: false, errors: result.errors };
 
   const entities = mapSubmissionToEntities(schema, data);
+
+  const dob = normalizeDate(entities.athlete.date_of_birth);
+  if (dob) entities.athlete.date_of_birth = dob;
+
+  if (!hasRequiredAthleteMapping(entities)) {
+    return { ok: false, error: 'incomplete_mapping' };
+  }
 
   // Programa vinculado a este formulário
   const { data: program } = await svc
