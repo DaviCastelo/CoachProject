@@ -17,6 +17,7 @@ export default function LoginPage() {
   const t = useTranslations('auth');
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(
@@ -27,34 +28,47 @@ export default function LoginPage() {
   // NEXT_PUBLIC_SITE_URL está configurado errado no ambiente).
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
-  async function handleMagicLink(e: React.FormEvent) {
+  async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+    setLoading(false);
+    if (signInError) {
+      setError(signInError.message);
+    } else {
+      // reload completo para o middleware/SSR pegarem a sessão do cookie
+      window.location.assign('/coach');
+    }
+  }
+
+  async function sendMagicLink() {
+    if (!email) {
+      setError(t('email'));
+      return;
+    }
     setLoading(true);
     setError(null);
 
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
-      },
+      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
     });
 
     setLoading(false);
-    if (signInError) {
-      setError(signInError.message);
-    } else {
-      setSent(true);
-    }
+    if (signInError) setError(signInError.message);
+    else setSent(true);
   }
 
   async function handleGoogleLogin() {
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${siteUrl}/auth/callback`,
-      },
+      options: { redirectTo: `${siteUrl}/auth/callback` },
     });
   }
 
@@ -77,8 +91,10 @@ export default function LoginPage() {
             <CardDescription>{sent ? t('magicLinkSent') : t('loginSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
-            {!sent ? (
-              <form onSubmit={handleMagicLink} className="space-y-4">
+            {sent ? (
+              <p className="text-center text-muted-foreground">{t('magicLinkSent')}</p>
+            ) : (
+              <form onSubmit={handlePasswordLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">{t('email')}</Label>
                   <Input
@@ -91,9 +107,23 @@ export default function LoginPage() {
                     autoComplete="email"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">{t('password')}</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                  />
+                </div>
+
                 {error && <p className="text-sm text-danger">{error}</p>}
+
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? '...' : t('sendMagicLink')}
+                  {loading ? '...' : t('login')}
                 </Button>
 
                 <div className="relative my-4">
@@ -109,13 +139,20 @@ export default function LoginPage() {
                   type="button"
                   variant="outline"
                   className="w-full"
+                  onClick={sendMagicLink}
+                  disabled={loading}
+                >
+                  {t('sendMagicLink')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
                   onClick={handleGoogleLogin}
                 >
                   {t('continueWithGoogle')}
                 </Button>
               </form>
-            ) : (
-              <p className="text-center text-muted-foreground">{t('magicLinkSent')}</p>
             )}
           </CardContent>
         </Card>

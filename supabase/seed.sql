@@ -17,7 +17,7 @@ values
   (
     'a1111111-1111-1111-1111-111111111111',
     'arthur@catempo.test',
-    crypt('testpassword123', gen_salt('bf')),
+    crypt('Admin123', gen_salt('bf')),
     now(), now(), now(),
     '00000000-0000-0000-0000-000000000000',
     'authenticated', 'authenticated',
@@ -26,7 +26,7 @@ values
   (
     'c2222222-2222-2222-2222-222222222222',
     'coach@catempo.test',
-    crypt('testpassword123', gen_salt('bf')),
+    crypt('Admin123', gen_salt('bf')),
     now(), now(), now(),
     '00000000-0000-0000-0000-000000000000',
     'authenticated', 'authenticated',
@@ -35,7 +35,7 @@ values
   (
     'f3333333-3333-3333-3333-333333333333',
     'guardian@catempo.test',
-    crypt('testpassword123', gen_salt('bf')),
+    crypt('Admin123', gen_salt('bf')),
     now(), now(), now(),
     '00000000-0000-0000-0000-000000000000',
     'authenticated', 'authenticated',

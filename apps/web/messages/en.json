@@ -22,6 +22,7 @@
     "loginSubtitle": "Enter your email to receive a magic link",
     "email": "Email address",
     "emailPlaceholder": "you@example.com",
+    "password": "Password",
     "sendMagicLink": "Send magic link",
     "magicLinkSent": "Check your email for the sign-in link",
     "continueWithGoogle": "Continue with Google",
