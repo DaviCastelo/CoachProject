@@ -8,6 +8,7 @@
   },
   "nav": {
     "dashboard": "Panel",
+    "registrations": "Inscripciones",
     "schedule": "Agenda",
     "athletes": "Atletas",
     "billing": "Facturación",
