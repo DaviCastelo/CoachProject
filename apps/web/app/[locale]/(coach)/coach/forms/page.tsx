@@ -4,7 +4,7 @@ import { requireRole } from '@/lib/auth/guards';
 import { listForms } from './actions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
+import { AthleticCard } from '@/components/athletic-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,17 +33,17 @@ export default async function FormsPage() {
       </div>
 
       {forms.length === 0 ? (
-        <Card className="p-6 text-center">
+        <AthleticCard className="p-6 text-center">
           <h2 className="mb-2 font-display text-xl uppercase tracking-wide">{t('emptyTitle')}</h2>
           <p className="mb-4 text-sm text-muted-foreground">{t('emptyDescription')}</p>
           <Button asChild>
             <Link href="/coach/forms/new">{t('newForm')}</Link>
           </Button>
-        </Card>
+        </AthleticCard>
       ) : (
         <div className="space-y-3">
           {forms.map((form) => (
-            <Card key={form.id} className="p-4">
+            <AthleticCard key={form.id} className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -79,7 +79,7 @@ export default async function FormsPage() {
                   ) : null}
                 </div>
               </div>
-            </Card>
+            </AthleticCard>
           ))}
         </div>
       )}

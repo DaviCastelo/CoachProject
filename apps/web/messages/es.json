@@ -33,18 +33,57 @@
     "mfaSubtitle": "Configura una app de autenticación para proteger tu cuenta",
     "mfaEnroll": "Escanea el código QR con tu app de autenticación",
     "mfaVerify": "Ingresa el código de 6 dígitos",
-    "mfaRequired": "Los propietarios y administradores deben activar la autenticación de dos factores"
+    "mfaRequired": "Los propietarios y administradores deben activar la autenticación de dos factores",
+    "inviteTitle": "Aceptar invitación",
+    "inviteDescription": "Has sido invitado a CA Tempo Training.",
+    "inviteInvalid": "Esta invitación no es válida o ya fue aceptada.",
+    "inviteAccept": "Aceptar invitación"
+  },
+  "landing": {
+    "heroTitle": "CA TEMPO TRAINING",
+    "heroSubtitle": "Entrenamiento privado, grupos pequeños y campamentos — todo en una plataforma.",
+    "ctaLogin": "Iniciar sesión",
+    "ctaPrograms": "Ver Programas",
+    "meetTeamEyebrow": "CONOCE A",
+    "meetTeam": "NUESTRO EQUIPO",
+    "foundersEyebrow": "FUNDADORES",
+    "foundersTitle": "QUIÉN DIRIGE",
+    "foundersDescription": "Arthur Pompeu y Carlos Barboza fundaron CA Tempo para elevar el desarrollo de atletas.",
+    "featuredPrograms": "Programas Destacados",
+    "viewAllPrograms": "Ver todos los programas"
+  },
+  "programs": {
+    "title": "Programas",
+    "empty": "No hay programas abiertos en este momento. Vuelve pronto.",
+    "backToAll": "Todos los programas",
+    "spotsLeft": "{left} de {total} plazas restantes",
+    "soldOut": "Agotado",
+    "registerNow": "Inscribirse ahora"
+  },
+  "submissions": {
+    "title": "Inscripciones",
+    "subtitle": "{count} en total",
+    "viewOnly": " · solo visualización"
   },
   "coach": {
     "dashboardTitle": "Panel",
     "emptyTitle": "Sin sesiones aún",
     "emptyDescription": "Crea tu primera sesión de entrenamiento para comenzar.",
-    "emptyAction": "Crear sesión"
+    "emptyAction": "Crear sesión",
+    "statsRegistrations": "Inscripciones",
+    "statsForms": "Formularios",
+    "statsPrograms": "Programas",
+    "quickActions": "Acciones rápidas",
+    "viewSubmissions": "Ver inscripciones",
+    "manageForms": "Gestionar formularios",
+    "viewPrograms": "Ver programas públicos"
   },
   "family": {
     "homeTitle": "Portal Familiar",
     "emptyTitle": "Sin sesiones próximas",
-    "emptyDescription": "El horario de tu atleta aparecerá aquí."
+    "emptyDescription": "El horario de tu atleta aparecerá aquí.",
+    "upcomingSessions": "Próximas sesiones",
+    "noSessionsScheduled": "Sin sesiones programadas"
   },
   "theme": {
     "light": "Claro",

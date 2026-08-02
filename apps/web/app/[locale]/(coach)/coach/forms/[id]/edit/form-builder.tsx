@@ -319,7 +319,7 @@ export function FormBuilder({ initial }: Props) {
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-4">
+        <div className="space-y-4 rounded-lg border border-ink-700 p-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -428,7 +428,7 @@ export function FormBuilder({ initial }: Props) {
           )}
         </div>
 
-        <div>
+        <div className="rounded-lg border border-ink-700 p-4 accent-border-top">
           <h2 className="mb-3 font-display text-lg uppercase tracking-wide">{t('preview')}</h2>
           <Card className="p-4">
             <FormRenderer schema={schema} preview />

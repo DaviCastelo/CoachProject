@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BrandLogo } from '@/components/brand-logo';
 
 interface InvitePageProps {
   params: Promise<{ token: string }>;
@@ -9,6 +11,7 @@ interface InvitePageProps {
 
 export default async function InvitePage({ params }: InvitePageProps) {
   const { token } = await params;
+  const t = await getTranslations('auth');
   const supabase = await createClient();
   const {
     data: { user },
@@ -44,20 +47,21 @@ export default async function InvitePage({ params }: InvitePageProps) {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Accept Invitation</CardTitle>
+      <Card className="w-full max-w-md accent-border-top shadow-lg shadow-accent-500/5">
+        <CardHeader className="text-center">
+          <div className="mb-4 flex justify-center">
+            <BrandLogo size={56} />
+          </div>
+          <CardTitle>{t('inviteTitle')}</CardTitle>
           <CardDescription>
-            {membership
-              ? 'You have been invited to join CA Tempo Training.'
-              : 'This invitation is invalid or has already been accepted.'}
+            {membership ? t('inviteDescription') : t('inviteInvalid')}
           </CardDescription>
         </CardHeader>
         {membership && (
           <CardContent>
             <form action={acceptInvite}>
               <Button type="submit" className="w-full">
-                Accept Invitation
+                {t('inviteAccept')}
               </Button>
             </form>
           </CardContent>

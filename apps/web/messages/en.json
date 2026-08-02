@@ -33,18 +33,57 @@
     "mfaSubtitle": "Set up an authenticator app to secure your account",
     "mfaEnroll": "Scan QR code with your authenticator app",
     "mfaVerify": "Enter the 6-digit code",
-    "mfaRequired": "Owners and admins must enable two-factor authentication"
+    "mfaRequired": "Owners and admins must enable two-factor authentication",
+    "inviteTitle": "Accept invitation",
+    "inviteDescription": "You have been invited to join CA Tempo Training.",
+    "inviteInvalid": "This invitation is invalid or has already been accepted.",
+    "inviteAccept": "Accept invitation"
+  },
+  "landing": {
+    "heroTitle": "CA TEMPO TRAINING",
+    "heroSubtitle": "Private training, small groups and seasonal camps — all in one platform.",
+    "ctaLogin": "Sign in",
+    "ctaPrograms": "View Programs",
+    "meetTeamEyebrow": "MEET OUR",
+    "meetTeam": "TEAM",
+    "foundersEyebrow": "FOUNDERS",
+    "foundersTitle": "WHO LEADS",
+    "foundersDescription": "Arthur Pompeu and Carlos Barboza founded CA Tempo to elevate athlete development.",
+    "featuredPrograms": "Featured Programs",
+    "viewAllPrograms": "View all programs"
+  },
+  "programs": {
+    "title": "Programs",
+    "empty": "No open programs right now. Check back soon.",
+    "backToAll": "All programs",
+    "spotsLeft": "{left} of {total} spots left",
+    "soldOut": "Sold out",
+    "registerNow": "Register now"
+  },
+  "submissions": {
+    "title": "Registrations",
+    "subtitle": "{count} total",
+    "viewOnly": " · view only"
   },
   "coach": {
     "dashboardTitle": "Dashboard",
     "emptyTitle": "No sessions yet",
     "emptyDescription": "Create your first training session to get started.",
-    "emptyAction": "Create session"
+    "emptyAction": "Create session",
+    "statsRegistrations": "Registrations",
+    "statsForms": "Forms",
+    "statsPrograms": "Programs",
+    "quickActions": "Quick actions",
+    "viewSubmissions": "View registrations",
+    "manageForms": "Manage forms",
+    "viewPrograms": "View public programs"
   },
   "family": {
     "homeTitle": "Family Portal",
     "emptyTitle": "No upcoming sessions",
-    "emptyDescription": "Your athlete's schedule will appear here."
+    "emptyDescription": "Your athlete's schedule will appear here.",
+    "upcomingSessions": "Upcoming sessions",
+    "noSessionsScheduled": "No sessions scheduled"
   },
   "theme": {
     "light": "Light",

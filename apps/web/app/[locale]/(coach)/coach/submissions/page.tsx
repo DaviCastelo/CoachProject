@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { requireRole } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -19,6 +20,7 @@ type RawWaiver = { athlete_id: string; pdf_url: string | null };
 
 export default async function SubmissionsPage() {
   const ctx = await requireRole(['owner', 'admin', 'coach', 'staff']);
+  const t = await getTranslations('submissions');
   const db = (await createClient()) as unknown as SupabaseClient;
 
   const { data: regsData } = await db
@@ -58,9 +60,9 @@ export default async function SubmissionsPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
-      <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">Registrations</h1>
+      <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">{t('title')}</h1>
       <p className="mb-6 text-sm text-muted-foreground">
-        {rows.length} total{canApprove ? '' : ' · view only'}
+        {t('subtitle', { count: rows.length })}{canApprove ? '' : t('viewOnly')}
       </p>
       <SubmissionsTable rows={rows} canApprove={canApprove} />
     </div>

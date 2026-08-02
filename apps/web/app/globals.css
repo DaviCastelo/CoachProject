@@ -118,3 +118,95 @@
     letter-spacing: 0.02em;
   }
 }
+
+@layer utilities {
+  .skew-frame {
+    transform: skewX(-6deg);
+    overflow: hidden;
+  }
+
+  .skew-frame-inner {
+    transform: skewX(6deg);
+    overflow: hidden;
+  }
+
+  .hero-overlay {
+    background: linear-gradient(
+      180deg,
+      rgba(10, 10, 10, 0.55) 0%,
+      rgba(10, 10, 10, 0.75) 50%,
+      #0a0a0a 92%
+    );
+  }
+
+  .hero-overlay-compact {
+    background: linear-gradient(
+      180deg,
+      rgba(10, 10, 10, 0.4) 0%,
+      rgba(10, 10, 10, 0.85) 100%
+    );
+  }
+
+  .athletic-card {
+    border-color: var(--border);
+    transition:
+      transform 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+  }
+
+  .athletic-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-accent-500);
+    box-shadow: 0 8px 32px rgba(200, 162, 74, 0.12);
+  }
+
+  .accent-border-top {
+    border-top: 3px solid var(--color-accent-500);
+  }
+
+  .text-eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes hero-zoom {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.06);
+    }
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.5s ease forwards;
+  }
+
+  .animate-hero-zoom {
+    animation: hero-zoom 20s ease-in-out infinite alternate;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-up,
+    .animate-hero-zoom {
+      animation: none;
+    }
+
+    .athletic-card:hover {
+      transform: none;
+    }
+  }
+}

@@ -1,14 +1,17 @@
 'use client';
 
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
   titleKey: string;
   descriptionKey: string;
   actionKey?: string;
   namespace?: 'coach' | 'family';
+  imageSrc?: string;
+  className?: string;
 }
 
 export function EmptyState({
@@ -16,16 +19,25 @@ export function EmptyState({
   descriptionKey,
   actionKey,
   namespace = 'coach',
+  imageSrc = '/images/coaches-field.png',
+  className,
 }: EmptyStateProps) {
   const t = useTranslations(namespace);
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-        <Shield className="h-10 w-10 text-accent-500" />
+    <div className={cn('flex flex-col items-center justify-center py-12 px-4 text-center', className)}>
+      <div className="relative mb-6 h-32 w-48 overflow-hidden rounded-lg border border-ink-700">
+        <Image
+          src={imageSrc}
+          alt=""
+          fill
+          className="object-cover opacity-80"
+          sizes="192px"
+        />
+        <div className="absolute inset-0 border-t-2 border-l-2 border-accent-500" aria-hidden="true" />
       </div>
-      <h2 className="text-2xl font-display uppercase tracking-wide mb-2">{t(titleKey)}</h2>
-      <p className="text-muted-foreground max-w-sm mb-6">{t(descriptionKey)}</p>
+      <h2 className="mb-2 font-display text-2xl uppercase tracking-wide">{t(titleKey)}</h2>
+      <p className="mb-6 max-w-sm text-muted-foreground">{t(descriptionKey)}</p>
       {actionKey && (
         <Button variant="default" disabled>
           {t(actionKey)}

@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
-import Image from 'next/image';
 import { createServiceClient } from '@/lib/supabase/service';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { LocaleSwitcher } from '@/components/locale-switcher';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { AthleticCard } from '@/components/athletic-card';
+import { PageHero } from '@/components/page-hero';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,29 +13,21 @@ type PageProps = Readonly<{ params: Promise<{ locale: string; slug: string }> }>
 
 type OptionRow = { name: string; description: string | null; price_cents: number };
 
+const GALLERY_IMAGES = [
+  '/images/gallery-1.png',
+  '/images/gallery-2.png',
+  '/images/gallery-3.png',
+  '/images/gallery-4.png',
+];
+
 function price(cents: number): string {
   return `$${(cents / 100).toFixed(0)}`;
 }
 
-function RegisterButton({
-  soldOut,
-  formSlug,
-}: Readonly<{ soldOut: boolean; formSlug: string | null | undefined }>) {
-  if (soldOut) {
-    return (
-      <Button size="lg" disabled>
-        Sold out
-      </Button>
-    );
-  }
-  if (formSlug) {
-    return (
-      <Button asChild size="lg">
-        <Link href={`/register/${formSlug}`}>Register now</Link>
-      </Button>
-    );
-  }
-  return null;
+function hashSlug(slug: string): number {
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h = (h + slug.charCodeAt(i)) % GALLERY_IMAGES.length;
+  return h;
 }
 
 async function loadProgram(slug: string) {
@@ -64,6 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProgramDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const t = await getTranslations('programs');
   const svc = createServiceClient();
 
   const program = await loadProgram(slug);
@@ -93,6 +85,8 @@ export default async function ProgramDetailPage({ params }: PageProps) {
     .eq('id', program.form_id)
     .maybeSingle();
 
+  const heroImage = GALLERY_IMAGES[hashSlug(slug)];
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -104,52 +98,56 @@ export default async function ProgramDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <header className="flex h-14 items-center justify-between border-b px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/icons/shield.svg" alt="CA Tempo" width={32} height={32} />
-          <span className="font-display text-lg uppercase tracking-wide">CA Tempo</span>
-        </Link>
-        <div className="flex items-center gap-1">
-          <LocaleSwitcher />
-          <ThemeToggle />
-        </div>
-      </header>
+      <PageHero
+        imageSrc={heroImage}
+        imageAlt={program.name}
+        title={program.name}
+        compact
+      />
 
       <main className="mx-auto w-full max-w-xl flex-1 px-4 py-8">
-        <Link href="/programs" className="text-sm text-muted-foreground hover:underline">
-          ← All programs
+        <Link href="/programs" className="text-sm text-muted-foreground hover:text-accent-500 transition-colors">
+          ← {t('backToAll')}
         </Link>
-        <h1 className="mb-1 mt-2 font-display text-3xl uppercase tracking-wide">{program.name}</h1>
+
         {program.description ? (
-          <p className="mb-4 text-muted-foreground">{program.description}</p>
+          <p className="mb-4 mt-4 text-muted-foreground">{program.description}</p>
         ) : null}
 
         {spotsLeft != null ? (
           <p className={`mb-6 text-sm font-medium ${soldOut ? 'text-danger' : 'text-success'}`}>
-            {soldOut ? 'Sold out' : `${spotsLeft} of ${program.capacity} spots left`}
+            {soldOut
+              ? t('soldOut')
+              : t('spotsLeft', { left: spotsLeft, total: program.capacity })}
           </p>
         ) : null}
 
         {options.length > 0 ? (
           <div className="mb-6 space-y-3">
             {options.map((opt) => (
-              <Card key={opt.name} className="flex items-start justify-between gap-3 p-4">
+              <AthleticCard key={opt.name} className="flex items-start justify-between gap-3 p-4">
                 <div>
                   <p className="font-medium">{opt.name}</p>
                   {opt.description ? (
                     <p className="text-sm text-muted-foreground">{opt.description}</p>
                   ) : null}
                 </div>
-                <span className="font-display text-lg">{price(opt.price_cents)}</span>
-              </Card>
+                <span className="font-display text-lg text-accent-500">{price(opt.price_cents)}</span>
+              </AthleticCard>
             ))}
           </div>
         ) : null}
 
-        <RegisterButton soldOut={soldOut} formSlug={form?.slug} />
+        {soldOut ? (
+          <Button size="lg" disabled>{t('soldOut')}</Button>
+        ) : form?.slug ? (
+          <Button asChild size="lg">
+            <Link href={`/register/${form.slug}`}>{t('registerNow')}</Link>
+          </Button>
+        ) : null}
       </main>
-    </div>
+    </>
   );
 }

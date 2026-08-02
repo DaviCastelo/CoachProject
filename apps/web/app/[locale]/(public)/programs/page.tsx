@@ -1,9 +1,9 @@
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { createServiceClient } from '@/lib/supabase/service';
-import { Card } from '@/components/ui/card';
-import { LocaleSwitcher } from '@/components/locale-switcher';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { PageHero } from '@/components/page-hero';
+import { AthleticCard } from '@/components/athletic-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +22,7 @@ function dateRange(start: string | null, end: string | null): string | null {
 }
 
 export default async function ProgramsPage() {
+  const t = await getTranslations('programs');
   const svc = createServiceClient();
   const { data } = await svc
     .from('programs')
@@ -32,45 +33,52 @@ export default async function ProgramsPage() {
   const programs = (data ?? []) as ProgramRow[];
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex h-14 items-center justify-between border-b px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/icons/shield.svg" alt="CA Tempo" width={32} height={32} />
-          <span className="font-display text-lg uppercase tracking-wide">CA Tempo</span>
-        </Link>
-        <div className="flex items-center gap-1">
-          <LocaleSwitcher />
-          <ThemeToggle />
-        </div>
-      </header>
+    <>
+      <PageHero
+        imageSrc="/images/gallery-2.png"
+        imageAlt="Training session"
+        title={t('title')}
+        compact
+      />
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        <h1 className="mb-6 font-display text-3xl uppercase tracking-wide">Programs</h1>
-
         {programs.length === 0 ? (
-          <p className="text-muted-foreground">No open programs right now. Check back soon.</p>
+          <p className="text-muted-foreground">{t('empty')}</p>
         ) : (
           <div className="space-y-4">
-            {programs.map((p) => (
+            {programs.map((p, i) => (
               <Link key={p.slug} href={`/programs/${p.slug}`} className="block">
-                <Card className="p-5 transition-colors hover:border-accent-500">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h2 className="font-display text-xl uppercase tracking-wide">{p.name}</h2>
-                    {dateRange(p.starts_on, p.ends_on) ? (
-                      <span className="shrink-0 text-sm text-muted-foreground">
-                        {dateRange(p.starts_on, p.ends_on)}
-                      </span>
-                    ) : null}
+                <AthleticCard className="overflow-hidden">
+                  <div className="flex gap-0">
+                    <div className="relative hidden h-24 w-28 shrink-0 sm:block">
+                      <Image
+                        src={`/images/gallery-${(i % 4) + 1}.png`}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="112px"
+                      />
+                    </div>
+                    <div className="flex-1 p-5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <h2 className="font-display text-xl uppercase tracking-wide">{p.name}</h2>
+                        {dateRange(p.starts_on, p.ends_on) ? (
+                          <span className="shrink-0 text-sm text-accent-500">
+                            {dateRange(p.starts_on, p.ends_on)}
+                          </span>
+                        ) : null}
+                      </div>
+                      {p.description ? (
+                        <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>
+                      ) : null}
+                    </div>
                   </div>
-                  {p.description ? (
-                    <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>
-                  ) : null}
-                </Card>
+                </AthleticCard>
               </Link>
             ))}
           </div>
         )}
       </main>
-    </div>
+    </>
   );
 }

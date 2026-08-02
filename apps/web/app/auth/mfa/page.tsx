@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BrandLogo } from '@/components/brand-logo';
 
 export default function MfaPage() {
   const t = useTranslations('auth');
@@ -86,8 +87,11 @@ export default function MfaPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
+      <Card className="w-full max-w-md accent-border-top shadow-lg shadow-accent-500/5">
+        <CardHeader className="text-center">
+          <div className="mb-4 flex justify-center">
+            <BrandLogo size={56} />
+          </div>
           <CardTitle>{t('mfaTitle')}</CardTitle>
           <CardDescription>{t('mfaSubtitle')}</CardDescription>
         </CardHeader>

@@ -3,15 +3,13 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LocaleSwitcher } from '@/components/locale-switcher';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { BrandLogo } from '@/components/brand-logo';
 
 export default function LoginPage() {
   const t = useTranslations('auth');
@@ -24,8 +22,6 @@ export default function LoginPage() {
     searchParams.get('error') === 'unauthorized' ? t('unauthorized') : null,
   );
 
-  // Sempre usa a origem atual (evita redirect para localhost quando
-  // NEXT_PUBLIC_SITE_URL está configurado errado no ambiente).
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
   async function handlePasswordLogin() {
@@ -39,7 +35,6 @@ export default function LoginPage() {
     if (signInError) {
       setError(signInError.message);
     } else {
-      // reload completo para o middleware/SSR pegarem a sessão do cookie
       window.location.assign('/coach');
     }
   }
@@ -72,20 +67,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex h-14 items-center justify-between px-4 border-b">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/icons/shield.svg" alt="CA Tempo" width={28} height={28} />
-        </Link>
-        <div className="flex items-center gap-1">
-          <LocaleSwitcher />
-          <ThemeToggle />
-        </div>
-      </header>
-
-      <main className="flex flex-1 items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+    <div className="flex min-h-[calc(100vh-7rem)] flex-col lg:flex-row">
+      <main className="flex flex-1 items-center justify-center p-4 lg:p-8">
+        <Card className="w-full max-w-md accent-border-top shadow-lg shadow-accent-500/5">
           <CardHeader className="text-center">
+            <div className="mb-4 flex justify-center">
+              <BrandLogo size={56} />
+            </div>
             <CardTitle>{t('loginTitle')}</CardTitle>
             <CardDescription>{sent ? t('magicLinkSent') : t('loginSubtitle')}</CardDescription>
           </CardHeader>
@@ -162,6 +150,18 @@ export default function LoginPage() {
           </CardContent>
         </Card>
       </main>
+
+      <div className="relative hidden min-h-[calc(100vh-7rem)] flex-1 lg:block">
+        <Image
+          src="/images/hero-action-2.png"
+          alt="Athletes in training"
+          fill
+          className="object-cover"
+          sizes="50vw"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-l from-transparent to-background/20" />
+      </div>
     </div>
   );
 }

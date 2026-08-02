@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   title: 'CA Tempo Training',
   description: 'Soccer training platform for coaches, athletes and families',
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/icons/logo.jpg',
+    apple: '/icons/icon-192.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

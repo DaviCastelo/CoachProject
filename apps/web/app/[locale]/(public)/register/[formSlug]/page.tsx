@@ -1,10 +1,8 @@
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import { parseFormSchema } from '@ca-tempo/domain';
 import { createServiceClient } from '@/lib/supabase/service';
-import { LocaleSwitcher } from '@/components/locale-switcher';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { RegisterForm, type ProgramOption, type WaiverInfo } from './register-form';
+import { AthleticCard } from '@/components/athletic-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +36,6 @@ export default async function RegisterPage({ params }: PageProps) {
 
   const schema = parseFormSchema(version.schema);
 
-  // Programa vinculado a este formulário (para pass e waiver)
   const { data: program } = await svc
     .from('programs')
     .select('id, waiver_template_id')
@@ -69,19 +66,8 @@ export default async function RegisterPage({ params }: PageProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex h-14 items-center justify-between border-b px-4">
-        <div className="flex items-center gap-2">
-          <Image src="/icons/shield.svg" alt="CA Tempo" width={32} height={32} />
-          <span className="font-display text-lg uppercase tracking-wide">CA Tempo</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <LocaleSwitcher />
-          <ThemeToggle />
-        </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 py-8">
+    <main className="mx-auto w-full max-w-xl flex-1 px-4 py-8">
+      <AthleticCard className="accent-border-top p-6">
         <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">{form.name}</h1>
         {form.description ? (
           <p className="mb-6 text-muted-foreground">{form.description}</p>
@@ -94,7 +80,7 @@ export default async function RegisterPage({ params }: PageProps) {
           options={options}
           waiver={waiver}
         />
-      </main>
-    </div>
+      </AthleticCard>
+    </main>
   );
 }

@@ -33,18 +33,57 @@
     "mfaSubtitle": "Configure um app autenticador para proteger sua conta",
     "mfaEnroll": "Escaneie o QR code com seu app autenticador",
     "mfaVerify": "Digite o código de 6 dígitos",
-    "mfaRequired": "Proprietários e administradores devem ativar a autenticação de dois fatores"
+    "mfaRequired": "Proprietários e administradores devem ativar a autenticação de dois fatores",
+    "inviteTitle": "Aceitar convite",
+    "inviteDescription": "Você foi convidado para CA Tempo Training.",
+    "inviteInvalid": "Este convite é inválido ou já foi aceito.",
+    "inviteAccept": "Aceitar convite"
+  },
+  "landing": {
+    "heroTitle": "CA TEMPO TRAINING",
+    "heroSubtitle": "Treino privado, grupos pequenos e acampamentos — tudo em uma plataforma.",
+    "ctaLogin": "Entrar",
+    "ctaPrograms": "Ver Programas",
+    "meetTeamEyebrow": "CONHEÇA O",
+    "meetTeam": "NOSSO TIME",
+    "foundersEyebrow": "FUNDADORES",
+    "foundersTitle": "QUEM LIDERA",
+    "foundersDescription": "Arthur Pompeu e Carlos Barboza fundaram CA Tempo com a missão de elevar o desenvolvimento de atletas.",
+    "featuredPrograms": "Programas em Destaque",
+    "viewAllPrograms": "Ver todos os programas"
+  },
+  "programs": {
+    "title": "Programas",
+    "empty": "Nenhum programa aberto no momento. Volte em breve.",
+    "backToAll": "Todos os programas",
+    "spotsLeft": "{left} de {total} vagas restantes",
+    "soldOut": "Esgotado",
+    "registerNow": "Inscrever-se agora"
+  },
+  "submissions": {
+    "title": "Inscrições",
+    "subtitle": "{count} no total",
+    "viewOnly": " · somente visualização"
   },
   "coach": {
     "dashboardTitle": "Painel",
     "emptyTitle": "Nenhuma sessão ainda",
     "emptyDescription": "Crie sua primeira sessão de treino para começar.",
-    "emptyAction": "Criar sessão"
+    "emptyAction": "Criar sessão",
+    "statsRegistrations": "Inscrições",
+    "statsForms": "Formulários",
+    "statsPrograms": "Programas",
+    "quickActions": "Ações rápidas",
+    "viewSubmissions": "Ver inscrições",
+    "manageForms": "Gerenciar formulários",
+    "viewPrograms": "Ver programas públicos"
   },
   "family": {
     "homeTitle": "Portal da Família",
     "emptyTitle": "Nenhuma sessão próxima",
-    "emptyDescription": "A agenda do seu atleta aparecerá aqui."
+    "emptyDescription": "A agenda do seu atleta aparecerá aqui.",
+    "upcomingSessions": "Próximas sessões",
+    "noSessionsScheduled": "Nenhuma sessão agendada"
   },
   "theme": {
     "light": "Claro",
