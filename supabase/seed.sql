@@ -83,3 +83,57 @@ on conflict do nothing;
 insert into locations (organization_id, name, city, state, is_active) values
   ('e45be439-217d-467e-a4fa-a9001738b83b', 'Main Field', 'Miami', 'FL', true),
   ('e45be439-217d-467e-a4fa-a9001738b83b', 'Training Center', 'Miami', 'FL', true);
+
+-- Catálogo público de demonstração (Fase 2): formulário, programa, opções e waiver
+insert into forms (id, organization_id, slug, name, description, type, status, requires_waiver, success_message) values
+  ('11111111-0000-0000-0000-000000000001', 'e45be439-217d-467e-a4fa-a9001738b83b', 'summer-camp-2026',
+   'CA Tempo Summer Camp 2026', 'Register your athlete for the CA Tempo Summer Camp.', 'registration', 'published', true,
+   'Thanks! Your camp registration was received. We will reach out with payment options.')
+on conflict (id) do nothing;
+
+insert into form_versions (id, form_id, version, schema, published_at) values
+  ('11111111-0000-0000-0000-000000000002', '11111111-0000-0000-0000-000000000001', 1, '{
+    "sections": [
+      {"id":"athlete","title":"Athlete Information","fields":[
+        {"id":"first_name","type":"text","label":"Athletes First Name","required":true,"mapsTo":"athlete.first_name"},
+        {"id":"last_name","type":"text","label":"Athletes Last Name","required":true,"mapsTo":"athlete.last_name"},
+        {"id":"dob","type":"dob","label":"Birth Date","required":true,"mapsTo":"athlete.date_of_birth","validation":{"minYear":2013,"maxYear":2018}},
+        {"id":"gender","type":"select","label":"Gender","options":["Male","Female"],"mapsTo":"athlete.gender"},
+        {"id":"current_club","type":"text","label":"Current Club","mapsTo":"athlete.current_club"},
+        {"id":"level","type":"select","label":"Playing Level","options":["GOLD","PREMIER","ECNL","PRE-ECNL","ECNLRL","PRE-ECNLRL","MLS","GA"],"mapsTo":"athlete.playing_level"},
+        {"id":"shirt","type":"select","label":"Shirt Size","options":["Youth S","Youth M","Youth L","Youth XL","Adult S","Adult M"],"mapsTo":"athlete.jersey_size"}
+      ]},
+      {"id":"guardian","title":"Parent / Guardian","fields":[
+        {"id":"g_first","type":"text","label":"Guardian First Name","required":true,"mapsTo":"guardian.first_name"},
+        {"id":"g_last","type":"text","label":"Guardian Last Name","required":true,"mapsTo":"guardian.last_name"},
+        {"id":"g_email","type":"email","label":"Email","required":true,"mapsTo":"guardian.email"},
+        {"id":"g_phone","type":"phone","label":"Phone","mapsTo":"guardian.phone"},
+        {"id":"relationship","type":"select","label":"Relationship","options":["Mother","Father","Guardian"],"mapsTo":"guardian.relationship"}
+      ]}
+    ]
+  }'::jsonb, now())
+on conflict (id) do nothing;
+
+insert into waiver_templates (id, organization_id, name, version, body_markdown, effective_from, is_active) values
+  ('11111111-0000-0000-0000-000000000003', 'e45be439-217d-467e-a4fa-a9001738b83b', 'CA Tempo Liability Waiver', 1,
+   $w$# CA Tempo Training — Liability Waiver and Release
+
+I, the parent/legal guardian of the registered athlete, acknowledge that participation in soccer training, camps and related activities involves inherent risks, including physical injury.
+
+In consideration of my child's participation, I release, waive and discharge CA Tempo Training, its coaches and staff from any and all liability for injuries or damages arising from participation, except where caused by gross negligence.
+
+I confirm that my child is physically able to participate and I authorize CA Tempo Training to seek emergency medical treatment if needed. I have read and understood this waiver and agree to its terms.$w$,
+   current_date, true)
+on conflict (id) do nothing;
+
+insert into programs (id, organization_id, slug, name, type, status, form_id, waiver_template_id, min_birth_year, max_birth_year, capacity, description) values
+  ('11111111-0000-0000-0000-000000000004', 'e45be439-217d-467e-a4fa-a9001738b83b', 'summer-camp-2026',
+   'CA Tempo Summer Camp 2026', 'camp', 'published',
+   '11111111-0000-0000-0000-000000000001', '11111111-0000-0000-0000-000000000003',
+   2013, 2018, 24, 'Two weeks of high-level training. Boys and girls born 2013-2018.')
+on conflict (id) do nothing;
+
+insert into program_options (id, organization_id, program_id, name, description, price_cents, sort_order) values
+  ('11111111-0000-0000-0000-000000000005', 'e45be439-217d-467e-a4fa-a9001738b83b', '11111111-0000-0000-0000-000000000004', 'Week 1 Pass', '4 days of training + Camp T-Shirt', 35000, 1),
+  ('11111111-0000-0000-0000-000000000006', 'e45be439-217d-467e-a4fa-a9001738b83b', '11111111-0000-0000-0000-000000000004', 'Full Camp Pass', '8 days of training + Camp T-Shirt', 60000, 2)
+on conflict (id) do nothing;
