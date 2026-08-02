@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { createServiceClient } from '@/lib/supabase/service';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,33 @@ import { ThemeToggle } from '@/components/theme-toggle';
 
 export const dynamic = 'force-dynamic';
 
-type PageProps = { params: Promise<{ locale: string; slug: string }> };
+type PageProps = Readonly<{ params: Promise<{ locale: string; slug: string }> }>;
 
 type OptionRow = { name: string; description: string | null; price_cents: number };
 
 function price(cents: number): string {
   return `$${(cents / 100).toFixed(0)}`;
+}
+
+function RegisterButton({
+  soldOut,
+  formSlug,
+}: Readonly<{ soldOut: boolean; formSlug: string | null | undefined }>) {
+  if (soldOut) {
+    return (
+      <Button size="lg" disabled>
+        Sold out
+      </Button>
+    );
+  }
+  if (formSlug) {
+    return (
+      <Button asChild size="lg">
+        <Link href={`/register/${formSlug}`}>Register now</Link>
+      </Button>
+    );
+  }
+  return null;
 }
 
 async function loadProgram(slug: string) {
@@ -127,15 +148,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
           </div>
         ) : null}
 
-        {form?.slug && !soldOut ? (
-          <Button asChild size="lg">
-            <Link href={`/register/${form.slug}`}>Register now</Link>
-          </Button>
-        ) : soldOut ? (
-          <Button size="lg" disabled>
-            Sold out
-          </Button>
-        ) : null}
+        <RegisterButton soldOut={soldOut} formSlug={form?.slug} />
       </main>
     </div>
   );

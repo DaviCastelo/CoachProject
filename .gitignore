@@ -34,6 +34,11 @@ test-results
 .vscode/*
 !.vscode/extensions.json
 
+# agent skills (global only — ~/.agents/skills)
+.agents/
+skills-lock.json
+.skill-lock.json
+
 # debug
 npm-debug.log*
 pnpm-debug.log*

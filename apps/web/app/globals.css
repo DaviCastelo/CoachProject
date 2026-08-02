@@ -49,6 +49,8 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 }
 
 @layer base {
@@ -70,7 +72,10 @@
     --border: var(--color-ink-200);
     --input: var(--color-ink-200);
     --ring: var(--color-accent-500);
+    --popover: var(--card);
+    --popover-foreground: var(--card-foreground);
     --radius: 8px;
+    color-scheme: light;
   }
 
   .dark {
@@ -91,6 +96,9 @@
     --border: var(--color-ink-700);
     --input: var(--color-ink-700);
     --ring: var(--color-accent-500);
+    --popover: var(--card);
+    --popover-foreground: var(--card-foreground);
+    color-scheme: dark;
   }
 
   * {

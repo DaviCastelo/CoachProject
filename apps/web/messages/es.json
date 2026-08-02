@@ -120,5 +120,37 @@
     "errorSave": "Error al guardar borrador",
     "errorPublish": "Error al publicar",
     "errorCreate": "Error al crear formulario"
+  },
+  "register": {
+    "step": "Paso {current} de {total}",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar inscripción",
+    "submitting": "Enviando…",
+    "thankYou": "¡Gracias!",
+    "defaultSuccess": "Tu inscripción fue recibida. Nos pondremos en contacto pronto.",
+    "choosePass": "Elige tu pase",
+    "choosePassError": "Por favor, elige un pase.",
+    "scrollToEnd": "Desplázate hasta el final para firmar.",
+    "drawSignature": "Dibujar firma",
+    "typeName": "Escribir nombre",
+    "typeNamePlaceholder": "Escribe tu nombre completo",
+    "consent": "Soy el padre/tutor legal, he leído y acepto este waiver y consiento firmar electrónicamente.",
+    "readWaiver": "Por favor, lee el waiver hasta el final.",
+    "signWaiver": "Por favor, firma el waiver.",
+    "consentRequired": "Por favor, proporciona el consentimiento para continuar.",
+    "reviewSteps": "Por favor, revisa los pasos anteriores.",
+    "fixFields": "Por favor, corrige los campos resaltados.",
+    "closed": "Las inscripciones para este formulario están cerradas.",
+    "genericError": "Algo salió mal. Inténtalo de nuevo.",
+    "checkboxYes": "Sí",
+    "errors": {
+      "required": "Este campo es obligatorio.",
+      "invalid_email": "Introduce un correo válido.",
+      "invalid_option": "Elige una opción válida.",
+      "minYear": "El año debe ser {year} o posterior.",
+      "maxYear": "El año debe ser {year} o anterior.",
+      "invalid": "Valor inválido."
+    }
   }
 }

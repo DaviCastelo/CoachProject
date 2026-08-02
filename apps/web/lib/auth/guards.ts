@@ -1,9 +1,17 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { redirect as nextRedirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
+import { routing } from '@/i18n/routing';
 import type { OrgRole } from '@ca-tempo/db';
 
 const ACTIVE_ORG_COOKIE = 'active_org_id';
+
+async function localizedRedirect(path: string): Promise<never> {
+  const locale = await getLocale();
+  const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
+  nextRedirect(`${prefix}${path}`);
+}
 
 export interface ActiveOrgContext {
   orgId: string;
@@ -54,10 +62,10 @@ export async function getActiveOrg(): Promise<ActiveOrgContext | null> {
 export async function requireRole(allowedRoles: OrgRole[]): Promise<ActiveOrgContext> {
   const ctx = await getActiveOrg();
   if (!ctx) {
-    redirect('/login');
+    return localizedRedirect('/login');
   }
   if (!allowedRoles.includes(ctx.role)) {
-    redirect('/login?error=unauthorized');
+    return localizedRedirect('/login?error=unauthorized');
   }
   return ctx;
 }
@@ -73,7 +81,7 @@ export async function requireMfaForAdmin(): Promise<void> {
   const hasVerifiedTotp = factors?.totp?.some((f) => f.status === 'verified');
 
   if (!hasVerifiedTotp) {
-    redirect('/auth/mfa');
+    return localizedRedirect('/auth/mfa');
   }
 }
 

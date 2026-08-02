@@ -13,9 +13,25 @@ function stripLocale(pathname: string): string {
   const segments = pathname.split('/');
   const maybeLocale = segments[1];
   if (routing.locales.includes(maybeLocale as 'en' | 'pt-BR' | 'es')) {
-    return `/${segments.slice(2).join('/')}` || '/';
+    const rest = segments.slice(2).join('/');
+    return rest ? `/${rest}` : '/';
   }
   return pathname;
+}
+
+function getLocaleFromPath(pathname: string): string {
+  const segments = pathname.split('/');
+  const maybeLocale = segments[1];
+  if (routing.locales.includes(maybeLocale as 'en' | 'pt-BR' | 'es')) {
+    return maybeLocale;
+  }
+  return routing.defaultLocale;
+}
+
+function localizedUrl(request: NextRequest, path: string): URL {
+  const locale = getLocaleFromPath(request.nextUrl.pathname);
+  const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
+  return new URL(`${prefix}${path}`, request.url);
 }
 
 export async function middleware(request: NextRequest) {
@@ -40,13 +56,13 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = normalizedPath.startsWith('/login');
 
   if (isProtected && !user) {
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = localizedUrl(request, '/login');
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   if (isAuthPage && user) {
-    return NextResponse.redirect(new URL('/coach', request.url));
+    return NextResponse.redirect(localizedUrl(request, '/coach'));
   }
 
   const intlResponse = intlMiddleware(request);

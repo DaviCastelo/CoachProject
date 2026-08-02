@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useForm, type UseFormRegister, type UseFormSetValue } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 import { isFieldVisible, type FormSchema, type FormField } from '@ca-tempo/domain';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,39 +15,132 @@ function defaultValueFor(field: FormField): unknown {
   return '';
 }
 
-function errorText(message: string): string {
-  if (message === 'required') return 'This field is required.';
-  if (message === 'invalid_email') return 'Enter a valid email.';
-  if (message === 'invalid_option') return 'Choose a valid option.';
-  if (message.startsWith('minYear:')) return `Year must be ${message.split(':')[1]} or later.`;
-  if (message.startsWith('maxYear:')) return `Year must be ${message.split(':')[1]} or earlier.`;
-  return 'Invalid value.';
+function getInputType(field: FormField): 'email' | 'tel' | 'date' | 'text' {
+  if (field.type === 'email') return 'email';
+  if (field.type === 'phone') return 'tel';
+  if (field.type === 'date' || field.type === 'dob') return 'date';
+  return 'text';
 }
 
-export type FormFieldProps = {
+function useErrorText() {
+  const t = useTranslations('register.errors');
+  return (message: string): string => {
+    if (message === 'required') return t('required');
+    if (message === 'invalid_email') return t('invalid_email');
+    if (message === 'invalid_option') return t('invalid_option');
+    if (message.startsWith('minYear:')) return t('minYear', { year: message.split(':')[1] });
+    if (message.startsWith('maxYear:')) return t('maxYear', { year: message.split(':')[1] });
+    return t('invalid');
+  };
+}
+
+export type FormFieldProps = Readonly<{
   field: FormField;
   error?: string;
   register: UseFormRegister<Values>;
   value: unknown;
   setValue: UseFormSetValue<Values>;
-};
+}>;
+
+type FieldControlProps = Readonly<{
+  field: FormField;
+  register: UseFormRegister<Values>;
+  value: unknown;
+  setValue: UseFormSetValue<Values>;
+  checkboxLabel: string;
+}>;
+
+function FieldControl({ field, register, value, setValue, checkboxLabel }: FieldControlProps) {
+  if (field.type === 'textarea') {
+    return (
+      <textarea
+        id={field.id}
+        className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+        {...register(field.id)}
+      />
+    );
+  }
+
+  if (field.type === 'select' || field.type === 'pass_selector') {
+    return (
+      <select
+        id={field.id}
+        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
+        {...register(field.id)}
+      >
+        <option value="">—</option>
+        {(field.options ?? []).map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  if (field.type === 'radio') {
+    return (
+      <div className="space-y-1">
+        {(field.options ?? []).map((opt) => (
+          <label key={opt} className="flex items-center gap-2 text-sm">
+            <input type="radio" value={opt} {...register(field.id)} />
+            {opt}
+          </label>
+        ))}
+      </div>
+    );
+  }
+
+  if (field.type === 'checkbox') {
+    return (
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" {...register(field.id)} />
+        {field.placeholder ?? checkboxLabel}
+      </label>
+    );
+  }
+
+  if (field.type === 'multiselect') {
+    const arr = Array.isArray(value) ? (value as string[]) : [];
+    return (
+      <div className="space-y-1">
+        {(field.options ?? []).map((opt) => (
+          <label key={opt} className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={arr.includes(opt)}
+              onChange={(e) => {
+                const next = e.target.checked ? [...arr, opt] : arr.filter((v) => v !== opt);
+                setValue(field.id, next);
+              }}
+            />
+            {opt}
+          </label>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <Input
+      id={field.id}
+      type={getInputType(field)}
+      placeholder={field.placeholder}
+      {...register(field.id)}
+    />
+  );
+}
 
 export function FormFieldInput({ field, error, register, value, setValue }: FormFieldProps) {
+  const t = useTranslations('register');
+  const errorText = useErrorText();
+
   if (field.type === 'header') {
     return <h3 className="pt-2 font-display text-lg uppercase tracking-wide">{field.label}</h3>;
   }
   if (field.type === 'info') {
     return <p className="text-sm text-muted-foreground">{field.label}</p>;
   }
-
-  const inputType =
-    field.type === 'email'
-      ? 'email'
-      : field.type === 'phone'
-        ? 'tel'
-        : field.type === 'date' || field.type === 'dob'
-          ? 'date'
-          : 'text';
 
   return (
     <div className="space-y-1.5">
@@ -57,66 +151,13 @@ export function FormFieldInput({ field, error, register, value, setValue }: Form
         </Label>
       ) : null}
 
-      {field.type === 'textarea' ? (
-        <textarea
-          id={field.id}
-          className="flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
-          {...register(field.id)}
-        />
-      ) : field.type === 'select' || field.type === 'pass_selector' ? (
-        <select
-          id={field.id}
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-          {...register(field.id)}
-        >
-          <option value="">—</option>
-          {(field.options ?? []).map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-      ) : field.type === 'radio' ? (
-        <div className="space-y-1">
-          {(field.options ?? []).map((opt) => (
-            <label key={opt} className="flex items-center gap-2 text-sm">
-              <input type="radio" value={opt} {...register(field.id)} />
-              {opt}
-            </label>
-          ))}
-        </div>
-      ) : field.type === 'checkbox' ? (
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" {...register(field.id)} />
-          {field.placeholder ?? 'Yes'}
-        </label>
-      ) : field.type === 'multiselect' ? (
-        <div className="space-y-1">
-          {(field.options ?? []).map((opt) => {
-            const arr = Array.isArray(value) ? (value as string[]) : [];
-            return (
-              <label key={opt} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={arr.includes(opt)}
-                  onChange={(e) => {
-                    const next = e.target.checked ? [...arr, opt] : arr.filter((v) => v !== opt);
-                    setValue(field.id, next);
-                  }}
-                />
-                {opt}
-              </label>
-            );
-          })}
-        </div>
-      ) : (
-        <Input
-          id={field.id}
-          type={inputType}
-          placeholder={field.placeholder}
-          {...register(field.id)}
-        />
-      )}
+      <FieldControl
+        field={field}
+        register={register}
+        value={value}
+        setValue={setValue}
+        checkboxLabel={t('checkboxYes')}
+      />
 
       {field.helpText ? <p className="text-xs text-muted-foreground">{field.helpText}</p> : null}
       {error ? <p className="text-xs text-danger">{errorText(error)}</p> : null}
@@ -124,13 +165,13 @@ export function FormFieldInput({ field, error, register, value, setValue }: Form
   );
 }
 
-export type SectionStepProps = {
+export type SectionStepProps = Readonly<{
   section: FormSchema['sections'][number];
   values: Values;
   fieldErrors: Record<string, string>;
   register: UseFormRegister<Values>;
   setValue: UseFormSetValue<Values>;
-};
+}>;
 
 export function SectionStep({
   section,
@@ -164,11 +205,11 @@ export function SectionStep({
   );
 }
 
-type FormRendererProps = {
+type FormRendererProps = Readonly<{
   schema: FormSchema;
   preview?: boolean;
   fieldErrors?: Record<string, string>;
-};
+}>;
 
 /** Renders form sections. In preview mode, shows all sections at once without submit. */
 export function FormRenderer({ schema, preview = false, fieldErrors = {} }: FormRendererProps) {

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
+import { useLocale, useTranslations } from 'next-intl';
 import { isFieldVisible, validateSubmission, type FormSchema, type FormField } from '@ca-tempo/domain';
 import { SectionStep } from '@/components/forms/form-renderer';
 import { Button } from '@/components/ui/button';
@@ -18,13 +19,13 @@ export type ProgramOption = {
 };
 export type WaiverInfo = { id: string; name: string; body: string };
 
-type Props = {
+type Props = Readonly<{
   formVersionId: string;
   schema: FormSchema;
   successMessage: string | null;
   options: ProgramOption[];
   waiver: WaiverInfo | null;
-};
+}>;
 
 type Values = Record<string, unknown>;
 type Step = { kind: 'section'; index: number } | { kind: 'options' } | { kind: 'waiver' };
@@ -35,11 +36,141 @@ function defaultValueFor(field: FormField): unknown {
   return '';
 }
 
-function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(0)}`;
+function formatPrice(cents: number, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
+function getSubmitLabel(
+  isLast: boolean,
+  pending: boolean,
+  t: ReturnType<typeof useTranslations<'register'>>,
+): string {
+  if (!isLast) return t('next');
+  if (pending) return t('submitting');
+  return t('submit');
+}
+
+type OptionsStepProps = Readonly<{
+  options: ProgramOption[];
+  optionId: string | null;
+  onSelect: (id: string) => void;
+  locale: string;
+  label: string;
+}>;
+
+function OptionsStep({ options, optionId, onSelect, locale, label }: OptionsStepProps) {
+  return (
+    <fieldset className="space-y-3">
+      <legend className="font-display text-xl uppercase tracking-wide">{label}</legend>
+      {options.map((opt) => (
+        <label
+          key={opt.id}
+          className="flex cursor-pointer items-start gap-3 rounded-md border border-input p-3"
+        >
+          <input
+            type="radio"
+            name="pass"
+            className="mt-1"
+            checked={optionId === opt.id}
+            onChange={() => onSelect(opt.id)}
+          />
+          <span className="flex-1">
+            <span className="flex justify-between font-medium">
+              <span>{opt.name}</span>
+              <span>{formatPrice(opt.price_cents, locale)}</span>
+            </span>
+            {opt.description ? (
+              <span className="block text-sm text-muted-foreground">{opt.description}</span>
+            ) : null}
+          </span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+type WaiverStepProps = Readonly<{
+  waiver: WaiverInfo;
+  scrolledEnd: boolean;
+  onScrolledEnd: () => void;
+  sigType: 'drawn' | 'typed';
+  onSigTypeChange: (type: 'drawn' | 'typed') => void;
+  onSigDataChange: (data: string | null) => void;
+  typedName: string;
+  onTypedNameChange: (name: string) => void;
+  consent: boolean;
+  onConsentChange: (value: boolean) => void;
+  t: ReturnType<typeof useTranslations<'register'>>;
+}>;
+
+function WaiverStep({
+  waiver,
+  scrolledEnd,
+  onScrolledEnd,
+  sigType,
+  onSigTypeChange,
+  onSigDataChange,
+  typedName,
+  onTypedNameChange,
+  consent,
+  onConsentChange,
+  t,
+}: WaiverStepProps) {
+  return (
+    <div className="space-y-4">
+      <h2 className="font-display text-xl uppercase tracking-wide">{waiver.name}</h2>
+      <div
+        className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-md border border-input p-3 text-sm"
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight - 8) onScrolledEnd();
+        }}
+      >
+        {waiver.body}
+      </div>
+      {!scrolledEnd ? <p className="text-xs text-muted-foreground">{t('scrollToEnd')}</p> : null}
+
+      <div className="flex gap-4 text-sm">
+        <label className="flex items-center gap-2">
+          <input type="radio" checked={sigType === 'drawn'} onChange={() => onSigTypeChange('drawn')} />
+          {t('drawSignature')}
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="radio" checked={sigType === 'typed'} onChange={() => onSigTypeChange('typed')} />
+          {t('typeName')}
+        </label>
+      </div>
+
+      {sigType === 'drawn' ? (
+        <SignaturePad onChange={onSigDataChange} />
+      ) : (
+        <Input
+          placeholder={t('typeNamePlaceholder')}
+          value={typedName}
+          onChange={(e) => onTypedNameChange(e.target.value)}
+        />
+      )}
+
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="mt-1"
+          checked={consent}
+          onChange={(e) => onConsentChange(e.target.checked)}
+        />
+        {t('consent')}
+      </label>
+    </div>
+  );
 }
 
 export function RegisterForm({ formVersionId, schema, successMessage, options, waiver }: Props) {
+  const t = useTranslations('register');
+  const locale = useLocale();
   const { register, watch, getValues, setValue } = useForm<Values>({
     defaultValues: useMemo(() => {
       const dv: Values = {};
@@ -75,38 +206,44 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
   const isLast = stepIdx === steps.length - 1;
 
   function validateSection(fields: FormField[]): boolean {
-    const scope = fields.filter((f) => isFieldVisible(f, values)).map((f) => f.id);
+    const scope = new Set(
+      fields.filter((f) => isFieldVisible(f, values)).map((f) => f.id),
+    );
     const result = validateSubmission(schema, getValues());
-    const errors = (result.ok ? [] : result.errors).filter((e) => scope.includes(e.fieldId));
+    const errors = (result.ok ? [] : result.errors).filter((e) => scope.has(e.fieldId));
     const map: Record<string, string> = {};
     for (const e of errors) map[e.fieldId] = e.message;
     setFieldErrors(map);
     return errors.length === 0;
   }
 
-  function stepValid(): boolean {
-    if (step.kind === 'section') return validateSection(schema.sections[step.index].fields);
-    if (step.kind === 'options') {
-      if (!optionId) {
-        setFormError('Please choose a pass.');
-        return false;
-      }
-      return true;
-    }
+  function validateWaiverStep(): boolean {
     if (!scrolledEnd) {
-      setFormError('Please read the waiver to the end.');
+      setFormError(t('readWaiver'));
       return false;
     }
     const signed = sigType === 'typed' ? typedName.trim().length > 1 : Boolean(sigData);
     if (!signed) {
-      setFormError('Please sign the waiver.');
+      setFormError(t('signWaiver'));
       return false;
     }
     if (!consent) {
-      setFormError('Please provide consent to continue.');
+      setFormError(t('consentRequired'));
       return false;
     }
     return true;
+  }
+
+  function stepValid(): boolean {
+    if (step.kind === 'section') return validateSection(schema.sections[step.index].fields);
+    if (step.kind === 'options') {
+      if (!optionId) {
+        setFormError(t('choosePassError'));
+        return false;
+      }
+      return true;
+    }
+    return validateWaiverStep();
   }
 
   function goNext() {
@@ -123,7 +260,7 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
       const map: Record<string, string> = {};
       for (const e of result.errors) map[e.fieldId] = e.message;
       setFieldErrors(map);
-      setFormError('Please review the earlier steps.');
+      setFormError(t('reviewSteps'));
       return;
     }
 
@@ -144,24 +281,61 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
         const map: Record<string, string> = {};
         for (const e of res.errors) map[e.fieldId] = e.message;
         setFieldErrors(map);
-        setFormError('Please fix the highlighted fields.');
+        setFormError(t('fixFields'));
       } else {
-        setFormError(
-          res.error === 'closed'
-            ? 'Registration for this form is closed.'
-            : 'Something went wrong. Please try again.',
-        );
+        setFormError(res.error === 'closed' ? t('closed') : t('genericError'));
       }
     });
+  }
+
+  function renderStepContent() {
+    if (step.kind === 'section') {
+      return (
+        <SectionStep
+          section={schema.sections[step.index]}
+          values={values}
+          fieldErrors={fieldErrors}
+          register={register}
+          setValue={setValue}
+        />
+      );
+    }
+    if (step.kind === 'options') {
+      return (
+        <OptionsStep
+          options={options}
+          optionId={optionId}
+          onSelect={setOptionId}
+          locale={locale}
+          label={t('choosePass')}
+        />
+      );
+    }
+    if (waiver) {
+      return (
+        <WaiverStep
+          waiver={waiver}
+          scrolledEnd={scrolledEnd}
+          onScrolledEnd={() => setScrolledEnd(true)}
+          sigType={sigType}
+          onSigTypeChange={setSigType}
+          onSigDataChange={setSigData}
+          typedName={typedName}
+          onTypedNameChange={setTypedName}
+          consent={consent}
+          onConsentChange={setConsent}
+          t={t}
+        />
+      );
+    }
+    return null;
   }
 
   if (done) {
     return (
       <Card className="p-6">
-        <h2 className="mb-2 font-display text-2xl uppercase tracking-wide">Thank you!</h2>
-        <p className="text-muted-foreground">
-          {successMessage ?? 'Your registration was received. We will be in touch shortly.'}
-        </p>
+        <h2 className="mb-2 font-display text-2xl uppercase tracking-wide">{t('thankYou')}</h2>
+        <p className="text-muted-foreground">{successMessage ?? t('defaultSuccess')}</p>
       </Card>
     );
   }
@@ -177,104 +351,11 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
     >
       {steps.length > 1 ? (
         <p className="mb-4 text-sm text-muted-foreground">
-          Step {stepIdx + 1} of {steps.length}
+          {t('step', { current: stepIdx + 1, total: steps.length })}
         </p>
       ) : null}
 
-      <Card className="space-y-4 p-6">
-        {step.kind === 'section' ? (
-          <SectionStep
-            section={schema.sections[step.index]}
-            values={values}
-            fieldErrors={fieldErrors}
-            register={register}
-            setValue={setValue}
-          />
-        ) : step.kind === 'options' ? (
-          <fieldset className="space-y-3">
-            <legend className="font-display text-xl uppercase tracking-wide">Choose your pass</legend>
-            {options.map((opt) => (
-              <label
-                key={opt.id}
-                className="flex cursor-pointer items-start gap-3 rounded-md border border-input p-3"
-              >
-                <input
-                  type="radio"
-                  name="pass"
-                  className="mt-1"
-                  checked={optionId === opt.id}
-                  onChange={() => setOptionId(opt.id)}
-                />
-                <span className="flex-1">
-                  <span className="flex justify-between font-medium">
-                    <span>{opt.name}</span>
-                    <span>{formatPrice(opt.price_cents)}</span>
-                  </span>
-                  {opt.description ? (
-                    <span className="block text-sm text-muted-foreground">{opt.description}</span>
-                  ) : null}
-                </span>
-              </label>
-            ))}
-          </fieldset>
-        ) : waiver ? (
-          <div className="space-y-4">
-            <h2 className="font-display text-xl uppercase tracking-wide">{waiver.name}</h2>
-            <div
-              className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-md border border-input p-3 text-sm"
-              onScroll={(e) => {
-                const el = e.currentTarget;
-                if (el.scrollTop + el.clientHeight >= el.scrollHeight - 8) setScrolledEnd(true);
-              }}
-            >
-              {waiver.body}
-            </div>
-            {!scrolledEnd ? (
-              <p className="text-xs text-muted-foreground">Scroll to the end to sign.</p>
-            ) : null}
-
-            <div className="flex gap-4 text-sm">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  checked={sigType === 'drawn'}
-                  onChange={() => setSigType('drawn')}
-                />
-                Draw signature
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  checked={sigType === 'typed'}
-                  onChange={() => setSigType('typed')}
-                />
-                Type name
-              </label>
-            </div>
-
-            {sigType === 'drawn' ? (
-              <SignaturePad onChange={setSigData} />
-            ) : (
-              <Input
-                placeholder="Type your full name"
-                value={typedName}
-                onChange={(e) => setTypedName(e.target.value)}
-              />
-            )}
-
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-              />
-              I am the parent/legal guardian, I have read and agree to this waiver, and I consent to
-              signing electronically.
-            </label>
-          </div>
-        ) : null}
-      </Card>
+      <Card className="space-y-4 p-6">{renderStepContent()}</Card>
 
       {formError ? <p className="mt-3 text-sm text-danger">{formError}</p> : null}
 
@@ -285,10 +366,10 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
           onClick={() => setStepIdx((i) => Math.max(0, i - 1))}
           disabled={stepIdx === 0 || pending}
         >
-          Back
+          {t('back')}
         </Button>
         <Button type="submit" disabled={pending}>
-          {isLast ? (pending ? 'Submitting…' : 'Submit registration') : 'Next'}
+          {getSubmitLabel(isLast, pending, t)}
         </Button>
       </div>
     </form>

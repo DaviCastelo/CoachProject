@@ -120,5 +120,37 @@
     "errorSave": "Failed to save draft",
     "errorPublish": "Failed to publish",
     "errorCreate": "Failed to create form"
+  },
+  "register": {
+    "step": "Step {current} of {total}",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit registration",
+    "submitting": "Submitting…",
+    "thankYou": "Thank you!",
+    "defaultSuccess": "Your registration was received. We will be in touch shortly.",
+    "choosePass": "Choose your pass",
+    "choosePassError": "Please choose a pass.",
+    "scrollToEnd": "Scroll to the end to sign.",
+    "drawSignature": "Draw signature",
+    "typeName": "Type name",
+    "typeNamePlaceholder": "Type your full name",
+    "consent": "I am the parent/legal guardian, I have read and agree to this waiver, and I consent to signing electronically.",
+    "readWaiver": "Please read the waiver to the end.",
+    "signWaiver": "Please sign the waiver.",
+    "consentRequired": "Please provide consent to continue.",
+    "reviewSteps": "Please review the earlier steps.",
+    "fixFields": "Please fix the highlighted fields.",
+    "closed": "Registration for this form is closed.",
+    "genericError": "Something went wrong. Please try again.",
+    "checkboxYes": "Yes",
+    "errors": {
+      "required": "This field is required.",
+      "invalid_email": "Enter a valid email.",
+      "invalid_option": "Choose a valid option.",
+      "minYear": "Year must be {year} or later.",
+      "maxYear": "Year must be {year} or earlier.",
+      "invalid": "Invalid value."
+    }
   }
 }

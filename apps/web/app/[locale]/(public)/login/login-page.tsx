@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -28,8 +28,7 @@ export default function LoginPage() {
   // NEXT_PUBLIC_SITE_URL está configurado errado no ambiente).
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
-  async function handlePasswordLogin(e: React.FormEvent) {
-    e.preventDefault();
+  async function handlePasswordLogin() {
     setLoading(true);
     setError(null);
 
@@ -94,7 +93,13 @@ export default function LoginPage() {
             {sent ? (
               <p className="text-center text-muted-foreground">{t('magicLinkSent')}</p>
             ) : (
-              <form onSubmit={handlePasswordLogin} className="space-y-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void handlePasswordLogin();
+                }}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="email">{t('email')}</Label>
                   <Input
