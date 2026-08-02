@@ -22,6 +22,7 @@ export function AppShell({ children, variant }: AppShellProps) {
       ? [
           { href: '/coach', label: t('dashboard') },
           { href: '/coach/submissions', label: t('registrations') },
+          { href: '/coach/forms', label: t('forms') },
           { href: '/coach/schedule', label: t('schedule') },
           { href: '/coach/athletes', label: t('athletes') },
           { href: '/coach/settings', label: t('settings') },
