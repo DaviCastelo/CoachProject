@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter, usePathname, routing } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ export function LocaleSwitcher() {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,7 +42,13 @@ export function LocaleSwitcher() {
 
   function choose(next: string) {
     setOpen(false);
-    if (next !== locale) router.replace(pathname, { locale: next });
+    if (next === locale) return;
+    // client navigation (no full refresh) — startTransition re-renders the
+    // localized server components for the new locale.
+    startTransition(() => {
+      router.replace(pathname, { locale: next });
+      router.refresh();
+    });
   }
 
   return (
@@ -61,7 +68,7 @@ export function LocaleSwitcher() {
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-1 min-w-48 overflow-hidden rounded-md border bg-background shadow-lg"
+          className="absolute right-0 z-50 mt-1 min-w-48 overflow-hidden rounded-md border bg-card text-card-foreground shadow-lg"
         >
           {routing.locales.map((l) => (
             <button

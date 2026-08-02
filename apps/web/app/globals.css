@@ -30,23 +30,25 @@
   --radius-card: 12px;
   --spacing-touch: 56px;
 
-  --color-border: var(--color-ink-200);
-  --color-background: var(--color-paper);
-  --color-foreground: var(--color-ink-950);
-  --color-card: var(--color-paper);
-  --color-card-foreground: var(--color-ink-950);
-  --color-primary: var(--color-accent-500);
-  --color-primary-foreground: var(--color-ink-950);
-  --color-secondary: var(--color-ink-100);
-  --color-secondary-foreground: var(--color-ink-900);
-  --color-muted: var(--color-ink-100);
-  --color-muted-foreground: var(--color-ink-500);
-  --color-accent: var(--color-accent-100);
-  --color-accent-foreground: var(--color-ink-900);
-  --color-destructive: var(--color-danger);
-  --color-destructive-foreground: var(--color-paper);
-  --color-input: var(--color-ink-200);
-  --color-ring: var(--color-accent-500);
+  --color-border: var(--border);
+  /* Tokens semânticos: apontam para as variáveis de runtime (:root / .dark),
+     para que bg-card, bg-background, text-muted-foreground, etc. acompanhem o tema. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
 @layer base {
