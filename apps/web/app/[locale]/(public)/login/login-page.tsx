@@ -23,7 +23,9 @@ export default function LoginPage() {
     searchParams.get('error') === 'unauthorized' ? t('unauthorized') : null,
   );
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+  // Sempre usa a origem atual (evita redirect para localhost quando
+  // NEXT_PUBLIC_SITE_URL está configurado errado no ambiente).
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
   async function handleMagicLink(e: React.FormEvent) {
     e.preventDefault();
