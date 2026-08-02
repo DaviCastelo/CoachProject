@@ -78,6 +78,15 @@ describe('field CRUD', () => {
     schema = removeField(schema, 's1', fieldId);
     expect(schema.sections[0].fields).toHaveLength(0);
   });
+
+  it('adds multiple fields of the same type with unique ids', () => {
+    let schema = addSection(createEmptySchema(), { id: 's1', title: 'Section' });
+    schema = addField(schema, 's1', { type: 'text', label: 'text' });
+    schema = addField(schema, 's1', { type: 'text', label: 'text' });
+    expect(schema.sections[0].fields).toHaveLength(2);
+    expect(schema.sections[0].fields[0].id).toBe('text');
+    expect(schema.sections[0].fields[1].id).toBe('text_2');
+  });
 });
 
 describe('reorderSections', () => {

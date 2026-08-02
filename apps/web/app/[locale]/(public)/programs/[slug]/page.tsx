@@ -26,8 +26,40 @@ function price(cents: number): string {
 
 function hashSlug(slug: string): number {
   let h = 0;
-  for (let i = 0; i < slug.length; i++) h = (h + slug.charCodeAt(i)) % GALLERY_IMAGES.length;
+  for (let i = 0; i < slug.length; i++) {
+    const code = slug.codePointAt(i) ?? 0;
+    h = (h + code) % GALLERY_IMAGES.length;
+    if (code > 0xffff) i++;
+  }
   return h;
+}
+
+function RegisterButton({
+  soldOut,
+  formSlug,
+  soldOutLabel,
+  registerLabel,
+}: Readonly<{
+  soldOut: boolean;
+  formSlug: string | null | undefined;
+  soldOutLabel: string;
+  registerLabel: string;
+}>) {
+  if (soldOut) {
+    return (
+      <Button size="lg" disabled>
+        {soldOutLabel}
+      </Button>
+    );
+  }
+  if (formSlug) {
+    return (
+      <Button asChild size="lg">
+        <Link href={`/register/${formSlug}`}>{registerLabel}</Link>
+      </Button>
+    );
+  }
+  return null;
 }
 
 async function loadProgram(slug: string) {
@@ -140,13 +172,12 @@ export default async function ProgramDetailPage({ params }: PageProps) {
           </div>
         ) : null}
 
-        {soldOut ? (
-          <Button size="lg" disabled>{t('soldOut')}</Button>
-        ) : form?.slug ? (
-          <Button asChild size="lg">
-            <Link href={`/register/${form.slug}`}>{t('registerNow')}</Link>
-          </Button>
-        ) : null}
+        <RegisterButton
+          soldOut={soldOut}
+          formSlug={form?.slug}
+          soldOutLabel={t('soldOut')}
+          registerLabel={t('registerNow')}
+        />
       </main>
     </>
   );

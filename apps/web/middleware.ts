@@ -36,6 +36,18 @@ function localizedUrl(request: NextRequest, path: string): URL {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Arquivos estáticos em public/ — não passar por i18n nem auth
+  if (
+    pathname.startsWith('/images/') ||
+    pathname.startsWith('/icons/') ||
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/sw.js' ||
+    pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
+
   const normalizedPath = stripLocale(pathname);
 
   // Rate limit auth routes
@@ -74,5 +86,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/(en|pt-BR|es)/:path*', '/((?!_next|api|auth|icons|manifest.webmanifest|sw.js|favicon.ico).*)'],
+  matcher: [
+    '/',
+    '/(en|pt-BR|es)/:path*',
+    '/((?!_next|api|auth|icons|images|manifest.webmanifest|sw.js|favicon.ico).*)',
+  ],
 };

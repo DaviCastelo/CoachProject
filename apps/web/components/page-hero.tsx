@@ -1,7 +1,7 @@
-import Image from 'next/image';
+import { StaticImage } from '@/components/static-image';
 import { cn } from '@/lib/utils';
 
-interface PageHeroProps {
+type PageHeroProps = Readonly<{
   imageSrc: string;
   imageAlt: string;
   title?: string;
@@ -10,7 +10,7 @@ interface PageHeroProps {
   className?: string;
   children?: React.ReactNode;
   priority?: boolean;
-}
+}>;
 
 export function PageHero({
   imageSrc,
@@ -31,7 +31,7 @@ export function PageHero({
       )}
     >
       <div className="absolute inset-0">
-        <Image
+        <StaticImage
           src={imageSrc}
           alt={imageAlt}
           fill

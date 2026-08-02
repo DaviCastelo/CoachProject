@@ -1,13 +1,13 @@
-import Image from 'next/image';
+import { StaticImage } from '@/components/static-image';
 import { cn } from '@/lib/utils';
 
-interface BrandLogoProps {
+type BrandLogoProps = Readonly<{
   size?: number;
   showName?: boolean;
   className?: string;
   nameClassName?: string;
   alt?: string;
-}
+}>;
 
 export function BrandLogo({
   size = 32,
@@ -18,7 +18,7 @@ export function BrandLogo({
 }: BrandLogoProps) {
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      <Image
+      <StaticImage
         src="/icons/logo.jpg"
         alt={alt}
         width={size}

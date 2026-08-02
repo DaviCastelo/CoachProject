@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import { StaticImage } from '@/components/static-image';
 import { getTranslations } from 'next-intl/server';
 import { EmptyState } from '@/components/empty-state';
 import { AthleticCard } from '@/components/athletic-card';
@@ -9,7 +9,7 @@ export default async function FamilyHomePage() {
   return (
     <div>
       <div className="relative h-36 overflow-hidden">
-        <Image
+        <StaticImage
           src="/images/hero-action-2.png"
           alt="Athlete training"
           fill

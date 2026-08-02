@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
-import Image from 'next/image';
+import { StaticImage } from '@/components/static-image';
 import { createServiceClient } from '@/lib/supabase/service';
 import { PageHero } from '@/components/page-hero';
 import { AthleticCard } from '@/components/athletic-card';
@@ -51,7 +51,7 @@ export default async function ProgramsPage() {
                 <AthleticCard className="overflow-hidden">
                   <div className="flex gap-0">
                     <div className="relative hidden h-24 w-28 shrink-0 sm:block">
-                      <Image
+                      <StaticImage
                         src={`/images/gallery-${(i % 4) + 1}.png`}
                         alt=""
                         fill

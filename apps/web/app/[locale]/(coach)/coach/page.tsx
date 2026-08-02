@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import { StaticImage } from '@/components/static-image';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { requireRole } from '@/lib/auth/guards';
@@ -34,7 +34,7 @@ export default async function CoachDashboardPage() {
   return (
     <div>
       <div className="relative h-40 overflow-hidden">
-        <Image
+        <StaticImage
           src="/images/coaches-field.png"
           alt="Coaches on the field"
           fill

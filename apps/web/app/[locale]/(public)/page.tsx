@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
-import Image from 'next/image';
+import { StaticImage } from '@/components/static-image';
 import { createServiceClient } from '@/lib/supabase/service';
 import { Button } from '@/components/ui/button';
 import { PageHero } from '@/components/page-hero';
@@ -102,7 +102,7 @@ export default async function LandingPage() {
               <Link key={p.slug} href={`/programs/${p.slug}`} className="block">
                 <AthleticCard className="overflow-hidden">
                   <div className="relative h-40">
-                    <Image
+                    <StaticImage
                       src={`/images/gallery-${(i % 4) + 1}.png`}
                       alt=""
                       fill

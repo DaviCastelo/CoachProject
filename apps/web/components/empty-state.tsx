@@ -1,18 +1,18 @@
 'use client';
 
-import Image from 'next/image';
+import { StaticImage } from '@/components/static-image';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-interface EmptyStateProps {
+type EmptyStateProps = Readonly<{
   titleKey: string;
   descriptionKey: string;
   actionKey?: string;
   namespace?: 'coach' | 'family';
   imageSrc?: string;
   className?: string;
-}
+}>;
 
 export function EmptyState({
   titleKey,
@@ -27,7 +27,7 @@ export function EmptyState({
   return (
     <div className={cn('flex flex-col items-center justify-center py-12 px-4 text-center', className)}>
       <div className="relative mb-6 h-32 w-48 overflow-hidden rounded-lg border border-ink-700">
-        <Image
+        <StaticImage
           src={imageSrc}
           alt=""
           fill

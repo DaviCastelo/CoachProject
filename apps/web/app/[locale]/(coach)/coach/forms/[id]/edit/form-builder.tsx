@@ -49,25 +49,27 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-type Props = {
+type Props = Readonly<{
   initial: FormDetail;
-};
+}>;
 
 type DragItem =
   | { kind: 'section'; id: string }
   | { kind: 'field'; id: string; sectionId: string };
+
+type SortableSectionProps = Readonly<{
+  sectionId: string;
+  title: string;
+  children: React.ReactNode;
+  onRemove: () => void;
+}>;
 
 function SortableSection({
   sectionId,
   title,
   children,
   onRemove,
-}: {
-  sectionId: string;
-  title: string;
-  children: React.ReactNode;
-  onRemove: () => void;
-}) {
+}: SortableSectionProps) {
   const t = useTranslations('forms');
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `section:${sectionId}`,
@@ -99,19 +101,21 @@ function SortableSection({
   );
 }
 
+type SortableFieldProps = Readonly<{
+  field: FormField;
+  sectionId: string;
+  selected: boolean;
+  onSelect: () => void;
+  onRemove: () => void;
+}>;
+
 function SortableField({
   field,
   sectionId,
   selected,
   onSelect,
   onRemove,
-}: {
-  field: FormField;
-  sectionId: string;
-  selected: boolean;
-  onSelect: () => void;
-  onRemove: () => void;
-}) {
+}: SortableFieldProps) {
   const t = useTranslations('forms');
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `field:${sectionId}:${field.id}`,
@@ -149,6 +153,22 @@ function SortableField({
   );
 }
 
+function DragOverlayContent({ activeDrag }: Readonly<{ activeDrag: DragItem | null }>) {
+  if (!activeDrag) return null;
+  if (activeDrag.kind === 'section') {
+    return (
+      <div className="rounded-md border border-primary bg-card px-3 py-2 text-sm shadow-lg">
+        Section
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-md border border-primary bg-card px-3 py-2 text-sm shadow-lg">
+      {activeDrag.id}
+    </div>
+  );
+}
+
 export function FormBuilder({ initial }: Props) {
   const t = useTranslations('forms');
   const router = useRouter();
@@ -160,6 +180,7 @@ export function FormBuilder({ initial }: Props) {
   const [hasDraft, setHasDraft] = useState(initial.hasDraft);
   const [publishedVersion, setPublishedVersion] = useState(initial.publishedVersion?.version ?? null);
   const [selected, setSelected] = useState<{ sectionId: string; fieldId: string } | null>(null);
+  const [fieldPickerKeys, setFieldPickerKeys] = useState<Record<string, number>>({});
   const [activeDrag, setActiveDrag] = useState<DragItem | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -222,14 +243,44 @@ export function FormBuilder({ initial }: Props) {
   }
 
   function handleAddField(sectionId: string, type: FieldType) {
+    let newFieldId: string | undefined;
     setSchema((s) => {
       const updated = addField(s, sectionId, { type, label: type });
-      const section = updated.sections.find((sec) => sec.id === sectionId);
-      const newField = section?.fields[section.fields.length - 1];
-      if (newField) setSelected({ sectionId, fieldId: newField.id });
+      newFieldId = updated.sections.find((sec) => sec.id === sectionId)?.fields.at(-1)?.id;
       return updated;
     });
+    if (newFieldId) setSelected({ sectionId, fieldId: newFieldId });
+    setFieldPickerKeys((keys) => ({ ...keys, [sectionId]: (keys[sectionId] ?? 0) + 1 }));
   }
+
+  const handleRemoveSection = useCallback((sectionId: string) => {
+    setSchema((s) => removeSection(s, sectionId));
+    setSelected((sel) => (sel?.sectionId === sectionId ? null : sel));
+  }, []);
+
+  const handleRemoveField = useCallback((sectionId: string, fieldId: string) => {
+    setSchema((s) => removeField(s, sectionId, fieldId));
+    setSelected((sel) => (sel?.fieldId === fieldId ? null : sel));
+  }, []);
+
+  const handleSelectField = useCallback((sectionId: string, fieldId: string) => {
+    setSelected({ sectionId, fieldId });
+  }, []);
+
+  const handleSectionTitleChange = useCallback((sectionId: string, title: string) => {
+    setSchema((s) => updateSection(s, sectionId, { title }));
+  }, []);
+
+  const handleSectionDescriptionChange = useCallback((sectionId: string, description: string) => {
+    setSchema((s) => updateSection(s, sectionId, { description }));
+  }, []);
+
+  const handleFieldChange = useCallback(
+    (sectionId: string, fieldId: string, patch: Partial<FormField>) => {
+      setSchema((s) => updateField(s, sectionId, fieldId, patch));
+    },
+    [],
+  );
 
   function handleSaveDraft() {
     setError(null);
@@ -332,27 +383,18 @@ export function FormBuilder({ initial }: Props) {
                   key={section.id}
                   sectionId={section.id}
                   title={section.title ?? section.id}
-                  onRemove={() => {
-                    setSchema((s) => removeSection(s, section.id));
-                    if (selected?.sectionId === section.id) setSelected(null);
-                  }}
+                  onRemove={() => handleRemoveSection(section.id)}
                 >
                   <div className="mb-3 space-y-2">
                     <Input
                       placeholder={t('sectionTitle')}
                       value={section.title ?? ''}
-                      onChange={(e) =>
-                        setSchema((s) => updateSection(s, section.id, { title: e.target.value }))
-                      }
+                      onChange={(e) => handleSectionTitleChange(section.id, e.target.value)}
                     />
                     <Input
                       placeholder={t('sectionDescription')}
                       value={section.description ?? ''}
-                      onChange={(e) =>
-                        setSchema((s) =>
-                          updateSection(s, section.id, { description: e.target.value }),
-                        )
-                      }
+                      onChange={(e) => handleSectionDescriptionChange(section.id, e.target.value)}
                     />
                   </div>
 
@@ -369,18 +411,18 @@ export function FormBuilder({ initial }: Props) {
                           selected={
                             selected?.sectionId === section.id && selected?.fieldId === field.id
                           }
-                          onSelect={() => setSelected({ sectionId: section.id, fieldId: field.id })}
-                          onRemove={() => {
-                            setSchema((s) => removeField(s, section.id, field.id));
-                            if (selected?.fieldId === field.id) setSelected(null);
-                          }}
+                          onSelect={() => handleSelectField(section.id, field.id)}
+                          onRemove={() => handleRemoveField(section.id, field.id)}
                         />
                       ))}
                     </div>
                   </SortableContext>
 
                   <div className="mt-3 flex items-center gap-2">
-                    <Select onValueChange={(v) => handleAddField(section.id, v as FieldType)}>
+                    <Select
+                      key={fieldPickerKeys[section.id] ?? 0}
+                      onValueChange={(v) => handleAddField(section.id, v as FieldType)}
+                    >
                       <SelectTrigger className="h-8 text-xs">
                         <SelectValue placeholder={t('addField')} />
                       </SelectTrigger>
@@ -398,15 +440,7 @@ export function FormBuilder({ initial }: Props) {
             </SortableContext>
 
             <DragOverlay>
-              {activeDrag?.kind === 'section' ? (
-                <div className="rounded-md border border-primary bg-card px-3 py-2 text-sm shadow-lg">
-                  Section
-                </div>
-              ) : activeDrag?.kind === 'field' ? (
-                <div className="rounded-md border border-primary bg-card px-3 py-2 text-sm shadow-lg">
-                  {activeDrag.id}
-                </div>
-              ) : null}
+              <DragOverlayContent activeDrag={activeDrag} />
             </DragOverlay>
           </DndContext>
 
@@ -419,9 +453,7 @@ export function FormBuilder({ initial }: Props) {
               field={selectedField}
               sectionId={selected.sectionId}
               schema={schema}
-              onChange={(sectionId, fieldId, patch) =>
-                setSchema((s) => updateField(s, sectionId, fieldId, patch))
-              }
+              onChange={handleFieldChange}
             />
           ) : (
             <p className="text-sm text-muted-foreground">{t('selectField')}</p>

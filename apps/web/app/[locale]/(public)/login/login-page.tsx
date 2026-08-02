@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
+import { StaticImage } from '@/components/static-image';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -152,7 +152,7 @@ export default function LoginPage() {
       </main>
 
       <div className="relative hidden min-h-[calc(100vh-7rem)] flex-1 lg:block">
-        <Image
+        <StaticImage
           src="/images/hero-action-2.png"
           alt="Athletes in training"
           fill
