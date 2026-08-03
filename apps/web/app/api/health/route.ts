@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { checkServiceRoleConfig } from '@/lib/supabase/service-config';
 
 export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -7,6 +8,19 @@ export async function GET() {
   if (!supabaseUrl || !supabaseKey) {
     return Response.json(
       { status: 'degraded', ts: new Date().toISOString(), reason: 'missing_config' },
+      { status: 503 },
+    );
+  }
+
+  const serviceRole = checkServiceRoleConfig();
+  if (!serviceRole.ok) {
+    return Response.json(
+      {
+        status: 'degraded',
+        ts: new Date().toISOString(),
+        reason: 'invalid_service_role_key',
+        detail: serviceRole.reason,
+      },
       { status: 503 },
     );
   }

@@ -19,6 +19,15 @@ export type ProgramOption = {
 };
 export type WaiverInfo = { id: string; name: string; body: string };
 
+type SubmitErrorCode = 'closed' | 'incomplete_mapping' | 'config_error' | 'not_found' | 'server_error';
+
+function submitErrorMessageKey(error: SubmitErrorCode): 'closed' | 'incompleteMapping' | 'configError' | 'genericError' {
+  if (error === 'closed') return 'closed';
+  if (error === 'incomplete_mapping') return 'incompleteMapping';
+  if (error === 'config_error') return 'configError';
+  return 'genericError';
+}
+
 type Props = Readonly<{
   formVersionId: string;
   schema: FormSchema;
@@ -283,13 +292,7 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
         setFieldErrors(map);
         setFormError(t('fixFields'));
       } else {
-        const messageKey =
-          res.error === 'closed'
-            ? 'closed'
-            : res.error === 'incomplete_mapping'
-              ? 'incompleteMapping'
-              : 'genericError';
-        setFormError(t(messageKey));
+        setFormError(t(submitErrorMessageKey(res.error)));
       }
     });
   }

@@ -182,6 +182,7 @@
     "fixFields": "Por favor, corrija os campos destacados.",
     "closed": "As inscrições para este formulário estão encerradas.",
     "incompleteMapping": "Este formulário ainda não está configurado corretamente (nome e data de nascimento do atleta precisam estar mapeados). Entre em contato com a organização.",
+    "configError": "Inscrições temporariamente indisponíveis. Tente mais tarde ou entre em contato com a organização.",
     "genericError": "Algo deu errado. Tente novamente.",
     "checkboxYes": "Sim",
     "errors": {

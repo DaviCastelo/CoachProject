@@ -25,6 +25,8 @@ COOKIE_SECRET=<min 32 caracteres aleatórios>
 
 Após alterar variáveis na Vercel, faça **Redeploy** (Deployments → ⋯ → Redeploy) para o runtime carregar os novos valores.
 
+**Diagnóstico rápido:** após o deploy, acesse `https://ca-tempo.vercel.app/api/health`. Se `reason` for `invalid_service_role_key`, a chave ainda está errada (`detail`: `same_as_anon` | `not_service_role` | `missing`).
+
 ### Erro RLS ao criar formulário (`violates row-level security policy for table "forms"`)
 
 **Causa:** `SUPABASE_SERVICE_ROLE_KEY` incorreta (geralmente a anon key no lugar da service role).
