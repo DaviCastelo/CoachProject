@@ -1,0 +1,17 @@
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+
+/**
+ * Cliente Supabase com a anon key — apenas server-side para RPCs públicas
+ * (ex.: submit_public_registration) que são SECURITY DEFINER.
+ * Não usar para operações que exigem bypass de RLS (storage, etc.).
+ */
+export function createAnonServerClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  }
+  return createSupabaseClient(url, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
