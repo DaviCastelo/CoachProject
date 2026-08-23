@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { isFieldVisible, type FormSchema, type FormField } from '@ca-tempo/domain';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SignatureFieldInput } from '@/components/forms/signature-field-input';
 
 type Values = Record<string, unknown>;
 
@@ -30,6 +31,7 @@ function useErrorText() {
     if (message === 'invalid_option') return t('invalid_option');
     if (message.startsWith('minYear:')) return t('minYear', { year: message.split(':')[1] });
     if (message.startsWith('maxYear:')) return t('maxYear', { year: message.split(':')[1] });
+    if (message === 'invalid_signature') return t('invalid_signature');
     return t('invalid');
   };
 }
@@ -118,6 +120,16 @@ function FieldControl({ field, register, value, setValue, checkboxLabel }: Field
           </label>
         ))}
       </div>
+    );
+  }
+
+  if (field.type === 'signature') {
+    return (
+      <SignatureFieldInput
+        fieldId={field.id}
+        value={value}
+        onChange={(next) => setValue(field.id, next, { shouldDirty: true, shouldValidate: true })}
+      />
     );
   }
 

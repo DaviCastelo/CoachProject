@@ -27,6 +27,8 @@ select lives_ok(
   'anon role can call submit_public_registration'
 );
 
+reset role;
+
 select is(
   (select count(*)::int from form_submissions where organization_id='00000000-0000-0000-0000-0000000000e1'),
   1,

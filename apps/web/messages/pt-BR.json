@@ -24,6 +24,8 @@
     "email": "Endereço de e-mail",
     "emailPlaceholder": "voce@exemplo.com",
     "password": "Senha",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
     "sendMagicLink": "Enviar link mágico",
     "magicLinkSent": "Verifique seu e-mail para o link de acesso",
     "continueWithGoogle": "Continuar com Google",
@@ -76,7 +78,8 @@
     "quickActions": "Ações rápidas",
     "viewSubmissions": "Ver inscrições",
     "manageForms": "Gerenciar formulários",
-    "viewPrograms": "Ver programas públicos"
+    "viewPrograms": "Ver programas públicos",
+    "upcomingSessions": "Próximas sessões"
   },
   "family": {
     "homeTitle": "Portal da Família",
@@ -158,7 +161,157 @@
     "selectField": "Selecione um campo para editar",
     "errorSave": "Falha ao salvar rascunho",
     "errorPublish": "Falha ao publicar",
-    "errorCreate": "Falha ao criar formulário"
+    "errorCreate": "Falha ao criar formulário",
+    "optionPlaceholder": "Opção {n}",
+    "removeOption": "Remover opção",
+    "fieldLabelPlaceholder": "Ex.: Nome do atleta",
+    "mapsToLabel": "Este campo preenche…",
+    "mapsToHint": "Liga a resposta ao cadastro do atleta/responsável.",
+    "mapsToBadge": "Campo mapeado",
+    "advanced": "Opções avançadas",
+    "showIfHint": "Mostrar este campo só quando outro tiver um valor.",
+    "showIfAlways": "Sempre visível",
+    "paletteTitle": "Adicionar campo",
+    "tabEdit": "Editor",
+    "tabPreview": "Pré-visualização",
+    "dragSection": "Arrastar seção",
+    "dragField": "Arrastar campo",
+    "untitledSection": "Seção sem título",
+    "untitledField": "Campo sem título",
+    "sectionN": "Seção {n}",
+    "emptySection": "Adicione campos usando a paleta ao lado.",
+    "startTitle": "Comece seu formulário",
+    "startSubtitle": "Escolha um modelo pronto para editar ou comece em branco.",
+    "startBlank": "Começar em branco",
+    "templateApplied": "Modelo aplicado — revise e salve.",
+    "fieldGroups": {
+      "text": "Texto",
+      "choice": "Escolha",
+      "datetime": "Data",
+      "special": "Especiais",
+      "layout": "Layout"
+    },
+    "fieldTypes": {
+      "text": {
+        "label": "Texto curto",
+        "description": "Uma linha de texto"
+      },
+      "textarea": {
+        "label": "Parágrafo",
+        "description": "Texto longo, várias linhas"
+      },
+      "email": {
+        "label": "E-mail",
+        "description": "Endereço de e-mail válido"
+      },
+      "phone": {
+        "label": "Telefone",
+        "description": "Número de telefone"
+      },
+      "date": {
+        "label": "Data",
+        "description": "Seleção de data"
+      },
+      "dob": {
+        "label": "Data de nascimento",
+        "description": "Data com cálculo de idade"
+      },
+      "select": {
+        "label": "Lista suspensa",
+        "description": "Escolher uma opção em uma lista"
+      },
+      "multiselect": {
+        "label": "Múltipla escolha",
+        "description": "Selecionar várias opções"
+      },
+      "radio": {
+        "label": "Escolha única",
+        "description": "Uma opção entre botões"
+      },
+      "checkbox": {
+        "label": "Sim/Não",
+        "description": "Caixa para marcar"
+      },
+      "upload": {
+        "label": "Envio de arquivo",
+        "description": "Anexar um arquivo"
+      },
+      "signature": {
+        "label": "Assinatura",
+        "description": "Assinatura desenhada"
+      },
+      "header": {
+        "label": "Título de seção",
+        "description": "Texto de destaque, não coleta dados"
+      },
+      "info": {
+        "label": "Texto informativo",
+        "description": "Instrução ou aviso, não coleta dados"
+      },
+      "pass_selector": {
+        "label": "Seletor de pacote",
+        "description": "Escolha de programa/opção"
+      }
+    },
+    "templates": {
+      "registration": {
+        "name": "Inscrição padrão",
+        "description": "Atleta, responsável e saúde — pronto para usar."
+      },
+      "camp": {
+        "name": "Camp de férias",
+        "description": "Turma, tamanho de camiseta e contato."
+      },
+      "evaluation": {
+        "name": "Avaliação / Trial",
+        "description": "Nível, pé dominante e objetivos."
+      }
+    },
+    "mapGroups": {
+      "athlete": "Atleta",
+      "guardian": "Responsável",
+      "household": "Família",
+      "program": "Programa"
+    },
+    "mapTargets": {
+      "athlete": {
+        "first_name": "Nome do atleta",
+        "last_name": "Sobrenome do atleta",
+        "date_of_birth": "Data de nascimento",
+        "gender": "Gênero",
+        "current_club": "Clube atual",
+        "playing_level": "Nível de jogo",
+        "positions": "Posições",
+        "dominant_foot": "Pé dominante",
+        "jersey_size": "Tamanho da camiseta",
+        "school": "Escola",
+        "graduation_year": "Ano de formatura",
+        "short_term_goals": "Objetivos de curto prazo",
+        "long_term_goals": "Objetivos de longo prazo",
+        "allergies": "Alergias",
+        "medical_notes": "Observações médicas"
+      },
+      "guardian": {
+        "first_name": "Nome do responsável",
+        "last_name": "Sobrenome do responsável",
+        "email": "E-mail do responsável",
+        "phone": "Telefone do responsável",
+        "relationship": "Parentesco"
+      },
+      "household": {
+        "name": "Nome da família"
+      },
+      "program": {
+        "type": "Tipo de programa"
+      }
+    },
+    "delete": "Apagar",
+    "deleteTitle": "Apagar formulário?",
+    "deleteBody": "Isso remove o formulário \"{name}\" e todas as suas versões. Não dá para desfazer.",
+    "deleteConfirm": "Apagar",
+    "deleteCancel": "Cancelar",
+    "deleting": "Apagando…",
+    "deleteBlocked": "Este formulário já tem inscrições. Feche ou arquive em vez de apagar."
   },
   "register": {
     "step": "Passo {current} de {total}",
@@ -174,6 +327,8 @@
     "drawSignature": "Desenhar assinatura",
     "typeName": "Digitar nome",
     "typeNamePlaceholder": "Digite seu nome completo",
+    "clearSignature": "Limpar",
+    "signatureFromField": "A assinatura informada no formulário acima será aplicada a este waiver.",
     "consent": "Sou o pai/responsável legal, li e concordo com este waiver e consinto em assinar eletronicamente.",
     "readWaiver": "Por favor, leia o waiver até o final.",
     "signWaiver": "Por favor, assine o waiver.",
@@ -191,6 +346,7 @@
       "invalid_option": "Escolha uma opção válida.",
       "minYear": "O ano deve ser {year} ou posterior.",
       "maxYear": "O ano deve ser {year} ou anterior.",
+      "invalid_signature": "Desenhe ou digite uma assinatura válida.",
       "invalid": "Valor inválido."
     }
   }

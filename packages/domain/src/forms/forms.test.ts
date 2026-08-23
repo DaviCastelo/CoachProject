@@ -3,6 +3,11 @@ import { parseFormSchema, collectableFields, type FormSchema } from './schema';
 import { isFieldVisible } from './conditional';
 import { mapSubmissionToEntities } from './mapping';
 import { validateSubmission } from './validate';
+import {
+  extractSignatureFromSchema,
+  hasSignatureField,
+  isDrawnSignatureValue,
+} from './signature';
 
 // Formulário de exemplo (baseado no schema do docs/03 / camp da CA Tempo).
 const campForm: FormSchema = parseFormSchema({
@@ -165,5 +170,55 @@ describe('validateSubmission', () => {
     // shirt is hidden when program.type != camp → not required
     const result = validateSubmission(campForm, { ...noShirt, 'program.type': 'private_1on1' });
     expect(result).toEqual({ ok: true });
+  });
+});
+
+describe('signature field helpers', () => {
+  const formWithSignature = parseFormSchema({
+    sections: [
+      {
+        id: 'sig',
+        fields: [
+          { id: 'sig_field', type: 'signature', label: 'Signature', required: true },
+        ],
+      },
+    ],
+  });
+
+  it('detects signature fields in schema', () => {
+    expect(hasSignatureField(formWithSignature)).toBe(true);
+    expect(hasSignatureField(campForm)).toBe(false);
+  });
+
+  it('extracts drawn signature from form data', () => {
+    const png = 'data:image/png;base64,abc';
+    expect(extractSignatureFromSchema(formWithSignature, { sig_field: png })).toEqual({
+      signatureType: 'drawn',
+      signatureData: png,
+    });
+    expect(isDrawnSignatureValue(png)).toBe(true);
+  });
+
+  it('extracts typed signature from form data', () => {
+    expect(extractSignatureFromSchema(formWithSignature, { sig_field: 'Maria Silva' })).toEqual({
+      signatureType: 'typed',
+      signatureData: 'Maria Silva',
+    });
+  });
+
+  it('requires signature when marked required', () => {
+    const result = validateSubmission(formWithSignature, {});
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContainEqual({ fieldId: 'sig_field', message: 'required' });
+    }
+  });
+
+  it('rejects a one-character typed signature', () => {
+    const result = validateSubmission(formWithSignature, { sig_field: 'A' });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContainEqual({ fieldId: 'sig_field', message: 'invalid_signature' });
+    }
   });
 });

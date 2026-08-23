@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { parseFormSchema } from '@ca-tempo/domain';
 import { createServiceClient } from '@/lib/supabase/service';
+import { resolveWaiverTemplateId } from './registration-helpers';
 import { RegisterForm, type ProgramOption, type WaiverInfo } from './register-form';
 import { AthleticCard } from '@/components/athletic-card';
 
@@ -16,7 +17,7 @@ export default async function RegisterPage({ params }: PageProps) {
 
   const { data: form } = await svc
     .from('forms')
-    .select('id, name, description, status, success_message, requires_waiver')
+    .select('id, organization_id, name, description, status, success_message, requires_waiver')
     .eq('slug', formSlug)
     .eq('status', 'published')
     .maybeSingle();
@@ -55,14 +56,17 @@ export default async function RegisterPage({ params }: PageProps) {
   }
 
   let waiver: WaiverInfo | null = null;
-  if (form.requires_waiver && program?.waiver_template_id) {
-    const { data: tpl } = await svc
-      .from('waiver_templates')
-      .select('id, name, body_markdown')
-      .eq('id', program.waiver_template_id)
-      .eq('is_active', true)
-      .maybeSingle();
-    if (tpl) waiver = { id: tpl.id, name: tpl.name, body: tpl.body_markdown };
+  if (form.requires_waiver) {
+    const templateId = await resolveWaiverTemplateId(svc, form.organization_id, program);
+    if (templateId) {
+      const { data: tpl } = await svc
+        .from('waiver_templates')
+        .select('id, name, body_markdown')
+        .eq('id', templateId)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (tpl) waiver = { id: tpl.id, name: tpl.name, body: tpl.body_markdown };
+    }
   }
 
   return (

@@ -1,6 +1,8 @@
 import { isFieldVisible } from './conditional';
 import { PRESENTATIONAL_TYPES, type FormSchema } from './schema';
 
+const PNG_DATA_URL_PREFIX = 'data:image/png';
+
 export type ValidationError = { fieldId: string; message: string };
 export type ValidationResult =
   | { ok: true }
@@ -70,6 +72,13 @@ export function validateSubmission(
 
       if (field.type === 'email' && !EMAIL_RE.test(String(value))) {
         errors.push({ fieldId: field.id, message: 'invalid_email' });
+      }
+
+      if (field.type === 'signature') {
+        const raw = String(value).trim();
+        if (raw && !raw.startsWith(PNG_DATA_URL_PREFIX) && raw.length <= 1) {
+          errors.push({ fieldId: field.id, message: 'invalid_signature' });
+        }
       }
     }
   }

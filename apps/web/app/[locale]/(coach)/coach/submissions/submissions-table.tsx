@@ -29,6 +29,8 @@ export type SubmissionRow = {
   dob: string | null;
   program: string | null;
   option: string | null;
+  formId: string | null;
+  formName: string | null;
   hasWaiver: boolean;
 };
 
@@ -65,6 +67,28 @@ function DetailRow({ label, value }: { label: string; value: string }) {
       <span className="text-right font-medium">{value}</span>
     </div>
   );
+}
+
+function isSignatureDataUrl(value: unknown): value is string {
+  return typeof value === 'string' && value.startsWith('data:image/png');
+}
+
+function FormAnswerRow({ label, value }: { label: string; value: unknown }) {
+  if (isSignatureDataUrl(value)) {
+    return (
+      <div className="col-span-full space-y-1 border-b border-border/50 py-1.5 last:border-0">
+        <span className="text-muted-foreground">{label}</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={value}
+          alt={label}
+          className="mt-1 max-h-24 rounded border border-input bg-white"
+        />
+      </div>
+    );
+  }
+
+  return <DetailRow label={label} value={String(value)} />;
 }
 
 export function SubmissionsTable({
@@ -116,6 +140,20 @@ export function SubmissionsTable({
     return <p className="text-muted-foreground">No registrations yet.</p>;
   }
 
+  // Agrupa as inscrições por formulário (mantém a ordem por data já vinda do servidor).
+  const groups: { key: string; name: string; rows: SubmissionRow[] }[] = [];
+  const groupIndex = new Map<string, number>();
+  for (const r of rows) {
+    const key = r.formId ?? '__none__';
+    let idx = groupIndex.get(key);
+    if (idx === undefined) {
+      idx = groups.length;
+      groupIndex.set(key, idx);
+      groups.push({ key, name: r.formName ?? 'Sem formulário', rows: [] });
+    }
+    groups[idx].rows.push(r);
+  }
+
   const extraData = details
     ? Object.entries(details.data).filter(
         ([, v]) => v != null && v !== '' && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean'),
@@ -126,31 +164,48 @@ export function SubmissionsTable({
     <div className="space-y-3">
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 
-      {rows.map((r) => (
-        <Card key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{r.athleteName}</span>
-              <StatusBadge status={r.status} />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {[r.program, r.option].filter(Boolean).join(' · ') || '—'}
-              {r.dob ? ` · DOB ${r.dob}` : ''}
-            </p>
-            <p className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleString()}</p>
+      {groups.map((g) => (
+        <section key={g.key} className="space-y-2">
+          <div className="flex items-center gap-2 pt-2">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-display text-sm uppercase tracking-wide text-muted-foreground">
+              {g.name}
+            </h2>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+              {g.rows.length}
+            </span>
+            <span className="h-px flex-1 bg-border" />
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => openDetails(r)}
-            aria-label={`View ${r.athleteName}`}
-          >
-            <Eye className="h-4 w-4" />
-            View
-          </Button>
-        </Card>
+          {g.rows.map((r) => (
+            <Card key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{r.athleteName}</span>
+                  <StatusBadge status={r.status} />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {[r.program, r.option].filter(Boolean).join(' · ') || '—'}
+                  {r.dob ? ` · DOB ${r.dob}` : ''}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(r.createdAt).toLocaleString()}
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => openDetails(r)}
+                aria-label={`View ${r.athleteName}`}
+              >
+                <Eye className="h-4 w-4" />
+                View
+              </Button>
+            </Card>
+          ))}
+        </section>
       ))}
 
       <Dialog
@@ -159,16 +214,18 @@ export function SubmissionsTable({
           if (!o) setOpenRow(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-w-2xl sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>{openRow?.athleteName}</DialogTitle>
             <DialogDescription>
-              {[openRow?.program, openRow?.option].filter(Boolean).join(' · ') || 'Registration'}
+              {[openRow?.formName, openRow?.program, openRow?.option]
+                .filter(Boolean)
+                .join(' · ') || 'Registration'}
               {openRow ? ` · ${openRow.status}` : ''}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="max-h-[55vh] overflow-y-auto text-sm">
+          <div className="max-h-[60vh] overflow-y-auto text-sm">
             {loadingDetails ? (
               <p className="text-muted-foreground">Loading…</p>
             ) : !details ? (
@@ -180,9 +237,11 @@ export function SubmissionsTable({
                     <p className="mb-1 font-display text-xs uppercase tracking-wide text-muted-foreground">
                       Athlete
                     </p>
-                    {Object.entries(details.athlete).map(([k, v]) => (
-                      <DetailRow key={k} label={prettyLabel(k)} value={v} />
-                    ))}
+                    <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+                      {Object.entries(details.athlete).map(([k, v]) => (
+                        <DetailRow key={k} label={prettyLabel(k)} value={v} />
+                      ))}
+                    </div>
                   </div>
                 ) : null}
 
@@ -191,9 +250,11 @@ export function SubmissionsTable({
                     <p className="mb-1 font-display text-xs uppercase tracking-wide text-muted-foreground">
                       Form answers
                     </p>
-                    {extraData.map(([k, v]) => (
-                      <DetailRow key={k} label={prettyLabel(k)} value={String(v)} />
-                    ))}
+                    <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+                      {extraData.map(([k, v]) => (
+                        <FormAnswerRow key={k} label={prettyLabel(k)} value={v} />
+                      ))}
+                    </div>
                   </div>
                 ) : null}
               </div>

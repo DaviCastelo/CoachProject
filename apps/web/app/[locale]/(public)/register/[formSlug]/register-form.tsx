@@ -3,13 +3,13 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocale, useTranslations } from 'next-intl';
-import { isFieldVisible, validateSubmission, type FormSchema, type FormField } from '@ca-tempo/domain';
+import { isFieldVisible, validateSubmission, hasSignatureField, extractSignatureFromSchema, type FormSchema, type FormField } from '@ca-tempo/domain';
 import { SectionStep } from '@/components/forms/form-renderer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { SignaturePad } from '@/components/forms/signature-pad';
 import { submitRegistration } from './actions';
-import { SignaturePad } from './signature-pad';
 
 export type ProgramOption = {
   id: string;
@@ -106,6 +106,7 @@ type WaiverStepProps = Readonly<{
   waiver: WaiverInfo;
   scrolledEnd: boolean;
   onScrolledEnd: () => void;
+  hideSignaturePad: boolean;
   sigType: 'drawn' | 'typed';
   onSigTypeChange: (type: 'drawn' | 'typed') => void;
   onSigDataChange: (data: string | null) => void;
@@ -120,6 +121,7 @@ function WaiverStep({
   waiver,
   scrolledEnd,
   onScrolledEnd,
+  hideSignaturePad,
   sigType,
   onSigTypeChange,
   onSigDataChange,
@@ -143,25 +145,31 @@ function WaiverStep({
       </div>
       {!scrolledEnd ? <p className="text-xs text-muted-foreground">{t('scrollToEnd')}</p> : null}
 
-      <div className="flex gap-4 text-sm">
-        <label className="flex items-center gap-2">
-          <input type="radio" checked={sigType === 'drawn'} onChange={() => onSigTypeChange('drawn')} />
-          {t('drawSignature')}
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="radio" checked={sigType === 'typed'} onChange={() => onSigTypeChange('typed')} />
-          {t('typeName')}
-        </label>
-      </div>
+      {!hideSignaturePad ? (
+        <>
+          <div className="flex gap-4 text-sm">
+            <label className="flex items-center gap-2">
+              <input type="radio" checked={sigType === 'drawn'} onChange={() => onSigTypeChange('drawn')} />
+              {t('drawSignature')}
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="radio" checked={sigType === 'typed'} onChange={() => onSigTypeChange('typed')} />
+              {t('typeName')}
+            </label>
+          </div>
 
-      {sigType === 'drawn' ? (
-        <SignaturePad onChange={onSigDataChange} />
+          {sigType === 'drawn' ? (
+            <SignaturePad onChange={onSigDataChange} />
+          ) : (
+            <Input
+              placeholder={t('typeNamePlaceholder')}
+              value={typedName}
+              onChange={(e) => onTypedNameChange(e.target.value)}
+            />
+          )}
+        </>
       ) : (
-        <Input
-          placeholder={t('typeNamePlaceholder')}
-          value={typedName}
-          onChange={(e) => onTypedNameChange(e.target.value)}
-        />
+        <p className="text-sm text-muted-foreground">{t('signatureFromField')}</p>
       )}
 
       <label className="flex items-start gap-2 text-sm">
@@ -213,6 +221,19 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
   const values = watch();
   const step = steps[stepIdx];
   const isLast = stepIdx === steps.length - 1;
+  const schemaHasSignature = useMemo(() => hasSignatureField(schema), [schema]);
+
+  function resolveEffectiveSignature(formValues: Values): { signatureType: 'drawn' | 'typed'; signatureData: string } | null {
+    const fromField = extractSignatureFromSchema(schema, formValues);
+    if (fromField) return fromField;
+    if (sigType === 'typed' && typedName.trim().length > 1) {
+      return { signatureType: 'typed', signatureData: typedName.trim() };
+    }
+    if (sigType === 'drawn' && sigData) {
+      return { signatureType: 'drawn', signatureData: sigData };
+    }
+    return null;
+  }
 
   function validateSection(fields: FormField[]): boolean {
     const scope = new Set(
@@ -231,7 +252,7 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
       setFormError(t('readWaiver'));
       return false;
     }
-    const signed = sigType === 'typed' ? typedName.trim().length > 1 : Boolean(sigData);
+    const signed = resolveEffectiveSignature(getValues());
     if (!signed) {
       setFormError(t('signWaiver'));
       return false;
@@ -274,12 +295,13 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
     }
 
     startTransition(async () => {
+      const effectiveSig = waiver ? resolveEffectiveSignature(getValues()) : null;
       const res = await submitRegistration(formVersionId, getValues(), {
         programOptionId: optionId,
         waiver: waiver
           ? {
-              signatureType: sigType,
-              signatureData: sigType === 'typed' ? typedName.trim() : (sigData ?? ''),
+              signatureType: effectiveSig?.signatureType ?? sigType,
+              signatureData: effectiveSig?.signatureData ?? '',
               consent,
             }
           : null,
@@ -326,6 +348,7 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
           waiver={waiver}
           scrolledEnd={scrolledEnd}
           onScrolledEnd={() => setScrolledEnd(true)}
+          hideSignaturePad={schemaHasSignature}
           sigType={sigType}
           onSigTypeChange={setSigType}
           onSigDataChange={setSigData}

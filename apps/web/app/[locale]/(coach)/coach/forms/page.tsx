@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { requireRole } from '@/lib/auth/guards';
 import { listForms } from './actions';
+import { DeleteFormButton } from './delete-form-button';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AthleticCard } from '@/components/athletic-card';
@@ -77,6 +78,7 @@ export default async function FormsPage() {
                       </Link>
                     </Button>
                   ) : null}
+                  <DeleteFormButton formId={form.id} formName={form.name} />
                 </div>
               </div>
             </AthleticCard>

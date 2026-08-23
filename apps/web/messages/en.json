@@ -24,6 +24,8 @@
     "email": "Email address",
     "emailPlaceholder": "you@example.com",
     "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "sendMagicLink": "Send magic link",
     "magicLinkSent": "Check your email for the sign-in link",
     "continueWithGoogle": "Continue with Google",
@@ -76,7 +78,8 @@
     "quickActions": "Quick actions",
     "viewSubmissions": "View registrations",
     "manageForms": "Manage forms",
-    "viewPrograms": "View public programs"
+    "viewPrograms": "View public programs",
+    "upcomingSessions": "Upcoming sessions"
   },
   "family": {
     "homeTitle": "Family Portal",
@@ -158,7 +161,157 @@
     "selectField": "Select a field to edit",
     "errorSave": "Failed to save draft",
     "errorPublish": "Failed to publish",
-    "errorCreate": "Failed to create form"
+    "errorCreate": "Failed to create form",
+    "optionPlaceholder": "Option {n}",
+    "removeOption": "Remove option",
+    "fieldLabelPlaceholder": "e.g. Athlete name",
+    "mapsToLabel": "This field fills…",
+    "mapsToHint": "Links the answer to the athlete/guardian profile.",
+    "mapsToBadge": "Mapped field",
+    "advanced": "Advanced options",
+    "showIfHint": "Show this field only when another field has a value.",
+    "showIfAlways": "Always visible",
+    "paletteTitle": "Add field",
+    "tabEdit": "Editor",
+    "tabPreview": "Preview",
+    "dragSection": "Drag section",
+    "dragField": "Drag field",
+    "untitledSection": "Untitled section",
+    "untitledField": "Untitled field",
+    "sectionN": "Section {n}",
+    "emptySection": "Add fields using the palette on the left.",
+    "startTitle": "Start your form",
+    "startSubtitle": "Pick a ready-made template to edit, or start blank.",
+    "startBlank": "Start blank",
+    "templateApplied": "Template applied — review and save.",
+    "fieldGroups": {
+      "text": "Text",
+      "choice": "Choice",
+      "datetime": "Date",
+      "special": "Special",
+      "layout": "Layout"
+    },
+    "fieldTypes": {
+      "text": {
+        "label": "Short text",
+        "description": "One line of text"
+      },
+      "textarea": {
+        "label": "Paragraph",
+        "description": "Long, multi-line text"
+      },
+      "email": {
+        "label": "Email",
+        "description": "Valid email address"
+      },
+      "phone": {
+        "label": "Phone",
+        "description": "Phone number"
+      },
+      "date": {
+        "label": "Date",
+        "description": "Date picker"
+      },
+      "dob": {
+        "label": "Date of birth",
+        "description": "Date with age calculation"
+      },
+      "select": {
+        "label": "Dropdown",
+        "description": "Pick one option from a list"
+      },
+      "multiselect": {
+        "label": "Multiple choice",
+        "description": "Select several options"
+      },
+      "radio": {
+        "label": "Single choice",
+        "description": "One option among buttons"
+      },
+      "checkbox": {
+        "label": "Yes/No",
+        "description": "A box to check"
+      },
+      "upload": {
+        "label": "File upload",
+        "description": "Attach a file"
+      },
+      "signature": {
+        "label": "Signature",
+        "description": "Drawn signature"
+      },
+      "header": {
+        "label": "Section title",
+        "description": "Emphasis text, no data"
+      },
+      "info": {
+        "label": "Info text",
+        "description": "Instruction or note, no data"
+      },
+      "pass_selector": {
+        "label": "Package selector",
+        "description": "Program/option choice"
+      }
+    },
+    "templates": {
+      "registration": {
+        "name": "Standard registration",
+        "description": "Athlete, guardian and health — ready to use."
+      },
+      "camp": {
+        "name": "Summer camp",
+        "description": "Session, jersey size and contact."
+      },
+      "evaluation": {
+        "name": "Evaluation / Trial",
+        "description": "Level, dominant foot and goals."
+      }
+    },
+    "mapGroups": {
+      "athlete": "Athlete",
+      "guardian": "Guardian",
+      "household": "Household",
+      "program": "Program"
+    },
+    "mapTargets": {
+      "athlete": {
+        "first_name": "Athlete first name",
+        "last_name": "Athlete last name",
+        "date_of_birth": "Date of birth",
+        "gender": "Gender",
+        "current_club": "Current club",
+        "playing_level": "Playing level",
+        "positions": "Positions",
+        "dominant_foot": "Dominant foot",
+        "jersey_size": "Jersey size",
+        "school": "School",
+        "graduation_year": "Graduation year",
+        "short_term_goals": "Short-term goals",
+        "long_term_goals": "Long-term goals",
+        "allergies": "Allergies",
+        "medical_notes": "Medical notes"
+      },
+      "guardian": {
+        "first_name": "Guardian first name",
+        "last_name": "Guardian last name",
+        "email": "Guardian email",
+        "phone": "Guardian phone",
+        "relationship": "Relationship"
+      },
+      "household": {
+        "name": "Household name"
+      },
+      "program": {
+        "type": "Program type"
+      }
+    },
+    "delete": "Delete",
+    "deleteTitle": "Delete form?",
+    "deleteBody": "This removes the form \"{name}\" and all its versions. This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "deleteCancel": "Cancel",
+    "deleting": "Deleting…",
+    "deleteBlocked": "This form already has registrations. Close or archive it instead of deleting."
   },
   "register": {
     "step": "Step {current} of {total}",
@@ -174,6 +327,8 @@
     "drawSignature": "Draw signature",
     "typeName": "Type name",
     "typeNamePlaceholder": "Type your full name",
+    "clearSignature": "Clear",
+    "signatureFromField": "Your signature from the form above will be applied to this waiver.",
     "consent": "I am the parent/legal guardian, I have read and agree to this waiver, and I consent to signing electronically.",
     "readWaiver": "Please read the waiver to the end.",
     "signWaiver": "Please sign the waiver.",
@@ -191,6 +346,7 @@
       "invalid_option": "Choose a valid option.",
       "minYear": "Year must be {year} or later.",
       "maxYear": "Year must be {year} or earlier.",
+      "invalid_signature": "Please draw or type a valid signature.",
       "invalid": "Invalid value."
     }
   }

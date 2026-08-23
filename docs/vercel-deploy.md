@@ -37,7 +37,24 @@ Após alterar variáveis na Vercel, faça **Redeploy** (Deployments → ⋯ → 
 2. Vercel → **Settings → Environment Variables** → atualizar `SUPABASE_SERVICE_ROLE_KEY`
 3. Redeploy
 
-O CRUD do coach (`/coach/forms`) usa o JWT do usuário logado + RLS `forms_staff_all`, então funciona mesmo sem service role correta. A service role continua necessária para o pipeline público de inscrição (`/register/...`) e URLs assinadas de storage.
+O CRUD do coach (`/coach/forms`) usa o JWT do usuário logado + RLS `forms_staff_all`, então funciona mesmo sem service role correta. A service role continua necessária para URLs assinadas de storage e upload de PDF de waiver.
+
+### Erro RLS ao submeter inscrição (`violates row-level security policy for table "form_submissions"`)
+
+**Causa:** INSERT direto em `form_submissions` com JWT anon (policy RLS bloqueia).
+
+**Correção (código + banco):**
+
+1. Aplicar migration `0016_public_registration_submit.sql` no Supabase de produção:
+   ```bash
+   supabase login
+   supabase link --project-ref dbnoddzaqjgtfnymyqjm
+   supabase db push
+   ```
+2. Redeploy na Vercel (o app chama `submit_public_registration` via RPC `SECURITY DEFINER`)
+3. Mapear campos do formulário no editor (`athlete.first_name`, `athlete.last_name`, `athlete.date_of_birth`, `guardian.phone`, etc.) — sem isso, a RPC roda mas retorna `incomplete_mapping`
+
+A inscrição passa a funcionar **mesmo** com `SUPABASE_SERVICE_ROLE_KEY` incorreta. Corrija a service role mesmo assim para PDF/storage.
 
 ### Validar migrations no Supabase de produção
 

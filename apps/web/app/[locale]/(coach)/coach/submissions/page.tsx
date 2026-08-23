@@ -14,6 +14,7 @@ type RawReg = {
   athletes: { first_name: string; last_name: string; date_of_birth: string } | null;
   programs: { name: string } | null;
   program_options: { name: string } | null;
+  form_submissions: { form_versions: { forms: { id: string; name: string } | null } | null } | null;
 };
 
 type RawWaiver = { athlete_id: string; pdf_url: string | null };
@@ -26,7 +27,7 @@ export default async function SubmissionsPage() {
   const { data: regsData } = await db
     .from('registrations')
     .select(
-      'id, status, created_at, athlete_id, athletes(first_name, last_name, date_of_birth), programs(name), program_options(name)',
+      'id, status, created_at, athlete_id, athletes(first_name, last_name, date_of_birth), programs(name), program_options(name), form_submissions(form_versions(forms(id, name)))',
     )
     .eq('organization_id', ctx.orgId)
     .order('created_at', { ascending: false })
@@ -53,6 +54,8 @@ export default async function SubmissionsPage() {
     dob: r.athletes?.date_of_birth ?? null,
     program: r.programs?.name ?? null,
     option: r.program_options?.name ?? null,
+    formId: r.form_submissions?.form_versions?.forms?.id ?? null,
+    formName: r.form_submissions?.form_versions?.forms?.name ?? null,
     hasWaiver: r.athlete_id ? pdfByAthlete.has(r.athlete_id) : false,
   }));
 

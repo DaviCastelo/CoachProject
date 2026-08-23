@@ -333,6 +333,37 @@ export async function getForm(formId: string): Promise<FormDetail | null> {
   };
 }
 
+export async function deleteForm(formId: string): Promise<ActionResult> {
+  const ctx = await requireRole(['owner', 'admin']);
+  const db = await getDb();
+
+  const form = await loadFormForOrg(formId, ctx.orgId);
+  if (!form) return { ok: false, error: 'Form not found.' };
+
+  // Protege dados: não apaga formulário que já recebeu inscrições (arquivar/fechar é o certo).
+  const versions = await loadVersions(formId);
+  const versionIds = versions.map((v) => v.id);
+  if (versionIds.length > 0) {
+    const { count, error: countError } = await db
+      .from('form_submissions')
+      .select('id', { count: 'exact', head: true })
+      .in('form_version_id', versionIds);
+    if (countError) return { ok: false, error: countError.message };
+    if ((count ?? 0) > 0) return { ok: false, error: 'has_submissions' };
+  }
+
+  // form_versions tem ON DELETE CASCADE, então some junto com o formulário.
+  const { error } = await db
+    .from('forms')
+    .delete()
+    .eq('id', formId)
+    .eq('organization_id', ctx.orgId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath('/coach/forms');
+  return { ok: true };
+}
+
 export async function listForms(): Promise<FormListItem[]> {
   const ctx = await requireRole(['owner', 'admin']);
   const db = await getDb();

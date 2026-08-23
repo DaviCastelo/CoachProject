@@ -4,6 +4,8 @@ import {
   parseFormSchema,
   validateSubmission,
   mapSubmissionToEntities,
+  extractSignatureFromSchema,
+  type FormSchema,
   type ValidationError,
 } from '@ca-tempo/domain';
 import { isRlsViolation } from '@/lib/supabase/service-config';
@@ -142,18 +144,44 @@ export async function resolveProgramOptionId(
   return (opt as { id: string } | null)?.id ?? null;
 }
 
+export async function resolveWaiverTemplateId(
+  svc: SupabaseClient,
+  organizationId: string,
+  program: { waiver_template_id: string | null } | null,
+): Promise<string | null> {
+  if (program?.waiver_template_id) return program.waiver_template_id;
+
+  const { data: tpl } = await svc
+    .from('waiver_templates')
+    .select('id')
+    .eq('organization_id', organizationId)
+    .eq('is_active', true)
+    .order('effective_from', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return (tpl as { id: string } | null)?.id ?? null;
+}
+
 export async function buildWaiverContext(
   svc: SupabaseClient,
+  organizationId: string,
   program: ProgramRow | null,
   extras: RegistrationExtras | undefined,
   entities: ReturnType<typeof mapSubmissionToEntities>,
+  schema: FormSchema,
+  data: Record<string, unknown>,
 ): Promise<WaiverCtx | null> {
-  if (!extras?.waiver || !program?.waiver_template_id) return null;
+  if (!extras?.waiver?.consent) return null;
+
+  const templateId = await resolveWaiverTemplateId(svc, organizationId, program);
+  if (!templateId) return null;
 
   const { data: tpl } = await svc
     .from('waiver_templates')
     .select('name, body_markdown')
-    .eq('id', program.waiver_template_id)
+    .eq('id', templateId)
+    .eq('is_active', true)
     .maybeSingle();
   if (!tpl) return null;
 
@@ -162,16 +190,21 @@ export async function buildWaiverContext(
     `${str(entities.guardian.first_name)} ${str(entities.guardian.last_name)}`.trim() ||
     'Guardian';
 
+  const fieldSignature = extractSignatureFromSchema(schema, data);
+  const signatureType = fieldSignature?.signatureType ?? extras.waiver.signatureType;
+  const signatureData = fieldSignature?.signatureData ?? extras.waiver.signatureData;
+  if (!signatureData) return null;
+
   return {
-    templateId: program.waiver_template_id,
+    templateId,
     title: tpl.name as string,
     body,
     documentHash: createHash('sha256').update(body).digest('hex'),
     signerName,
     signerEmail: str(entities.guardian.email),
     relationship: str(entities.guardian.relationship) || 'guardian',
-    signatureType: extras.waiver.signatureType,
-    signatureData: extras.waiver.signatureData,
+    signatureType,
+    signatureData,
     consent: extras.waiver.consent,
   };
 }

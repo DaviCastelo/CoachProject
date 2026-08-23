@@ -16,8 +16,6 @@ import {
   type SubmitResult,
 } from './registration-helpers';
 
-export type { RegistrationExtras, SubmitResult };
-
 type SubmitErrorCode = Extract<SubmitResult, { ok: false; error: string }>['error'];
 
 function mapRpcError(message: string): SubmitErrorCode {
@@ -52,12 +50,19 @@ export async function submitRegistration(
   const loaded = await loadVersionContext(readClient, formVersionId, data);
   if (!isVersionContext(loaded)) return loaded;
 
-  const { form, entities } = loaded;
+  const { form, schema, entities } = loaded;
   const program = await loadProgram(readClient, form.id);
-  const programId = program?.id ?? null;
-  const programOptionId = await resolveProgramOptionId(readClient, programId, extras?.programOptionId);
+  const programOptionId = await resolveProgramOptionId(readClient, program?.id ?? null, extras?.programOptionId);
   const { ip, userAgent } = await readRequestMeta();
-  const waiver = await buildWaiverContext(readClient, program, extras, entities);
+  const waiver = await buildWaiverContext(
+    readClient,
+    form.organization_id,
+    program,
+    extras,
+    entities,
+    schema,
+    data,
+  );
   const waiverPayload = waiver ? waiverToRpcPayload(waiver, ip, userAgent) : null;
 
   const { error: rpcError } = await readClient.rpc('submit_public_registration', {
