@@ -106,7 +106,7 @@ export default async function LandingPage() {
                       src={`/images/gallery-${(i % 4) + 1}.png`}
                       alt=""
                       fill
-                      className="object-cover object-top"
+                      className="object-contain"
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 to-transparent" />

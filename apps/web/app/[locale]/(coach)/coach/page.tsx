@@ -38,7 +38,7 @@ export default async function CoachDashboardPage() {
           src="/images/coaches-field.png"
           alt="Coaches on the field"
           fill
-          className="object-cover object-top"
+          className="object-contain"
           sizes="100vw"
           priority
         />

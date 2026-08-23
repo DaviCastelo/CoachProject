@@ -13,7 +13,7 @@ export default async function FamilyHomePage() {
           src="/images/hero-action-2.png"
           alt="Athlete training"
           fill
-          className="object-cover object-top"
+          className="object-contain"
           sizes="100vw"
         />
         <div className="hero-overlay-compact absolute inset-0" />

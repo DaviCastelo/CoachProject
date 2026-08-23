@@ -156,7 +156,7 @@ export default function LoginPage() {
           src="/images/hero-action-2.png"
           alt="Athletes in training"
           fill
-          className="object-cover object-top"
+          className="object-contain"
           sizes="50vw"
           priority
         />
