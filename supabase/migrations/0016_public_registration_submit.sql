@@ -82,9 +82,9 @@ end;
 $$;
 
 revoke all on function submit_public_registration(
-  uuid, jsonb, jsonb, jsonb, uuid, jsonb, inet, text
+  uuid, jsonb, jsonb, jsonb, jsonb, uuid, jsonb, inet, text
 ) from public;
 
 grant execute on function submit_public_registration(
-  uuid, jsonb, jsonb, jsonb, uuid, jsonb, inet, text
+  uuid, jsonb, jsonb, jsonb, jsonb, uuid, jsonb, inet, text
 ) to anon, authenticated, service_role;
