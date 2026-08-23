@@ -72,6 +72,7 @@ export type FormListItem = {
   status: string;
   publishedVersion: number | null;
   hasDraft: boolean;
+  submissionCount: number;
 };
 
 const FORM_TYPES = ['registration', 'evaluation', 'survey', 'intake'] as const;
@@ -340,16 +341,14 @@ export async function deleteForm(formId: string): Promise<ActionResult> {
   const form = await loadFormForOrg(formId, ctx.orgId);
   if (!form) return { ok: false, error: 'Form not found.' };
 
-  // Protege dados: não apaga formulário que já recebeu inscrições (arquivar/fechar é o certo).
   const versions = await loadVersions(formId);
   const versionIds = versions.map((v) => v.id);
   if (versionIds.length > 0) {
-    const { count, error: countError } = await db
+    const { error: subError } = await db
       .from('form_submissions')
-      .select('id', { count: 'exact', head: true })
+      .delete()
       .in('form_version_id', versionIds);
-    if (countError) return { ok: false, error: countError.message };
-    if ((count ?? 0) > 0) return { ok: false, error: 'has_submissions' };
+    if (subError) return { ok: false, error: subError.message };
   }
 
   // form_versions tem ON DELETE CASCADE, então some junto com o formulário.
@@ -361,7 +360,22 @@ export async function deleteForm(formId: string): Promise<ActionResult> {
   if (error) return { ok: false, error: error.message };
 
   revalidatePath('/coach/forms');
+  revalidatePath('/coach/submissions');
   return { ok: true };
+}
+
+async function countSubmissionsForForm(formId: string): Promise<number> {
+  const db = await getDb();
+  const versions = await loadVersions(formId);
+  const versionIds = versions.map((v) => v.id);
+  if (versionIds.length === 0) return 0;
+
+  const { count, error } = await db
+    .from('form_submissions')
+    .select('id', { count: 'exact', head: true })
+    .in('form_version_id', versionIds);
+  if (error) return 0;
+  return count ?? 0;
 }
 
 export async function listForms(): Promise<FormListItem[]> {
@@ -381,6 +395,7 @@ export async function listForms(): Promise<FormListItem[]> {
     const versions = await loadVersions(form.id);
     const published = versions.find((v) => v.published_at !== null);
     const draft = versions.find((v) => v.published_at === null);
+    const submissionCount = await countSubmissionsForForm(form.id);
     items.push({
       id: form.id,
       slug: form.slug,
@@ -389,6 +404,7 @@ export async function listForms(): Promise<FormListItem[]> {
       status: form.status,
       publishedVersion: published?.version ?? null,
       hasDraft: Boolean(draft),
+      submissionCount,
     });
   }
 

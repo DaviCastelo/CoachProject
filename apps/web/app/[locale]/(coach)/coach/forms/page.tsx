@@ -78,7 +78,11 @@ export default async function FormsPage() {
                       </Link>
                     </Button>
                   ) : null}
-                  <DeleteFormButton formId={form.id} formName={form.name} />
+                  <DeleteFormButton
+                    formId={form.id}
+                    formName={form.name}
+                    submissionCount={form.submissionCount}
+                  />
                 </div>
               </div>
             </AthleticCard>

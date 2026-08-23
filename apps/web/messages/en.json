@@ -104,6 +104,16 @@
     "newForm": "New form",
     "edit": "Edit",
     "viewPublic": "View public",
+    "delete": "Delete",
+    "deleteTitle": "Delete form?",
+    "deleteTitleWithSubmissions": "Delete form with registrations?",
+    "deleteBody": "This removes the form \"{name}\" and all its versions. This cannot be undone.",
+    "deleteBodyWithSubmissions": "The form \"{name}\" has {count, plural, one {# registration} other {# registrations}}. Deleting it will permanently remove those submitted responses too.",
+    "deleteWarningSubmissions": "All registrations tied to this form will be deleted. Athlete records may remain, but you lose the response history and the public link will stop working. This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "deleteConfirmWithSubmissions": "Delete anyway",
+    "deleteCancel": "Cancel",
+    "deleting": "Deleting…",
     "emptyTitle": "No forms yet",
     "emptyDescription": "Create your first form to start collecting registrations.",
     "statusDraft": "Draft",
@@ -304,14 +314,7 @@
       "program": {
         "type": "Program type"
       }
-    },
-    "delete": "Delete",
-    "deleteTitle": "Delete form?",
-    "deleteBody": "This removes the form \"{name}\" and all its versions. This cannot be undone.",
-    "deleteConfirm": "Delete",
-    "deleteCancel": "Cancel",
-    "deleting": "Deleting…",
-    "deleteBlocked": "This form already has registrations. Close or archive it instead of deleting."
+    }
   },
   "register": {
     "step": "Step {current} of {total}",

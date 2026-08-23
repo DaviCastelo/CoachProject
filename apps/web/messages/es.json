@@ -104,6 +104,16 @@
     "newForm": "Nuevo formulario",
     "edit": "Editar",
     "viewPublic": "Ver público",
+    "delete": "Eliminar",
+    "deleteTitle": "¿Eliminar formulario?",
+    "deleteTitleWithSubmissions": "¿Eliminar formulario con inscripciones?",
+    "deleteBody": "Esto elimina el formulario \"{name}\" y todas sus versiones. No se puede deshacer.",
+    "deleteBodyWithSubmissions": "El formulario \"{name}\" tiene {count, plural, one {# inscripción} other {# inscripciones}}. Al eliminarlo, las respuestas enviadas también se borrarán permanentemente.",
+    "deleteWarningSubmissions": "Las inscripciones vinculadas a este formulario se eliminarán. Los registros de atletas pueden seguir existiendo, pero perderás el historial de respuestas y el enlace público dejará de funcionar. Esta acción no se puede deshacer.",
+    "deleteConfirm": "Eliminar",
+    "deleteConfirmWithSubmissions": "Eliminar de todos modos",
+    "deleteCancel": "Cancelar",
+    "deleting": "Eliminando…",
     "emptyTitle": "Sin formularios aún",
     "emptyDescription": "Crea tu primer formulario para empezar a recibir inscripciones.",
     "statusDraft": "Borrador",
@@ -304,14 +314,7 @@
       "program": {
         "type": "Tipo de programa"
       }
-    },
-    "delete": "Eliminar",
-    "deleteTitle": "¿Eliminar formulario?",
-    "deleteBody": "Esto elimina el formulario \"{name}\" y todas sus versiones. No se puede deshacer.",
-    "deleteConfirm": "Eliminar",
-    "deleteCancel": "Cancelar",
-    "deleting": "Eliminando…",
-    "deleteBlocked": "Este formulario ya tiene inscripciones. Ciérralo o archívalo en lugar de eliminarlo."
+    }
   },
   "register": {
     "step": "Paso {current} de {total}",

@@ -104,6 +104,16 @@
     "newForm": "Novo formulário",
     "edit": "Editar",
     "viewPublic": "Ver público",
+    "delete": "Apagar",
+    "deleteTitle": "Apagar formulário?",
+    "deleteTitleWithSubmissions": "Apagar formulário com inscrições?",
+    "deleteBody": "Isso remove o formulário \"{name}\" e todas as suas versões. Não dá para desfazer.",
+    "deleteBodyWithSubmissions": "O formulário \"{name}\" tem {count, plural, one {# inscrição} other {# inscrições}}. Ao apagar, as respostas enviadas também serão removidas permanentemente.",
+    "deleteWarningSubmissions": "As inscrições ligadas a este formulário serão apagadas. Os cadastros de atletas podem continuar existindo, mas você perde o histórico das respostas e o link público deixa de funcionar. Essa ação não pode ser desfeita.",
+    "deleteConfirm": "Apagar",
+    "deleteConfirmWithSubmissions": "Apagar mesmo assim",
+    "deleteCancel": "Cancelar",
+    "deleting": "Apagando…",
     "emptyTitle": "Nenhum formulário ainda",
     "emptyDescription": "Crie seu primeiro formulário para começar a coletar inscrições.",
     "statusDraft": "Rascunho",
@@ -304,14 +314,7 @@
       "program": {
         "type": "Tipo de programa"
       }
-    },
-    "delete": "Apagar",
-    "deleteTitle": "Apagar formulário?",
-    "deleteBody": "Isso remove o formulário \"{name}\" e todas as suas versões. Não dá para desfazer.",
-    "deleteConfirm": "Apagar",
-    "deleteCancel": "Cancelar",
-    "deleting": "Apagando…",
-    "deleteBlocked": "Este formulário já tem inscrições. Feche ou arquive em vez de apagar."
+    }
   },
   "register": {
     "step": "Passo {current} de {total}",
