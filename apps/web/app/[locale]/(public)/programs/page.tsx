@@ -55,7 +55,7 @@ export default async function ProgramsPage() {
                         src={`/images/gallery-${(i % 4) + 1}.png`}
                         alt=""
                         fill
-                        className="object-cover"
+                        className="object-cover object-top"
                         sizes="112px"
                       />
                     </div>

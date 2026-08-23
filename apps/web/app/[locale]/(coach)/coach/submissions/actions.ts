@@ -65,3 +65,52 @@ export async function getWaiverUrl(athleteId: string): Promise<string | null> {
   const { data: signed } = await svc.storage.from('waivers').createSignedUrl(path, 120);
   return signed?.signedUrl ?? null;
 }
+
+export type RegistrationDetails = {
+  status: string;
+  createdAt: string;
+  program: string | null;
+  option: string | null;
+  athlete: Record<string, string> | null;
+  data: Record<string, unknown>;
+};
+
+/** Detalhes completos de uma inscrição para o popup (staff). */
+export async function getRegistrationDetails(id: string): Promise<RegistrationDetails | null> {
+  const ctx = await requireRole(['owner', 'admin', 'coach', 'staff']);
+  const db = await getDb();
+
+  const { data } = await db
+    .from('registrations')
+    .select(
+      'status, created_at, athletes(first_name, last_name, date_of_birth, gender, current_club, playing_level, jersey_size, allergies, medical_notes), programs(name), program_options(name), form_submissions(data)',
+    )
+    .eq('id', id)
+    .eq('organization_id', ctx.orgId)
+    .maybeSingle();
+
+  if (!data) return null;
+  const row = data as unknown as {
+    status: string;
+    created_at: string;
+    athletes: Record<string, string | null> | null;
+    programs: { name: string } | null;
+    program_options: { name: string } | null;
+    form_submissions: { data: Record<string, unknown> } | null;
+  };
+
+  const athlete = row.athletes
+    ? (Object.fromEntries(
+        Object.entries(row.athletes).filter(([, v]) => v != null && v !== ''),
+      ) as Record<string, string>)
+    : null;
+
+  return {
+    status: row.status,
+    createdAt: row.created_at,
+    program: row.programs?.name ?? null,
+    option: row.program_options?.name ?? null,
+    athlete,
+    data: row.form_submissions?.data ?? {},
+  };
+}

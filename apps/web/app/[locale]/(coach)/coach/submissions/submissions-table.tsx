@@ -2,9 +2,23 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Eye, FileText } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { setRegistrationStatus, getWaiverUrl } from './actions';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  setRegistrationStatus,
+  getWaiverUrl,
+  getRegistrationDetails,
+  type RegistrationDetails,
+} from './actions';
 
 export type SubmissionRow = {
   id: string;
@@ -39,6 +53,20 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function prettyLabel(key: string): string {
+  const s = key.replace(/_/g, ' ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4 border-b border-border/50 py-1.5 last:border-0">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right font-medium">{value}</span>
+    </div>
+  );
+}
+
 export function SubmissionsTable({
   rows,
   canApprove,
@@ -48,17 +76,33 @@ export function SubmissionsTable({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [openRow, setOpenRow] = useState<SubmissionRow | null>(null);
+  const [details, setDetails] = useState<RegistrationDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  function openDetails(row: SubmissionRow) {
+    setError(null);
+    setOpenRow(row);
+    setDetails(null);
+    setLoadingDetails(true);
+    void getRegistrationDetails(row.id).then((d) => {
+      setDetails(d);
+      setLoadingDetails(false);
+    });
+  }
 
   function act(id: string, status: 'approved' | 'rejected') {
     setError(null);
-    setBusyId(id);
     startTransition(async () => {
       const res = await setRegistrationStatus(id, status);
-      if (!res.ok) setError(res.error);
-      router.refresh();
-      setBusyId(null);
+      if (!res.ok) {
+        setError(res.error);
+      } else {
+        setOpenRow(null);
+        router.refresh();
+      }
     });
   }
 
@@ -72,62 +116,126 @@ export function SubmissionsTable({
     return <p className="text-muted-foreground">No registrations yet.</p>;
   }
 
+  const extraData = details
+    ? Object.entries(details.data).filter(
+        ([, v]) => v != null && v !== '' && (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean'),
+      )
+    : [];
+
   return (
     <div className="space-y-3">
       {error ? <p className="text-sm text-danger">{error}</p> : null}
-      {rows.map((r) => (
-        <Card key={r.id} className="p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{r.athleteName}</span>
-                <StatusBadge status={r.status} />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {[r.program, r.option].filter(Boolean).join(' · ') || '—'}
-                {r.dob ? ` · DOB ${r.dob}` : ''}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {new Date(r.createdAt).toLocaleString()}
-              </p>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+      {rows.map((r) => (
+        <Card key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{r.athleteName}</span>
+              <StatusBadge status={r.status} />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {[r.program, r.option].filter(Boolean).join(' · ') || '—'}
+              {r.dob ? ` · DOB ${r.dob}` : ''}
+            </p>
+            <p className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleString()}</p>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => openDetails(r)}
+            aria-label={`View ${r.athleteName}`}
+          >
+            <Eye className="h-4 w-4" />
+            View
+          </Button>
+        </Card>
+      ))}
+
+      <Dialog
+        open={openRow !== null}
+        onOpenChange={(o) => {
+          if (!o) setOpenRow(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{openRow?.athleteName}</DialogTitle>
+            <DialogDescription>
+              {[openRow?.program, openRow?.option].filter(Boolean).join(' · ') || 'Registration'}
+              {openRow ? ` · ${openRow.status}` : ''}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[55vh] overflow-y-auto text-sm">
+            {loadingDetails ? (
+              <p className="text-muted-foreground">Loading…</p>
+            ) : !details ? (
+              <p className="text-muted-foreground">Details not found.</p>
+            ) : (
+              <div className="space-y-4">
+                {details.athlete ? (
+                  <div>
+                    <p className="mb-1 font-display text-xs uppercase tracking-wide text-muted-foreground">
+                      Athlete
+                    </p>
+                    {Object.entries(details.athlete).map(([k, v]) => (
+                      <DetailRow key={k} label={prettyLabel(k)} value={v} />
+                    ))}
+                  </div>
+                ) : null}
+
+                {extraData.length > 0 ? (
+                  <div>
+                    <p className="mb-1 font-display text-xs uppercase tracking-wide text-muted-foreground">
+                      Form answers
+                    </p>
+                    {extraData.map(([k, v]) => (
+                      <DetailRow key={k} label={prettyLabel(k)} value={String(v)} />
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            {openRow?.athleteId ? (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={!r.hasWaiver || !r.athleteId}
-                onClick={() => r.athleteId && openWaiver(r.athleteId)}
+                onClick={() => openRow.athleteId && openWaiver(openRow.athleteId)}
               >
-                {r.hasWaiver ? 'Waiver PDF' : 'No waiver'}
+                <FileText className="h-4 w-4" />
+                Waiver PDF
               </Button>
-
-              {canApprove ? (
-                <>
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={pending || r.status === 'approved'}
-                    onClick={() => act(r.id, 'approved')}
-                  >
-                    {busyId === r.id ? '…' : 'Approve'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={pending || r.status === 'rejected' || r.status === 'canceled'}
-                    onClick={() => act(r.id, 'rejected')}
-                  >
-                    Reject
-                  </Button>
-                </>
-              ) : null}
-            </div>
-          </div>
-        </Card>
-      ))}
+            ) : null}
+            {canApprove && openRow ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={pending || openRow.status === 'approved'}
+                  onClick={() => act(openRow.id, 'approved')}
+                >
+                  {pending ? '…' : 'Approve'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={pending || openRow.status === 'rejected' || openRow.status === 'canceled'}
+                  onClick={() => act(openRow.id, 'rejected')}
+                >
+                  Reject
+                </Button>
+              </>
+            ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

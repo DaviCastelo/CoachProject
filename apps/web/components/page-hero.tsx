@@ -37,7 +37,7 @@ export function PageHero({
           fill
           priority={priority}
           sizes="100vw"
-          className={cn('object-cover', !compact && 'animate-hero-zoom')}
+          className={cn('object-cover object-top', !compact && 'animate-hero-zoom')}
         />
         <div
           className={cn('absolute inset-0', compact ? 'hero-overlay-compact' : 'hero-overlay')}

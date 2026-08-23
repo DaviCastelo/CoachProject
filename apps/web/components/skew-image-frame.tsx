@@ -38,7 +38,7 @@ export function SkewImageFrame(
           height={height}
           priority={priority}
           sizes={sizes}
-          className={cn('h-full w-full object-cover', imageClassName)}
+          className={cn('h-full w-full object-cover object-top', imageClassName)}
         />
       </div>
     </div>
