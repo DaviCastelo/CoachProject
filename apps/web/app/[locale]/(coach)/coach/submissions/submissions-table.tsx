@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, FileText } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Eye, FileText, Users } from 'lucide-react';
+import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +19,10 @@ import {
   setRegistrationStatus,
   getWaiverUrl,
   getRegistrationDetails,
+  listGroupsForAssignment,
+  approveRegistrationWithGroups,
   type RegistrationDetails,
+  type AssignableGroup,
 } from './actions';
 
 export type SubmissionRow = {
@@ -99,6 +104,7 @@ export function SubmissionsTable({
   canApprove: boolean;
 }) {
   const router = useRouter();
+  const tg = useTranslations('groups');
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -106,14 +112,48 @@ export function SubmissionsTable({
   const [details, setDetails] = useState<RegistrationDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
+  // Atribuição de grupos na aprovação (brief §5).
+  const [groupOptions, setGroupOptions] = useState<AssignableGroup[]>([]);
+  const [pickedGroups, setPickedGroups] = useState<Set<string>>(new Set());
+
+  // Mostra os grupos como árvore (pai antes dos filhos), igual à tela de grupos.
+  const orderedGroupOptions = useMemo(
+    () => flattenGroupTree(buildGroupTree(groupOptions)),
+    [groupOptions],
+  );
+
   function openDetails(row: SubmissionRow) {
     setError(null);
     setOpenRow(row);
     setDetails(null);
+    setPickedGroups(new Set());
     setLoadingDetails(true);
     void getRegistrationDetails(row.id).then((d) => {
       setDetails(d);
       setLoadingDetails(false);
+    });
+    void listGroupsForAssignment().then(setGroupOptions);
+  }
+
+  function toggleGroup(id: string) {
+    setPickedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function approveWithGroups(id: string) {
+    setError(null);
+    startTransition(async () => {
+      const res = await approveRegistrationWithGroups(id, [...pickedGroups]);
+      if (!res.ok) {
+        setError(res.error);
+      } else {
+        setOpenRow(null);
+        router.refresh();
+      }
     });
   }
 
@@ -257,6 +297,40 @@ export function SubmissionsTable({
                     </div>
                   </div>
                 ) : null}
+
+                {/* Atribuição de grupos ao aprovar (brief §5: Registro → Usuário → Grupo → Roster) */}
+                {canApprove && openRow?.status !== 'approved' ? (
+                  <div>
+                    <p className="mb-1 flex items-center gap-1.5 font-display text-xs uppercase tracking-wide text-muted-foreground">
+                      <Users className="h-3.5 w-3.5" />
+                      {tg('assignToGroups')}
+                    </p>
+                    {groupOptions.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">{tg('noGroupsYet')}</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                        {orderedGroupOptions.map((g) => (
+                          <label
+                            key={g.id}
+                            className="flex cursor-pointer items-center gap-2 rounded-md border border-input px-2 py-1.5 text-sm"
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-accent-500"
+                              checked={pickedGroups.has(g.id)}
+                              onChange={() => toggleGroup(g.id)}
+                            />
+                            <span className="truncate">
+                              {'— '.repeat(g.depth)}
+                              {g.name}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-1 text-xs text-muted-foreground">{tg('assignHint')}</p>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
@@ -279,9 +353,13 @@ export function SubmissionsTable({
                   type="button"
                   size="sm"
                   disabled={pending || openRow.status === 'approved'}
-                  onClick={() => act(openRow.id, 'approved')}
+                  onClick={() => approveWithGroups(openRow.id)}
                 >
-                  {pending ? '…' : 'Approve'}
+                  {pending
+                    ? '…'
+                    : pickedGroups.size > 0
+                      ? tg('approveAndAssign', { count: pickedGroups.size })
+                      : 'Approve'}
                 </Button>
                 <Button
                   type="button"

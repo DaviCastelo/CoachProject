@@ -7,7 +7,15 @@ import { BrandLogo } from '@/components/brand-logo';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { LogOut, LayoutDashboard, ClipboardList, FileText } from 'lucide-react';
+import {
+  LogOut,
+  LayoutDashboard,
+  ClipboardList,
+  FileText,
+  Users,
+  CalendarDays,
+  Megaphone,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AppShellProps {
@@ -16,7 +24,14 @@ interface AppShellProps {
 }
 
 type NavItem = {
-  href: '/coach' | '/coach/submissions' | '/coach/forms' | '/family';
+  href:
+    | '/coach'
+    | '/coach/groups'
+    | '/coach/schedule'
+    | '/coach/announcements'
+    | '/coach/submissions'
+    | '/coach/forms'
+    | '/family';
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 };
@@ -30,6 +45,9 @@ export function AppShell({ children, variant }: AppShellProps) {
     variant === 'coach'
       ? [
           { href: '/coach', label: t('dashboard'), icon: LayoutDashboard },
+          { href: '/coach/groups', label: t('groups'), icon: Users },
+          { href: '/coach/schedule', label: t('schedule'), icon: CalendarDays },
+          { href: '/coach/announcements', label: t('announcements'), icon: Megaphone },
           { href: '/coach/submissions', label: t('registrations'), icon: ClipboardList },
           { href: '/coach/forms', label: t('forms'), icon: FileText },
         ]
