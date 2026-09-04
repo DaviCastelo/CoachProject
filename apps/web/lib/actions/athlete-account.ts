@@ -140,6 +140,13 @@ export async function createAthleteAccount(input: {
     return { ok: false, error: linkError.message };
   }
 
+  // Os destinatários de um aviso são gravados no envio. Quem ganha login depois
+  // ficaria sem ver os avisos já enviados aos seus grupos — este passo os inclui.
+  await svc.rpc('backfill_announcements_for_athlete', {
+    p_user_id: userId,
+    p_athlete_id: input.athleteId,
+  });
+
   revalidatePath('/coach/groups');
   revalidatePath('/coach/submissions');
   return { ok: true, id: userId };

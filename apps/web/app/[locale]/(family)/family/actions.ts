@@ -191,41 +191,30 @@ export async function listFamilyGroups(): Promise<FamilyGroup[]> {
 
   if (mine.length === 0) return [];
 
-  const groupIds = [...new Set(mine.map((m) => m.group_id))];
-
-  // Companheiros de time: a policy groups_family_read libera ler os membros do
-  // mesmo grupo através de auth_family_group_ids().
-  const { data: allMembers } = await db
-    .from('group_members')
-    .select('group_id, athlete_id, athletes(first_name, last_name)')
-    .in('group_id', groupIds)
-    .is('left_at', null);
+  // Companheiros e coaches vêm de RPCs SECURITY DEFINER: a RLS de `athletes`
+  // limita a família aos próprios atletas (e a linha carrega dados médicos),
+  // então as funções devolvem só o nome de quem está no mesmo grupo.
+  const [{ data: teammateRows }, { data: coachRows }] = await Promise.all([
+    db.rpc('list_my_teammates'),
+    db.rpc('list_my_group_coaches'),
+  ]);
 
   const teammatesByGroup = new Map<string, string[]>();
-  for (const m of (allMembers ?? []) as unknown as {
+  for (const m of (teammateRows ?? []) as {
     group_id: string;
     athlete_id: string;
-    athletes: { first_name: string; last_name: string } | null;
+    full_name: string;
   }[]) {
     if (myAthleteIds.has(m.athlete_id)) continue; // não se lista como próprio colega
-    if (!m.athletes) continue;
     const list = teammatesByGroup.get(m.group_id) ?? [];
-    list.push(`${m.athletes.first_name} ${m.athletes.last_name}`);
+    list.push(m.full_name);
     teammatesByGroup.set(m.group_id, list);
   }
 
-  const { data: coachRows } = await db
-    .from('group_coaches')
-    .select('group_id, profiles(full_name)')
-    .in('group_id', groupIds);
-
   const coachesByGroup = new Map<string, string[]>();
-  for (const c of (coachRows ?? []) as unknown as {
-    group_id: string;
-    profiles: { full_name: string | null } | null;
-  }[]) {
+  for (const c of (coachRows ?? []) as { group_id: string; full_name: string | null }[]) {
     const list = coachesByGroup.get(c.group_id) ?? [];
-    if (c.profiles?.full_name) list.push(c.profiles.full_name);
+    if (c.full_name) list.push(c.full_name);
     coachesByGroup.set(c.group_id, list);
   }
 
