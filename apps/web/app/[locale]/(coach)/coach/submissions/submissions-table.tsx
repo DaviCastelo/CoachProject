@@ -1,9 +1,14 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, FileText } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Eye, FileText, Users, KeyRound, EyeOff } from 'lucide-react';
+import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
+import { createAthleteAccount } from '@/lib/actions/athlete-account';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,7 +22,10 @@ import {
   setRegistrationStatus,
   getWaiverUrl,
   getRegistrationDetails,
+  listGroupsForAssignment,
+  approveRegistrationWithGroups,
   type RegistrationDetails,
+  type AssignableGroup,
 } from './actions';
 
 export type SubmissionRow = {
@@ -99,6 +107,7 @@ export function SubmissionsTable({
   canApprove: boolean;
 }) {
   const router = useRouter();
+  const tg = useTranslations('groups');
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -106,14 +115,83 @@ export function SubmissionsTable({
   const [details, setDetails] = useState<RegistrationDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
+  // Atribuição de grupos na aprovação (brief §5).
+  const [groupOptions, setGroupOptions] = useState<AssignableGroup[]>([]);
+  const [pickedGroups, setPickedGroups] = useState<Set<string>>(new Set());
+
+  // Mostra os grupos como árvore (pai antes dos filhos), igual à tela de grupos.
+  const orderedGroupOptions = useMemo(
+    () => flattenGroupTree(buildGroupTree(groupOptions)),
+    [groupOptions],
+  );
+
+  // Criar acesso do atleta direto da inscrição
+  const [athleteAccess, setAthleteAccess] = useState<{
+    athleteId: string;
+    name: string;
+    email: string;
+    password: string;
+  } | null>(null);
+  const [showPw, setShowPw] = useState(false);
+  const [accessDone, setAccessDone] = useState<string | null>(null);
+
+  function submitAthleteAccess() {
+    if (!athleteAccess) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await createAthleteAccount({
+        athleteId: athleteAccess.athleteId,
+        email: athleteAccess.email,
+        temporaryPassword: athleteAccess.password,
+      });
+      if (!res.ok) {
+        const map: Record<string, string> = {
+          invalid_email: tg('errorInvalidEmail'),
+          weak_password: tg('errorWeakPassword'),
+          email_taken: tg('errorEmailTaken'),
+          already_has_account: tg('errorAlreadyHasAccount'),
+        };
+        setError(map[res.error] ?? res.error);
+        return;
+      }
+      setAccessDone(tg('athleteAccountReady'));
+      setAthleteAccess(null);
+      router.refresh();
+    });
+  }
+
   function openDetails(row: SubmissionRow) {
     setError(null);
     setOpenRow(row);
     setDetails(null);
+    setPickedGroups(new Set());
     setLoadingDetails(true);
     void getRegistrationDetails(row.id).then((d) => {
       setDetails(d);
       setLoadingDetails(false);
+    });
+    void listGroupsForAssignment().then(setGroupOptions);
+  }
+
+  function toggleGroup(id: string) {
+    setPickedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function approveWithGroups(id: string) {
+    setError(null);
+    startTransition(async () => {
+      const res = await approveRegistrationWithGroups(id, [...pickedGroups]);
+      if (!res.ok) {
+        setError(res.error);
+      } else {
+        setOpenRow(null);
+        router.refresh();
+      }
     });
   }
 
@@ -162,7 +240,8 @@ export function SubmissionsTable({
 
   return (
     <div className="space-y-3">
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error && !athleteAccess ? <p className="text-sm text-danger">{error}</p> : null}
+      {accessDone ? <p className="text-sm text-success">{accessDone}</p> : null}
 
       {groups.map((g) => (
         <section key={g.key} className="space-y-2">
@@ -257,21 +336,74 @@ export function SubmissionsTable({
                     </div>
                   </div>
                 ) : null}
+
+                {/* Atribuição de grupos ao aprovar (brief §5: Registro → Usuário → Grupo → Roster) */}
+                {canApprove && openRow?.status !== 'approved' ? (
+                  <div>
+                    <p className="mb-1 flex items-center gap-1.5 font-display text-xs uppercase tracking-wide text-muted-foreground">
+                      <Users className="h-3.5 w-3.5" />
+                      {tg('assignToGroups')}
+                    </p>
+                    {groupOptions.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">{tg('noGroupsYet')}</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                        {orderedGroupOptions.map((g) => (
+                          <label
+                            key={g.id}
+                            className="flex cursor-pointer items-center gap-2 rounded-md border border-input px-2 py-1.5 text-sm"
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-accent-500"
+                              checked={pickedGroups.has(g.id)}
+                              onChange={() => toggleGroup(g.id)}
+                            />
+                            <span className="truncate">
+                              {'— '.repeat(g.depth)}
+                              {g.name}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-1 text-xs text-muted-foreground">{tg('assignHint')}</p>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
 
           <DialogFooter>
             {openRow?.athleteId ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => openRow.athleteId && openWaiver(openRow.athleteId)}
-              >
-                <FileText className="h-4 w-4" />
-                Waiver PDF
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openRow.athleteId && openWaiver(openRow.athleteId)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Waiver PDF
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setError(null);
+                    setAthleteAccess({
+                      athleteId: openRow.athleteId as string,
+                      name: openRow.athleteName,
+                      email: '',
+                      password: '',
+                    });
+                  }}
+                >
+                  <KeyRound className="h-4 w-4" />
+                  {tg('createAccess')}
+                </Button>
+              </>
             ) : null}
             {canApprove && openRow ? (
               <>
@@ -279,9 +411,13 @@ export function SubmissionsTable({
                   type="button"
                   size="sm"
                   disabled={pending || openRow.status === 'approved'}
-                  onClick={() => act(openRow.id, 'approved')}
+                  onClick={() => approveWithGroups(openRow.id)}
                 >
-                  {pending ? '…' : 'Approve'}
+                  {pending
+                    ? '…'
+                    : pickedGroups.size > 0
+                      ? tg('approveAndAssign', { count: pickedGroups.size })
+                      : 'Approve'}
                 </Button>
                 <Button
                   type="button"
@@ -294,6 +430,89 @@ export function SubmissionsTable({
                 </Button>
               </>
             ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Criar acesso do atleta a partir da inscrição */}
+      <Dialog
+        open={athleteAccess !== null}
+        onOpenChange={(o) => !pending && !o && setAthleteAccess(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tg('createAccessTitle')}</DialogTitle>
+            <DialogDescription>
+              {tg('createAccessHint', { name: athleteAccess?.name ?? '' })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="sa-email">{tg('coachEmail')}</Label>
+              <Input
+                id="sa-email"
+                type="email"
+                autoComplete="off"
+                placeholder="atleta@exemplo.com"
+                value={athleteAccess?.email ?? ''}
+                onChange={(e) =>
+                  athleteAccess && setAthleteAccess({ ...athleteAccess, email: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="sa-pw">{tg('temporaryPassword')}</Label>
+              <div className="relative">
+                <Input
+                  id="sa-pw"
+                  type={showPw ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  className="pr-10"
+                  value={athleteAccess?.password ?? ''}
+                  onChange={(e) =>
+                    athleteAccess &&
+                    setAthleteAccess({ ...athleteAccess, password: e.target.value })
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                  aria-label={showPw ? tg('hidePassword') : tg('showPassword')}
+                  tabIndex={-1}
+                >
+                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">{tg('temporaryPasswordHint')}</p>
+            </div>
+
+            {error ? <p className="text-sm text-danger">{error}</p> : null}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAthleteAccess(null)}
+              disabled={pending}
+            >
+              {tg('cancel')}
+            </Button>
+            <Button
+              size="sm"
+              onClick={submitAthleteAccess}
+              disabled={
+                pending ||
+                !athleteAccess?.email.trim() ||
+                (athleteAccess?.password.length ?? 0) < 8
+              }
+            >
+              <KeyRound className="h-4 w-4" />
+              {pending ? tg('saving') : tg('createAccess')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

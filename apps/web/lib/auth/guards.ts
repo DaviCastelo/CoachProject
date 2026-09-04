@@ -70,6 +70,26 @@ export async function requireRole(allowedRoles: OrgRole[]): Promise<ActiveOrgCon
   return ctx;
 }
 
+/**
+ * O usuário está com senha temporária? Enquanto for true, o app bloqueia o uso
+ * com um modal obrigatório de troca (acesso criado por um coach/admin).
+ */
+export async function mustChangePassword(): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('must_change_password')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  return Boolean((data as { must_change_password: boolean } | null)?.must_change_password);
+}
+
 export async function requireMfaForAdmin(): Promise<void> {
   const supabase = await createClient();
   const ctx = await getActiveOrg();
