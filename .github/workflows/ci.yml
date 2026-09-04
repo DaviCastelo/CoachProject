@@ -9,7 +9,12 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 traz o histórico completo. O Gitleaks varre o intervalo
+      # base..head do PR; com o clone raso padrão o commit base não existe no
+      # runner e o scan falha com "unknown revision".
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
