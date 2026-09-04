@@ -370,10 +370,14 @@ export async function deleteGroup(groupId: string): Promise<ActionResult> {
     .eq('parent_group_id', groupId);
   if ((childCount ?? 0) > 0) return { ok: false, error: 'has_subgroups' };
 
+  // Só os membros ATIVOS bloqueiam. Linhas de atletas já removidos são
+  // histórico (left_at preenchido) e somem por cascade junto com o grupo —
+  // contá-las tornava impossível apagar um grupo que a tela mostra vazio.
   const { count: memberCount } = await db
     .from('group_members')
     .select('id', { count: 'exact', head: true })
-    .eq('group_id', groupId);
+    .eq('group_id', groupId)
+    .is('left_at', null);
   if ((memberCount ?? 0) > 0) return { ok: false, error: 'has_members' };
 
   const { error } = await db
