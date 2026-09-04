@@ -101,7 +101,9 @@ export async function requireMfaForAdmin(): Promise<void> {
   const hasVerifiedTotp = factors?.totp?.some((f) => f.status === 'verified');
 
   if (!hasVerifiedTotp) {
-    return localizedRedirect('/auth/mfa');
+    // As rotas /auth/* ficam FORA de [locale]; prefixar com o idioma
+    // (ex.: /pt-BR/auth/mfa) leva a 404 e trava o admin fora do sistema.
+    nextRedirect('/auth/mfa');
   }
 }
 
