@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { requireRole } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 export type CreateResult = { ok: true; id: string } | { ok: false; error: string };
@@ -18,6 +19,8 @@ export type GroupListItem = {
   capacity: number;
   memberCount: number;
   coachCount: number;
+  /** O usuário logado treina este grupo? (destaca "meus grupos" na lista) */
+  isMine: boolean;
 };
 
 export type RosterMember = {
@@ -31,6 +34,9 @@ export type RosterMember = {
   allergies: string | null;
   medicalNotes: string | null;
   otherGroups: string[];
+  /** O atleta já tem login próprio? */
+  hasAccount: boolean;
+  accountEmail: string | null;
 };
 
 export type GroupCoach = {
@@ -88,7 +94,7 @@ export async function listGroups(): Promise<GroupListItem[]> {
 
   const [{ data: memberRows }, { data: coachRows }] = await Promise.all([
     db.from('group_members').select('group_id').in('group_id', ids).is('left_at', null),
-    db.from('group_coaches').select('group_id').in('group_id', ids),
+    db.from('group_coaches').select('group_id, coach_id').in('group_id', ids),
   ]);
 
   const memberCount = new Map<string, number>();
@@ -96,8 +102,10 @@ export async function listGroups(): Promise<GroupListItem[]> {
     memberCount.set(r.group_id, (memberCount.get(r.group_id) ?? 0) + 1);
   }
   const coachCount = new Map<string, number>();
-  for (const r of (coachRows ?? []) as { group_id: string }[]) {
+  const mine = new Set<string>();
+  for (const r of (coachRows ?? []) as { group_id: string; coach_id: string }[]) {
     coachCount.set(r.group_id, (coachCount.get(r.group_id) ?? 0) + 1);
+    if (r.coach_id === ctx.userId) mine.add(r.group_id);
   }
 
   return groups.map((g) => ({
@@ -110,6 +118,7 @@ export async function listGroups(): Promise<GroupListItem[]> {
     capacity: g.capacity,
     memberCount: memberCount.get(g.id) ?? 0,
     coachCount: coachCount.get(g.id) ?? 0,
+    isMine: mine.has(g.id),
   }));
 }
 
@@ -149,7 +158,7 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
   const { data: memberRows } = await db
     .from('group_members')
     .select(
-      'id, athlete_id, status, joined_at, athletes(first_name, last_name, date_of_birth, allergies, medical_notes)',
+      'id, athlete_id, status, joined_at, athletes(first_name, last_name, date_of_birth, allergies, medical_notes, user_id)',
     )
     .eq('group_id', groupId)
     .is('left_at', null)
@@ -166,8 +175,22 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
       date_of_birth: string;
       allergies: string | null;
       medical_notes: string | null;
+      user_id: string | null;
     } | null;
   }[];
+
+  // E-mail de acesso dos atletas que já têm login.
+  const accountIds = members.map((m) => m.athletes?.user_id).filter((id): id is string => !!id);
+  const emailByUser = new Map<string, string>();
+  if (accountIds.length > 0) {
+    const { data: profileRows } = await db
+      .from('profiles')
+      .select('id, email')
+      .in('id', accountIds);
+    for (const p of (profileRows ?? []) as { id: string; email: string }[]) {
+      emailByUser.set(p.id, p.email);
+    }
+  }
 
   // Outras participações dos mesmos atletas (brief §4: player em vários grupos).
   const athleteIds = members.map((m) => m.athlete_id);
@@ -223,6 +246,8 @@ export async function getGroup(groupId: string): Promise<GroupDetail | null> {
       allergies: m.athletes?.allergies ?? null,
       medicalNotes: m.athletes?.medical_notes ?? null,
       otherGroups: otherGroupsByAthlete.get(m.athlete_id) ?? [],
+      hasAccount: Boolean(m.athletes?.user_id),
+      accountEmail: m.athletes?.user_id ? (emailByUser.get(m.athletes.user_id) ?? null) : null,
     })),
     coaches: coaches.map((c) => ({
       id: c.id,
@@ -296,6 +321,36 @@ export async function updateGroup(
     // Mensagens do trigger check_group_cycle.
     if (error.message.includes('group_cycle')) return { ok: false, error: 'group_cycle' };
     if (error.message.includes('group_depth')) return { ok: false, error: 'group_depth' };
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath('/coach/groups');
+  revalidatePath(`/coach/groups/${groupId}`);
+  return { ok: true };
+}
+
+/**
+ * Ajusta somente a quantidade de vagas. Liberado para admin E para o coach do
+ * grupo — via RPC dedicada, para o coach não ganhar escrita livre em `groups`.
+ */
+export async function setGroupCapacity(
+  groupId: string,
+  capacity: number,
+): Promise<ActionResult> {
+  await requireRole([...STAFF]);
+  const db = await getDb();
+
+  if (!Number.isInteger(capacity) || capacity < 1) {
+    return { ok: false, error: 'invalid_capacity' };
+  }
+
+  const { error } = await db.rpc('set_group_capacity', {
+    p_group_id: groupId,
+    p_capacity: capacity,
+  });
+
+  if (error) {
+    if (error.message.includes('forbidden')) return { ok: false, error: 'forbidden' };
     return { ok: false, error: error.message };
   }
 
@@ -440,9 +495,11 @@ export async function listOrgCoaches(): Promise<{ id: string; name: string; emai
   const ctx = await requireRole([...STAFF]);
   const db = await getDb();
 
+  // `memberships` tem DUAS FKs para profiles (user_id e invited_by); sem
+  // nomear a constraint o embed fica ambíguo e o PostgREST devolve erro.
   const { data } = await db
     .from('memberships')
-    .select('user_id, role, profiles(full_name, email)')
+    .select('user_id, role, profiles!memberships_user_id_fkey(full_name, email)')
     .eq('organization_id', ctx.orgId)
     .eq('status', 'active')
     .in('role', ['owner', 'admin', 'coach', 'staff']);
@@ -462,6 +519,89 @@ export async function listOrgCoaches(): Promise<{ id: string; name: string; emai
     });
   }
   return out;
+}
+
+export type CreateCoachInput = {
+  fullName: string;
+  email: string;
+  password: string;
+  phone?: string;
+  role: 'coach' | 'staff' | 'admin';
+  addToGroupId?: string;
+  isLead?: boolean;
+};
+
+/**
+ * Cria a conta de um novo membro da equipe (coach/staff/admin) e, opcionalmente,
+ * já o atribui a um grupo. Usa a service role porque criar usuário no Auth exige
+ * privilégio de admin — por isso a autorização é checada aqui, explicitamente.
+ */
+export async function createCoachAccount(input: CreateCoachInput): Promise<CreateResult> {
+  const ctx = await requireRole([...ADMIN]);
+
+  const fullName = input.fullName.trim();
+  const email = input.email.trim().toLowerCase();
+  const password = input.password;
+
+  if (!fullName) return { ok: false, error: 'name_required' };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'invalid_email' };
+  if (password.length < 8) return { ok: false, error: 'weak_password' };
+
+  const svc = createServiceClient();
+
+  // 1. Conta no Auth já confirmada — o coach entra com e-mail e senha na hora.
+  const { data: created, error: createError } = await svc.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
+  });
+
+  if (createError || !created?.user) {
+    const msg = createError?.message ?? 'create_failed';
+    if (msg.toLowerCase().includes('already')) return { ok: false, error: 'email_taken' };
+    return { ok: false, error: msg };
+  }
+
+  const userId = created.user.id;
+
+  // 2. O trigger handle_new_user cria o profile; completamos o que ele não copia.
+  await svc
+    .from('profiles')
+    .update({ full_name: fullName, phone: input.phone?.trim() || null })
+    .eq('id', userId);
+
+  // 3. Vínculo com a organização.
+  const { error: membershipError } = await svc.from('memberships').insert({
+    organization_id: ctx.orgId,
+    user_id: userId,
+    role: input.role,
+    status: 'active',
+    invited_by: ctx.userId,
+    invited_at: new Date().toISOString(),
+    accepted_at: new Date().toISOString(),
+  });
+
+  if (membershipError) {
+    // Não deixa uma conta órfã (sem organização) para trás.
+    await svc.auth.admin.deleteUser(userId);
+    return { ok: false, error: membershipError.message };
+  }
+
+  // 4. Opcional: já entra como coach do grupo em que o admin estava.
+  if (input.addToGroupId) {
+    const { error: coachError } = await svc.from('group_coaches').insert({
+      organization_id: ctx.orgId,
+      group_id: input.addToGroupId,
+      coach_id: userId,
+      is_lead: input.isLead ?? false,
+    });
+    if (coachError) return { ok: false, error: coachError.message };
+    revalidatePath(`/coach/groups/${input.addToGroupId}`);
+  }
+
+  revalidatePath('/coach/groups');
+  return { ok: true, id: userId };
 }
 
 export async function addGroupCoach(groupId: string, coachId: string): Promise<ActionResult> {

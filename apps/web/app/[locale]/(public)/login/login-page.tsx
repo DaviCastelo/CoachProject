@@ -37,7 +37,8 @@ export default function LoginPage() {
     if (signInError) {
       setError(signInError.message);
     } else {
-      window.location.assign('/coach');
+      // Deixa o servidor decidir o destino conforme o papel (staff x família/atleta).
+      window.location.assign('/auth/home');
     }
   }
 

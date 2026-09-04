@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
+import { signImagePreviews } from '@/lib/announcements/preview';
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -145,12 +146,117 @@ export async function respondRsvp(
   return { ok: true };
 }
 
+export type FamilyGroup = {
+  id: string;
+  name: string;
+  ageGroup: string | null;
+  athleteName: string;
+  teammates: string[];
+  coaches: string[];
+};
+
+/**
+ * Grupos dos atletas do usuário, com os companheiros de time.
+ * A RLS garante que só aparecem os grupos em que ele (ou o filho) está.
+ */
+export async function listFamilyGroups(): Promise<FamilyGroup[]> {
+  const db = await getDb();
+
+  const { data: athleteRows } = await db
+    .from('athletes')
+    .select('id, first_name, last_name')
+    .is('deleted_at', null);
+
+  const athletes = ((athleteRows ?? []) as {
+    id: string;
+    first_name: string;
+    last_name: string;
+  }[]).map((a) => ({ id: a.id, name: `${a.first_name} ${a.last_name}` }));
+
+  if (athletes.length === 0) return [];
+  const myAthleteIds = new Set(athletes.map((a) => a.id));
+  const nameById = new Map(athletes.map((a) => [a.id, a.name]));
+
+  // Participações próprias (a RLS family_read limita aos próprios atletas).
+  const { data: myMemberships } = await db
+    .from('group_members')
+    .select('group_id, athlete_id, groups(id, name, age_group)')
+    .is('left_at', null);
+
+  const mine = (myMemberships ?? []) as unknown as {
+    group_id: string;
+    athlete_id: string;
+    groups: { id: string; name: string; age_group: string | null } | null;
+  }[];
+
+  if (mine.length === 0) return [];
+
+  const groupIds = [...new Set(mine.map((m) => m.group_id))];
+
+  // Companheiros de time: a policy groups_family_read libera ler os membros do
+  // mesmo grupo através de auth_family_group_ids().
+  const { data: allMembers } = await db
+    .from('group_members')
+    .select('group_id, athlete_id, athletes(first_name, last_name)')
+    .in('group_id', groupIds)
+    .is('left_at', null);
+
+  const teammatesByGroup = new Map<string, string[]>();
+  for (const m of (allMembers ?? []) as unknown as {
+    group_id: string;
+    athlete_id: string;
+    athletes: { first_name: string; last_name: string } | null;
+  }[]) {
+    if (myAthleteIds.has(m.athlete_id)) continue; // não se lista como próprio colega
+    if (!m.athletes) continue;
+    const list = teammatesByGroup.get(m.group_id) ?? [];
+    list.push(`${m.athletes.first_name} ${m.athletes.last_name}`);
+    teammatesByGroup.set(m.group_id, list);
+  }
+
+  const { data: coachRows } = await db
+    .from('group_coaches')
+    .select('group_id, profiles(full_name)')
+    .in('group_id', groupIds);
+
+  const coachesByGroup = new Map<string, string[]>();
+  for (const c of (coachRows ?? []) as unknown as {
+    group_id: string;
+    profiles: { full_name: string | null } | null;
+  }[]) {
+    const list = coachesByGroup.get(c.group_id) ?? [];
+    if (c.profiles?.full_name) list.push(c.profiles.full_name);
+    coachesByGroup.set(c.group_id, list);
+  }
+
+  return mine
+    .filter((m) => m.groups !== null)
+    .map((m) => ({
+      id: m.group_id,
+      name: m.groups?.name ?? '—',
+      ageGroup: m.groups?.age_group ?? null,
+      athleteName: nameById.get(m.athlete_id) ?? '',
+      teammates: (teammatesByGroup.get(m.group_id) ?? []).sort((a, b) => a.localeCompare(b)),
+      coaches: coachesByGroup.get(m.group_id) ?? [],
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export type AnnouncementFile = {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  /** URL assinada (1h) — preenchida só para imagens, que aparecem inline. */
+  previewUrl: string | null;
+};
+
 export type FamilyAnnouncement = {
   id: string;
   title: string;
   body: string;
   sentAt: string | null;
   readAt: string | null;
+  attachments: AnnouncementFile[];
 };
 
 /** Anúncios recebidos pelo usuário (materializados no envio). */
@@ -162,24 +268,59 @@ export async function listFamilyAnnouncements(): Promise<FamilyAnnouncement[]> {
   } = await db.auth.getUser();
   if (!user) return [];
 
+  // Só chegam os avisos em que o usuário é destinatário — ou seja, dos grupos
+  // a que ele (ou o filho) pertence no momento do envio.
   const { data } = await db
     .from('announcement_recipients')
     .select('announcement_id, read_at, announcements(title, body, sent_at)')
     .eq('profile_id', user.id)
     .limit(100);
 
-  return ((data ?? []) as unknown as {
+  const rows = ((data ?? []) as unknown as {
     announcement_id: string;
     read_at: string | null;
     announcements: { title: string; body: string; sent_at: string | null } | null;
-  }[])
-    .filter((r) => r.announcements !== null)
+  }[]).filter((r) => r.announcements !== null);
+
+  const ids = rows.map((r) => r.announcement_id);
+  const filesById = new Map<string, AnnouncementFile[]>();
+  if (ids.length > 0) {
+    const { data: fileRows } = await db
+      .from('announcement_attachments')
+      .select('id, announcement_id, file_name, mime_type, storage_path')
+      .in('announcement_id', ids);
+
+    const files = (fileRows ?? []) as {
+      id: string;
+      announcement_id: string;
+      file_name: string;
+      mime_type: string;
+      storage_path: string;
+    }[];
+
+    // Imagens ganham URL assinada para aparecerem direto no aviso.
+    const previews = await signImagePreviews(files);
+
+    for (const f of files) {
+      const list = filesById.get(f.announcement_id) ?? [];
+      list.push({
+        id: f.id,
+        fileName: f.file_name,
+        mimeType: f.mime_type,
+        previewUrl: previews.get(f.id) ?? null,
+      });
+      filesById.set(f.announcement_id, list);
+    }
+  }
+
+  return rows
     .map((r) => ({
       id: r.announcement_id,
       title: r.announcements?.title ?? '',
       body: r.announcements?.body ?? '',
       sentAt: r.announcements?.sent_at ?? null,
       readAt: r.read_at,
+      attachments: filesById.get(r.announcement_id) ?? [],
     }))
     .sort((a, b) => (b.sentAt ?? '').localeCompare(a.sentAt ?? ''));
 }

@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { Users, UserCog, Plus, Trash2, ChevronRight, CornerDownRight } from 'lucide-react';
+import { Users, UserCog, Plus, Trash2, ChevronRight, CornerDownRight, Star } from 'lucide-react';
 import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
 import { createGroup, deleteGroup, type GroupListItem } from './actions';
 import { Button } from '@/components/ui/button';
@@ -107,7 +107,11 @@ export function GroupsClient({ groups, canManage }: Props) {
         <div className="space-y-2">
           {ordered.map((g) => (
             <div key={g.id} style={{ marginLeft: `${g.depth * 1.5}rem` }}>
-              <AthleticCard className="flex items-center justify-between gap-3 p-4">
+              <AthleticCard
+                className={`flex items-center justify-between gap-3 p-4 ${
+                  g.isMine ? 'border-l-2 border-l-accent-500' : ''
+                }`}
+              >
                 <Link href={`/coach/groups/${g.id}`} className="flex min-w-0 flex-1 items-center gap-2">
                   {g.depth > 0 ? (
                     <CornerDownRight className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -115,6 +119,12 @@ export function GroupsClient({ groups, canManage }: Props) {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="truncate font-medium">{g.name}</span>
+                      {g.isMine ? (
+                        <Badge variant="success">
+                          <Star className="mr-1 h-3 w-3" />
+                          {t('myGroup')}
+                        </Badge>
+                      ) : null}
                       {g.ageGroup ? <Badge variant="outline">{g.ageGroup}</Badge> : null}
                       {g.status !== 'active' ? (
                         <Badge variant="secondary">{g.status}</Badge>

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/routing';
 import { BrandLogo } from '@/components/brand-logo';
 import { LocaleSwitcher } from '@/components/locale-switcher';
+import { ProfileButton } from '@/components/profile-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,7 +32,9 @@ type NavItem = {
     | '/coach/announcements'
     | '/coach/submissions'
     | '/coach/forms'
-    | '/family';
+    | '/family'
+    | '/family/groups'
+    | '/family/announcements';
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 };
@@ -51,7 +54,11 @@ export function AppShell({ children, variant }: AppShellProps) {
           { href: '/coach/submissions', label: t('registrations'), icon: ClipboardList },
           { href: '/coach/forms', label: t('forms'), icon: FileText },
         ]
-      : [{ href: '/family', label: t('dashboard'), icon: LayoutDashboard }];
+      : [
+          { href: '/family', label: t('schedule'), icon: CalendarDays },
+          { href: '/family/groups', label: t('groups'), icon: Users },
+          { href: '/family/announcements', label: t('announcements'), icon: Megaphone },
+        ];
 
   function isActive(href: string): boolean {
     const path = pathname.replace(/^\/(en|pt-BR|es)/, '');
@@ -69,11 +76,19 @@ export function AppShell({ children, variant }: AppShellProps) {
             <BrandLogo size={36} showName alt={tCommon('appName')} />
           </Link>
           <div className="flex items-center gap-1">
+            <ProfileButton />
             <LocaleSwitcher />
             <ThemeToggle />
             <form action="/auth/signout" method="post">
-              <Button variant="ghost" size="icon" type="submit" aria-label={t('logout')}>
-                <LogOut className="h-5 w-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-12 w-12"
+                type="submit"
+                aria-label={t('logout')}
+                title={t('logout')}
+              >
+                <LogOut className="h-8 w-8" />
               </Button>
             </form>
           </div>

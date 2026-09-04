@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { StaticImage } from '@/components/static-image';
-import { listFamilyEvents, listFamilyAnnouncements } from './actions';
+import { listFamilyEvents } from './actions';
 import { FamilyClient } from './family-client';
 
 export const dynamic = 'force-dynamic';
@@ -8,10 +8,7 @@ export const dynamic = 'force-dynamic';
 export default async function FamilyHomePage() {
   const t = await getTranslations('family');
 
-  const [{ athletes, events }, announcements] = await Promise.all([
-    listFamilyEvents(),
-    listFamilyAnnouncements(),
-  ]);
+  const { athletes, events } = await listFamilyEvents();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4">
@@ -33,7 +30,7 @@ export default async function FamilyHomePage() {
         <div className="absolute inset-x-0 bottom-0 h-[3px] bg-accent-500" aria-hidden="true" />
       </section>
 
-      <FamilyClient athletes={athletes} events={events} announcements={announcements} />
+      <FamilyClient athletes={athletes} events={events} />
     </div>
   );
 }

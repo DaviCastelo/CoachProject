@@ -3,9 +3,12 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Eye, FileText, Users } from 'lucide-react';
+import { Eye, FileText, Users, KeyRound, EyeOff } from 'lucide-react';
 import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
+import { createAthleteAccount } from '@/lib/actions/athlete-account';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -122,6 +125,41 @@ export function SubmissionsTable({
     [groupOptions],
   );
 
+  // Criar acesso do atleta direto da inscrição
+  const [athleteAccess, setAthleteAccess] = useState<{
+    athleteId: string;
+    name: string;
+    email: string;
+    password: string;
+  } | null>(null);
+  const [showPw, setShowPw] = useState(false);
+  const [accessDone, setAccessDone] = useState<string | null>(null);
+
+  function submitAthleteAccess() {
+    if (!athleteAccess) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await createAthleteAccount({
+        athleteId: athleteAccess.athleteId,
+        email: athleteAccess.email,
+        temporaryPassword: athleteAccess.password,
+      });
+      if (!res.ok) {
+        const map: Record<string, string> = {
+          invalid_email: tg('errorInvalidEmail'),
+          weak_password: tg('errorWeakPassword'),
+          email_taken: tg('errorEmailTaken'),
+          already_has_account: tg('errorAlreadyHasAccount'),
+        };
+        setError(map[res.error] ?? res.error);
+        return;
+      }
+      setAccessDone(tg('athleteAccountReady'));
+      setAthleteAccess(null);
+      router.refresh();
+    });
+  }
+
   function openDetails(row: SubmissionRow) {
     setError(null);
     setOpenRow(row);
@@ -202,7 +240,8 @@ export function SubmissionsTable({
 
   return (
     <div className="space-y-3">
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error && !athleteAccess ? <p className="text-sm text-danger">{error}</p> : null}
+      {accessDone ? <p className="text-sm text-success">{accessDone}</p> : null}
 
       {groups.map((g) => (
         <section key={g.key} className="space-y-2">
@@ -337,15 +376,34 @@ export function SubmissionsTable({
 
           <DialogFooter>
             {openRow?.athleteId ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => openRow.athleteId && openWaiver(openRow.athleteId)}
-              >
-                <FileText className="h-4 w-4" />
-                Waiver PDF
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openRow.athleteId && openWaiver(openRow.athleteId)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Waiver PDF
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setError(null);
+                    setAthleteAccess({
+                      athleteId: openRow.athleteId as string,
+                      name: openRow.athleteName,
+                      email: '',
+                      password: '',
+                    });
+                  }}
+                >
+                  <KeyRound className="h-4 w-4" />
+                  {tg('createAccess')}
+                </Button>
+              </>
             ) : null}
             {canApprove && openRow ? (
               <>
@@ -372,6 +430,89 @@ export function SubmissionsTable({
                 </Button>
               </>
             ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Criar acesso do atleta a partir da inscrição */}
+      <Dialog
+        open={athleteAccess !== null}
+        onOpenChange={(o) => !pending && !o && setAthleteAccess(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tg('createAccessTitle')}</DialogTitle>
+            <DialogDescription>
+              {tg('createAccessHint', { name: athleteAccess?.name ?? '' })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="sa-email">{tg('coachEmail')}</Label>
+              <Input
+                id="sa-email"
+                type="email"
+                autoComplete="off"
+                placeholder="atleta@exemplo.com"
+                value={athleteAccess?.email ?? ''}
+                onChange={(e) =>
+                  athleteAccess && setAthleteAccess({ ...athleteAccess, email: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="sa-pw">{tg('temporaryPassword')}</Label>
+              <div className="relative">
+                <Input
+                  id="sa-pw"
+                  type={showPw ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  className="pr-10"
+                  value={athleteAccess?.password ?? ''}
+                  onChange={(e) =>
+                    athleteAccess &&
+                    setAthleteAccess({ ...athleteAccess, password: e.target.value })
+                  }
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                  aria-label={showPw ? tg('hidePassword') : tg('showPassword')}
+                  tabIndex={-1}
+                >
+                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">{tg('temporaryPasswordHint')}</p>
+            </div>
+
+            {error ? <p className="text-sm text-danger">{error}</p> : null}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAthleteAccess(null)}
+              disabled={pending}
+            >
+              {tg('cancel')}
+            </Button>
+            <Button
+              size="sm"
+              onClick={submitAthleteAccess}
+              disabled={
+                pending ||
+                !athleteAccess?.email.trim() ||
+                (athleteAccess?.password.length ?? 0) < 8
+              }
+            >
+              <KeyRound className="h-4 w-4" />
+              {pending ? tg('saving') : tg('createAccess')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

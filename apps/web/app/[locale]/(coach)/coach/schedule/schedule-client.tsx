@@ -294,11 +294,15 @@ function SessionSection({
     <section className="space-y-2">
       <h2 className="text-eyebrow pt-2 text-muted-foreground">{label}</h2>
       {items.map((s) => (
-        <AthleticCard key={s.id} className="p-4">
+        <AthleticCard
+          key={s.id}
+          className={`p-4 ${s.isMine ? 'border-l-2 border-l-accent-500' : ''}`}
+        >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <Link href={`/coach/schedule/${s.id}`} className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">{s.title}</span>
+                {s.isMine ? <Badge variant="success">{t('myGroups')}</Badge> : null}
                 <Badge variant="outline">{t(`eventTypes.${s.eventType}`)}</Badge>
                 {s.status === 'canceled' ? (
                   <Badge variant="danger">{t('canceled')}</Badge>

@@ -3,15 +3,9 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Check, X, CalendarDays, MapPin, Megaphone, Users } from 'lucide-react';
+import { Check, X, CalendarDays, MapPin, Users } from 'lucide-react';
 import { canRespondToSession } from '@ca-tempo/domain';
-import {
-  respondRsvp,
-  markAnnouncementRead,
-  type FamilyAthlete,
-  type FamilyEvent,
-  type FamilyAnnouncement,
-} from './actions';
+import { respondRsvp, type FamilyAthlete, type FamilyEvent } from './actions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AthleticCard } from '@/components/athletic-card';
@@ -19,10 +13,9 @@ import { AthleticCard } from '@/components/athletic-card';
 type Props = Readonly<{
   athletes: FamilyAthlete[];
   events: FamilyEvent[];
-  announcements: FamilyAnnouncement[];
 }>;
 
-export function FamilyClient({ athletes, events, announcements }: Props) {
+export function FamilyClient({ athletes, events }: Props) {
   const t = useTranslations('family');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -51,8 +44,6 @@ export function FamilyClient({ athletes, events, announcements }: Props) {
       else router.refresh();
     });
   }
-
-  const unread = announcements.filter((a) => !a.readAt);
 
   return (
     <div className="space-y-8">
@@ -163,56 +154,6 @@ export function FamilyClient({ athletes, events, announcements }: Props) {
               </AthleticCard>
             );
           })
-        )}
-      </section>
-
-      {/* Anúncios */}
-      <section className="space-y-3">
-        <h2 className="text-eyebrow flex items-center gap-2 text-muted-foreground">
-          {t('announcements')}
-          {unread.length > 0 ? <Badge variant="warning">{unread.length}</Badge> : null}
-        </h2>
-
-        {announcements.length === 0 ? (
-          <AthleticCard className="p-6 text-center">
-            <Megaphone className="mx-auto mb-2 h-7 w-7 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">{t('noAnnouncements')}</p>
-          </AthleticCard>
-        ) : (
-          announcements.map((a) => (
-            <AthleticCard
-              key={a.id}
-              className={`p-4 ${!a.readAt ? 'border-l-2 border-l-accent-500' : ''}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium">{a.title}</p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{a.body}</p>
-                  {a.sentAt ? (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      {new Date(a.sentAt).toLocaleString()}
-                    </p>
-                  ) : null}
-                </div>
-                {!a.readAt ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={pending}
-                    onClick={() =>
-                      startTransition(async () => {
-                        await markAnnouncementRead(a.id);
-                        router.refresh();
-                      })
-                    }
-                  >
-                    {t('markRead')}
-                  </Button>
-                ) : null}
-              </div>
-            </AthleticCard>
-          ))
         )}
       </section>
     </div>

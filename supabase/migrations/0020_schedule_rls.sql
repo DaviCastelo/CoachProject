@@ -32,9 +32,19 @@ create policy sessions_family_read on sessions
 -- session_groups — quais grupos participam
 -- ---------------------------------------------------------------------------
 
-create policy session_groups_manage on session_groups
-  for all using (can_manage_session(session_id))
+-- No INSERT do primeiro grupo o evento ainda não tem grupos, então
+-- can_manage_session() seria falso: basta ser coach do grupo que está ligando.
+create policy session_groups_insert on session_groups
+  for insert with check (
+    can_manage_session(session_id) or can_manage_group(group_id)
+  );
+
+create policy session_groups_update on session_groups
+  for update using (can_manage_session(session_id))
   with check (can_manage_session(session_id));
+
+create policy session_groups_delete on session_groups
+  for delete using (can_manage_session(session_id));
 
 create policy session_groups_staff_read on session_groups
   for select using (

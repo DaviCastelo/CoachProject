@@ -56,12 +56,13 @@ export function LocaleSwitcher() {
       <Button
         variant="ghost"
         size="sm"
+        className="h-12 gap-1.5"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Change language"
       >
-        <Globe className="h-4 w-4" />
+        <Globe className="h-8 w-8" />
         <span className="text-xs uppercase">{shortCode(locale)}</span>
       </Button>
 

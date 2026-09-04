@@ -27,6 +27,8 @@ export type SessionListItem = {
   going: number;
   notGoing: number;
   noReply: number;
+  /** Algum grupo deste evento é treinado pelo usuário logado? */
+  isMine: boolean;
 };
 
 export type SessionRosterEntry = {
@@ -76,16 +78,24 @@ export async function listSessions(): Promise<SessionListItem[]> {
   if (sessions.length === 0) return [];
   const ids = sessions.map((s) => s.id);
 
-  const [{ data: groupRows }, { data: attRows }] = await Promise.all([
-    db.from('session_groups').select('session_id, groups(name)').in('session_id', ids),
+  const [{ data: groupRows }, { data: attRows }, { data: myGroups }] = await Promise.all([
+    db.from('session_groups').select('session_id, group_id, groups(name)').in('session_id', ids),
     db.from('session_attendance').select('session_id, status').in('session_id', ids),
+    db.from('group_coaches').select('group_id').eq('coach_id', ctx.userId),
   ]);
 
+  const myGroupIds = new Set(
+    ((myGroups ?? []) as { group_id: string }[]).map((r) => r.group_id),
+  );
+
   const namesBySession = new Map<string, string[]>();
+  const mineBySession = new Set<string>();
   for (const r of (groupRows ?? []) as unknown as {
     session_id: string;
+    group_id: string;
     groups: { name: string } | null;
   }[]) {
+    if (myGroupIds.has(r.group_id)) mineBySession.add(r.session_id);
     if (!r.groups) continue;
     const list = namesBySession.get(r.session_id) ?? [];
     list.push(r.groups.name);
@@ -112,6 +122,7 @@ export async function listSessions(): Promise<SessionListItem[]> {
       status: s.status,
       publishedAt: s.published_at,
       groupNames: namesBySession.get(s.id) ?? [],
+      isMine: mineBySession.has(s.id),
       ...t,
     };
   });

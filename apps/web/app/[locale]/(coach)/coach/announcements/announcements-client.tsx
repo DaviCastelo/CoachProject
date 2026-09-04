@@ -5,8 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Megaphone, Send, Users, Eye } from 'lucide-react';
 import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
-import { createAndSendAnnouncement, type AnnouncementListItem } from './actions';
+import {
+  createAndSendAnnouncement,
+  getAttachmentUrl,
+  type AnnouncementListItem,
+} from './actions';
 import type { GroupListItem } from '../groups/actions';
+import { AnnouncementAttachments } from '@/components/announcement-attachments';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,6 +46,13 @@ export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
   const [includeSubgroups, setIncludeSubgroups] = useState(false);
 
   const orderedGroups = useMemo(() => flattenGroupTree(buildGroupTree(groups)), [groups]);
+
+  async function openAttachment(id: string) {
+    setError(null);
+    const url = await getAttachmentUrl(id);
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    else setError(t('attachmentUnavailable'));
+  }
 
   function toggleGroup(id: string) {
     setPicked((prev) => {
@@ -111,6 +123,12 @@ export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
                     </Badge>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{a.body}</p>
+
+                  <AnnouncementAttachments
+                    attachments={a.attachments}
+                    onOpen={openAttachment}
+                  />
+
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <Users className="h-3.5 w-3.5" />
