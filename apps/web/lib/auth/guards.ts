@@ -90,7 +90,19 @@ export async function mustChangePassword(): Promise<boolean> {
   return Boolean((data as { must_change_password: boolean } | null)?.must_change_password);
 }
 
+/**
+ * 2FA obrigatório para owner/admin — hoje **desligado por padrão**.
+ *
+ * Ficou opt-in porque a exigência travava administradores fora do sistema:
+ * quando o app autenticador não conseguia ler o QR code, não havia caminho
+ * alternativo para entrar. Quem quiser 2FA ainda pode ativar em /auth/mfa;
+ * a diferença é que ninguém é mais bloqueado por não ter.
+ *
+ * Para tornar obrigatório de novo: REQUIRE_ADMIN_MFA=true no ambiente.
+ */
 export async function requireMfaForAdmin(): Promise<void> {
+  if (process.env.REQUIRE_ADMIN_MFA !== 'true') return;
+
   const supabase = await createClient();
   const ctx = await getActiveOrg();
   if (!ctx) return;
