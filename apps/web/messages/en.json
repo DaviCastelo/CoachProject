@@ -5,7 +5,8 @@
     "error": "Something went wrong. Please try again.",
     "save": "Save",
     "cancel": "Cancel",
-    "attachments": "Attachments"
+    "attachments": "Attachments",
+    "comingSoon": "Coming soon"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -18,7 +19,10 @@
     "account": "Account",
     "logout": "Sign out",
     "groups": "Groups",
-    "announcements": "Announcements"
+    "announcements": "Announcements",
+    "more": "More",
+    "skipToContent": "Skip to content",
+    "mainNavigation": "Main navigation"
   },
   "auth": {
     "login": "Sign in",

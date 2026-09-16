@@ -45,6 +45,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AthleticCard } from '@/components/athletic-card';
 import {
   Dialog,
@@ -201,9 +202,13 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
     assignHere: true,
   });
   const [showPw, setShowPw] = useState(false);
+  // Qual campo causou o erro, para mostrar a mensagem ao lado dele
+  // (mensagem no rodape do modal nao diz o que corrigir).
+  const [fieldError, setFieldError] = useState<{ field: string; message: string } | null>(null);
 
   function submitNewCoach() {
     setError(null);
+    setFieldError(null);
     startTransition(async () => {
       const res = await createCoachAccount({
         fullName: nc.fullName,
@@ -221,7 +226,15 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
           weak_password: t('errorWeakPassword'),
           email_taken: t('errorEmailTaken'),
         };
-        setError(map[res.error] ?? res.error);
+        const fieldOf: Record<string, string> = {
+          name_required: 'fullName',
+          invalid_email: 'email',
+          email_taken: 'email',
+          weak_password: 'password',
+        };
+        const message = map[res.error] ?? res.error;
+        if (fieldOf[res.error]) setFieldError({ field: fieldOf[res.error], message });
+        else setError(message);
         return;
       }
       setNewCoachOpen(false);
@@ -515,6 +528,7 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
                 className="w-full"
                 onClick={() => {
                   setError(null);
+                  setFieldError(null);
                   setNewCoachOpen(true);
                 }}
               >
@@ -587,7 +601,11 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
 
             <div className="max-h-[45vh] space-y-1 overflow-y-auto">
               {loadingCandidates ? (
-                <p className="p-3 text-sm text-muted-foreground">{t('loading')}</p>
+                <div className="space-y-1" aria-busy="true">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
               ) : candidates.length === 0 ? (
                 <p className="p-3 text-sm text-muted-foreground">{t('noAthletesFound')}</p>
               ) : (
@@ -921,6 +939,9 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
                 placeholder={t('coachFullNamePlaceholder')}
                 onChange={(e) => setNc({ ...nc, fullName: e.target.value })}
               />
+              {fieldError?.field === 'fullName' ? (
+                <p className="text-xs text-danger">{fieldError.message}</p>
+              ) : null}
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -934,6 +955,9 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
                   placeholder="coach@exemplo.com"
                   onChange={(e) => setNc({ ...nc, email: e.target.value })}
                 />
+                {fieldError?.field === 'email' ? (
+                  <p className="text-xs text-danger">{fieldError.message}</p>
+                ) : null}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="nc-phone">{t('coachPhone')}</Label>
@@ -968,6 +992,9 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
                 </button>
               </div>
               <p className="text-xs text-muted-foreground">{t('passwordHint')}</p>
+              {fieldError?.field === 'password' ? (
+                <p className="text-xs text-danger">{fieldError.message}</p>
+              ) : null}
             </div>
 
             <div className="space-y-1.5">

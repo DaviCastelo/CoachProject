@@ -85,8 +85,8 @@ export function DeleteFormButton({ formId, formName, submissionCount }: Props) {
             </Button>
             <Button
               type="button"
+              variant="destructive"
               size="sm"
-              className="bg-danger text-white hover:bg-danger/90"
               onClick={confirmDelete}
               disabled={pending}
             >

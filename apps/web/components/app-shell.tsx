@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/routing';
@@ -16,6 +17,7 @@ import {
   Users,
   CalendarDays,
   Megaphone,
+  MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -43,6 +45,7 @@ export function AppShell({ children, variant }: AppShellProps) {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const navItems: NavItem[] =
     variant === 'coach'
@@ -68,9 +71,24 @@ export function AppShell({ children, variant }: AppShellProps) {
     return path.startsWith(href);
   }
 
+  // Em 375px, 6 itens deixam ~62px cada — rótulos como "Formulários" não
+  // caberiam. Os 4 primeiros ficam sempre visíveis; o resto entra no "Mais".
+  const MAX_VISIBLE = 4;
+  const primaryItems = navItems.slice(0, MAX_VISIBLE);
+  const overflowItems = navItems.slice(MAX_VISIBLE);
+  const overflowActive = overflowItems.some((i) => isActive(i.href));
+
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 border-b border-ink-800 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* Atalho de teclado: pula a navegação e vai direto ao conteúdo. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:ring-2 focus:ring-accent-500"
+      >
+        {t('skipToContent')}
+      </a>
+
+      <header className="sticky top-0 z-30 border-b border-ink-800 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center justify-between px-4">
           <Link href={variant === 'coach' ? '/coach' : '/family'}>
             <BrandLogo size={36} showName alt={tCommon('appName')} />
@@ -95,19 +113,51 @@ export function AppShell({ children, variant }: AppShellProps) {
         </div>
       </header>
 
-      <main className="flex-1 pb-20">{children}</main>
+      <main id="main-content" className="flex-1 pb-20">
+        {children}
+      </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-ink-800 bg-background">
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-ink-800 bg-background"
+        aria-label={t('mainNavigation')}
+      >
+        {/* Itens extras, abertos pelo "Mais" */}
+        {moreOpen && overflowItems.length > 0 ? (
+          <div className="border-b border-ink-800">
+            {overflowItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMoreOpen(false)}
+                  className={cn(
+                    'flex min-h-[var(--spacing-touch)] items-center gap-3 px-4 text-sm transition-colors',
+                    isActive(item.href)
+                      ? 'text-accent-500'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ) : null}
+
         <div className="flex justify-around">
-          {navItems.map((item) => {
+          {primaryItems.map((item) => {
             const active = isActive(item.href);
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setMoreOpen(false)}
+                aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative flex min-h-[var(--spacing-touch)] flex-1 flex-col items-center justify-center gap-1 text-xs transition-colors',
+                  'relative flex min-h-[var(--spacing-touch)] min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-xs transition-colors',
                   active ? 'text-accent-500' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -117,11 +167,34 @@ export function AppShell({ children, variant }: AppShellProps) {
                     aria-hidden="true"
                   />
                 ) : null}
-                <Icon className="h-5 w-5" />
-                <span>{item.label}</span>
+                <Icon className="h-5 w-5 shrink-0" />
+                <span className="max-w-full truncate">{item.label}</span>
               </Link>
             );
           })}
+
+          {overflowItems.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setMoreOpen((v) => !v)}
+              aria-expanded={moreOpen}
+              className={cn(
+                'relative flex min-h-[var(--spacing-touch)] min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-xs transition-colors',
+                moreOpen || overflowActive
+                  ? 'text-accent-500'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {overflowActive ? (
+                <span
+                  className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-accent-500"
+                  aria-hidden="true"
+                />
+              ) : null}
+              <MoreHorizontal className="h-5 w-5 shrink-0" />
+              <span className="max-w-full truncate">{t('more')}</span>
+            </button>
+          ) : null}
         </div>
       </nav>
     </div>

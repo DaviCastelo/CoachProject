@@ -5,7 +5,8 @@
     "error": "Algo deu errado. Tente novamente.",
     "save": "Salvar",
     "cancel": "Cancelar",
-    "attachments": "Anexos"
+    "attachments": "Anexos",
+    "comingSoon": "Em breve"
   },
   "nav": {
     "dashboard": "Painel",
@@ -18,7 +19,10 @@
     "account": "Conta",
     "logout": "Sair",
     "groups": "Grupos",
-    "announcements": "Avisos"
+    "announcements": "Avisos",
+    "more": "Mais",
+    "skipToContent": "Ir para o conteúdo",
+    "mainNavigation": "Navegação principal"
   },
   "auth": {
     "login": "Entrar",

@@ -36,6 +36,7 @@ export function EmptyState({
   className,
 }: EmptyStateProps) {
   const t = useTranslations(namespace);
+  const tCommon = useTranslations('common');
   const Icon = iconName ? EMPTY_ICONS[iconName] : null;
 
   return (
@@ -60,9 +61,13 @@ export function EmptyState({
       <h2 className="mb-2 font-display text-2xl uppercase tracking-wide">{t(titleKey)}</h2>
       <p className="mb-6 max-w-sm text-muted-foreground">{t(descriptionKey)}</p>
       {actionKey && (
-        <Button variant="default" disabled>
-          {t(actionKey)}
-        </Button>
+        <div className="flex flex-col items-center gap-2">
+          <Button variant="default" disabled>
+            {t(actionKey)}
+          </Button>
+          {/* Botão desabilitado sem explicação parece defeito; diz por quê. */}
+          <span className="text-xs text-muted-foreground">{tCommon('comingSoon')}</span>
+        </div>
       )}
     </div>
   );

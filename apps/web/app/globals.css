@@ -18,10 +18,14 @@
   --color-accent-500: #c8a24a;
   --color-accent-600: #a8853a;
 
-  --color-success: #16794a;
-  --color-warning: #b45309;
-  --color-danger: #b02a2a;
-  --color-info: #1f5f8b;
+  /* Cores de estado: os valores abaixo são os do tema CLARO. No escuro elas
+     reprovavam no contraste AA (danger 2.8:1, info 2.7:1, success 3.4:1,
+     warning 3.7:1 sobre bg-card), então apontam para variáveis de runtime
+     redefinidas em .dark — ver --success/--warning/--danger/--info. */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
 
   --font-display: 'Bebas Neue', 'Oswald', sans-serif;
   --font-sans: 'Inter', system-ui, sans-serif;
@@ -29,6 +33,14 @@
 
   --radius-card: 12px;
   --spacing-touch: 56px;
+
+  /* Escala de z-index (evita valores arbitrários brigando entre si):
+       10  conteúdo sobreposto dentro de um bloco
+       30  header fixo
+       40  navegação inferior
+       50  diálogos/modais (Radix Portal)
+       60  atalho "ir para o conteúdo" (precisa vencer o header)
+      100  bloqueio de senha temporária (trava a tela inteira) */
 
   --color-border: var(--border);
   /* Tokens semânticos: apontam para as variáveis de runtime (:root / .dark),
@@ -75,6 +87,13 @@
     --popover: var(--card);
     --popover-foreground: var(--card-foreground);
     --radius: 8px;
+
+    /* Estados no tema claro (passam AA sobre papel branco) */
+    --success: #16794a;
+    --warning: #b45309;
+    --danger: #b02a2a;
+    --info: #1f5f8b;
+
     color-scheme: light;
   }
 
@@ -91,13 +110,24 @@
     --muted-foreground: var(--color-ink-400);
     --accent: var(--color-ink-800);
     --accent-foreground: var(--color-ink-100);
-    --destructive: var(--color-danger);
+    /* `danger` é cor de TEXTO (clara no escuro). `destructive` é SUPERFÍCIE:
+       precisa seguir escura nos dois temas para o texto branco continuar
+       legível em cima (8.2:1). Por isso não acompanha --danger aqui. */
+    --destructive: #b02a2a;
     --destructive-foreground: var(--color-ink-50);
     --border: var(--color-ink-700);
     --input: var(--color-ink-700);
     --ring: var(--color-accent-500);
     --popover: var(--card);
     --popover-foreground: var(--card-foreground);
+
+    /* Estados no tema escuro: versões claras das mesmas cores, para passar
+       AA (>=4.5:1) sobre bg-card (#141414) e bg-background (#0a0a0a). */
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --info: #60a5fa;
+
     color-scheme: dark;
   }
 

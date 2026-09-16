@@ -7,6 +7,7 @@ import { Eye, FileText, Users, KeyRound, EyeOff } from 'lucide-react';
 import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
 import { createAthleteAccount } from '@/lib/actions/athlete-account';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -306,7 +307,19 @@ export function SubmissionsTable({
 
           <div className="max-h-[60vh] overflow-y-auto text-sm">
             {loadingDetails ? (
-              <p className="text-muted-foreground">Loading…</p>
+              /* Esqueleto no formato do conteudo: evita o salto de layout que
+                 um texto "Carregando" de uma linha provoca. */
+              <div className="space-y-4" aria-busy="true">
+                <Skeleton className="h-3 w-24" />
+                <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="flex justify-between gap-4 py-1.5">
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-3 w-28" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : !details ? (
               <p className="text-muted-foreground">Details not found.</p>
             ) : (

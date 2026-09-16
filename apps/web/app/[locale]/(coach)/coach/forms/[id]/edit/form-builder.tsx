@@ -173,7 +173,7 @@ function SortableField({
       ref={setNodeRef}
       style={style}
       onClick={onSelect}
-      className={`flex items-center gap-2 rounded-md border px-2 py-1.5 transition-colors ${
+      className={`flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 transition-colors ${
         selected ? 'border-accent-500 bg-accent-500/10' : 'border-input hover:border-muted-foreground/40'
       }`}
     >
@@ -208,7 +208,7 @@ function SortableField({
         type="button"
         variant="ghost"
         size="icon"
-        className="h-7 w-7 shrink-0"
+        className="h-9 w-9 shrink-0"
         onClick={(e) => {
           e.stopPropagation();
           onRemove();

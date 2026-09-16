@@ -231,8 +231,8 @@ export function SessionDetailClient({ session, canEdit }: Props) {
               {t('cancel')}
             </Button>
             <Button
-              size="sm"
-              className="bg-danger text-white hover:bg-danger/90"
+              variant="destructive"
+              size="sm"
               disabled={pending}
               onClick={() =>
                 run(() => cancelSession(session.id, reason), () => setCancelOpen(false))

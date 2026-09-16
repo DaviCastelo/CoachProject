@@ -5,7 +5,8 @@
     "error": "Algo salió mal. Inténtalo de nuevo.",
     "save": "Guardar",
     "cancel": "Cancelar",
-    "attachments": "Adjuntos"
+    "attachments": "Adjuntos",
+    "comingSoon": "Pronto"
   },
   "nav": {
     "dashboard": "Panel",
@@ -18,7 +19,10 @@
     "account": "Cuenta",
     "logout": "Cerrar sesión",
     "groups": "Grupos",
-    "announcements": "Avisos"
+    "announcements": "Avisos",
+    "more": "Más",
+    "skipToContent": "Ir al contenido",
+    "mainNavigation": "Navegación principal"
   },
   "auth": {
     "login": "Iniciar sesión",

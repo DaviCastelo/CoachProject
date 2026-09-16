@@ -245,8 +245,8 @@ export function GroupsClient({ groups, canManage }: Props) {
               {t('cancel')}
             </Button>
             <Button
-              size="sm"
-              className="bg-danger text-white hover:bg-danger/90"
+              variant="destructive"
+              size="sm"
               onClick={confirmDelete}
               disabled={pending}
             >
