@@ -50,13 +50,13 @@ export function PasswordGate() {
       aria-modal="true"
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
     >
-      <div className="w-full max-w-md rounded-lg border border-ink-700 bg-card p-6 shadow-lg accent-border-top">
+      <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg accent-border-top">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-500/10 text-accent-500">
             <ShieldAlert className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="font-display text-xl uppercase tracking-wide">{t('changeTitle')}</h2>
+            <h2 className="text-xl font-semibold tracking-tight">{t('changeTitle')}</h2>
             <p className="text-sm text-muted-foreground">{t('changeSubtitle')}</p>
           </div>
         </div>

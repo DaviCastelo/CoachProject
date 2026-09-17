@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
 import { StaticImage } from '@/components/static-image';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FieldError } from '@/components/ui/field-error';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BrandLogo } from '@/components/brand-logo';
 
@@ -20,35 +22,45 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState<string | null>(
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(
     searchParams.get('error') === 'unauthorized' ? t('unauthorized') : null,
   );
 
   const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
+  function mapAuthError(message: string): string {
+    const lower = message.toLowerCase();
+    if (lower.includes('invalid') || lower.includes('credentials')) {
+      return t('invalidCredentials');
+    }
+    return t('loginFailed');
+  }
+
   async function handlePasswordLogin() {
     setLoading(true);
-    setError(null);
+    setEmailError(null);
+    setPasswordError(null);
 
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
     setLoading(false);
     if (signInError) {
-      setError(signInError.message);
+      setPasswordError(mapAuthError(signInError.message));
     } else {
-      // Deixa o servidor decidir o destino conforme o papel (staff x família/atleta).
       window.location.assign('/auth/home');
     }
   }
 
   async function sendMagicLink() {
     if (!email) {
-      setError(t('email'));
+      setEmailError(t('emailRequired'));
       return;
     }
     setLoading(true);
-    setError(null);
+    setEmailError(null);
+    setPasswordError(null);
 
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithOtp({
@@ -57,8 +69,11 @@ export default function LoginPage() {
     });
 
     setLoading(false);
-    if (signInError) setError(signInError.message);
-    else setSent(true);
+    if (signInError) setEmailError(mapAuthError(signInError.message));
+    else {
+      setSent(true);
+      toast.success(t('magicLinkSent'));
+    }
   }
 
   async function handleGoogleLogin() {
@@ -70,14 +85,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-7rem)] flex-col lg:flex-row">
+    <div className="flex min-h-dvh flex-col lg:flex-row">
       <main className="flex flex-1 items-center justify-center p-4 lg:p-8">
-        <Card className="w-full max-w-md accent-border-top shadow-lg shadow-accent-500/5">
+        <Card className="w-full max-w-md accent-border-top">
           <CardHeader className="text-center">
             <div className="mb-4 flex justify-center">
               <BrandLogo size={56} />
             </div>
-            <CardTitle>{t('loginTitle')}</CardTitle>
+            <CardTitle className="font-display uppercase tracking-wide">{t('loginTitle')}</CardTitle>
             <CardDescription>{sent ? t('magicLinkSent') : t('loginSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -101,7 +116,10 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     autoComplete="email"
+                    aria-invalid={Boolean(emailError)}
+                    aria-describedby={emailError ? 'email-error' : undefined}
                   />
+                  <FieldError id="email-error">{emailError}</FieldError>
                 </div>
 
                 <div className="space-y-2">
@@ -115,6 +133,8 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       autoComplete="current-password"
                       className="pr-10"
+                      aria-invalid={Boolean(passwordError)}
+                      aria-describedby={passwordError ? 'password-error' : undefined}
                     />
                     <button
                       type="button"
@@ -130,12 +150,11 @@ export default function LoginPage() {
                       )}
                     </button>
                   </div>
+                  <FieldError id="password-error">{passwordError}</FieldError>
                 </div>
 
-                {error && <p className="text-sm text-danger">{error}</p>}
-
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? '...' : t('login')}
+                  {loading ? t('signingIn') : t('login')}
                 </Button>
 
                 <div className="relative my-4">
@@ -170,16 +189,16 @@ export default function LoginPage() {
         </Card>
       </main>
 
-      <div className="relative hidden min-h-[calc(100vh-7rem)] flex-1 lg:block">
+      <div className="relative hidden min-h-dvh flex-1 lg:block">
         <StaticImage
           src="/images/hero-action-2.png"
           alt="Athletes in training"
           fill
-          className="object-contain"
+          className="object-cover object-center"
           sizes="50vw"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-l from-transparent to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-l from-background/80 to-transparent" />
       </div>
     </div>
   );

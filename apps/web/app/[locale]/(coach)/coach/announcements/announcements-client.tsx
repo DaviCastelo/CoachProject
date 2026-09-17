@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Megaphone, Send, Users, Eye } from 'lucide-react';
 import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
 import {
@@ -17,14 +17,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AthleticCard } from '@/components/athletic-card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { EmptyState } from '@/components/empty-state';
+import { FieldError } from '@/components/ui/field-error';
+import { formatDateTime } from '@/lib/format-datetime';
+import { toast } from 'sonner';
+import { ResponsiveFormOverlay } from '@/components/ui/responsive-form-overlay';
 
 type Props = Readonly<{
   announcements: AnnouncementListItem[];
@@ -34,10 +31,10 @@ type Props = Readonly<{
 
 export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
   const t = useTranslations('announcements');
+  const locale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
   const [title, setTitle] = useState('');
@@ -65,7 +62,6 @@ export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
 
   function send() {
     setError(null);
-    setSuccess(null);
     startTransition(async () => {
       const res = await createAndSendAnnouncement({
         title,
@@ -74,16 +70,17 @@ export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
         includeSubgroups,
       });
       if (!res.ok) {
-        setError(
+        const msg =
           res.error === 'group_not_owned'
             ? t('errorNotYourGroup')
             : res.error === 'groups_required'
               ? t('errorGroupsRequired')
-              : res.error,
-        );
+              : res.error;
+        setError(msg);
+        toast.error(msg);
         return;
       }
-      setSuccess(t('sentSuccess', { count: res.recipients }));
+      toast.success(t('sentSuccess', { count: res.recipients }));
       setOpen(false);
       setTitle('');
       setBody('');
@@ -101,15 +98,13 @@ export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
         </Button>
       ) : null}
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      {success ? <p className="text-sm text-success">{success}</p> : null}
-
       {announcements.length === 0 ? (
-        <AthleticCard className="p-6 text-center">
-          <Megaphone className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-          <h2 className="mb-2 font-display text-xl uppercase tracking-wide">{t('emptyTitle')}</h2>
-          <p className="text-sm text-muted-foreground">{t('emptyDescription')}</p>
-        </AthleticCard>
+        <EmptyState
+          namespace="announcements"
+          titleKey="emptyTitle"
+          descriptionKey="emptyDescription"
+          iconName="clipboard"
+        />
       ) : (
         <div className="space-y-3">
           {announcements.map((a) => (
@@ -142,7 +137,7 @@ export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
                       <Eye className="h-3.5 w-3.5" />
                       {t('readCount', { count: a.readCount })}
                     </span>
-                    {a.sentAt ? <span>{new Date(a.sentAt).toLocaleString()}</span> : null}
+                    {a.sentAt ? <span>{formatDateTime(a.sentAt, locale)}</span> : null}
                   </div>
                 </div>
               </div>
@@ -151,14 +146,28 @@ export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={(o) => !pending && setOpen(o)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('newAnnouncement')}</DialogTitle>
-            <DialogDescription>{t('newAnnouncementHint')}</DialogDescription>
-          </DialogHeader>
-
-          <div className="max-h-[60vh] space-y-4 overflow-y-auto">
+      <ResponsiveFormOverlay
+        open={open}
+        onOpenChange={(o) => !pending && setOpen(o)}
+        title={t('newAnnouncement')}
+        description={t('newAnnouncementHint')}
+        footer={
+          <>
+            <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={pending}>
+              {t('cancel')}
+            </Button>
+            <Button
+              size="sm"
+              onClick={send}
+              disabled={pending || !title.trim() || !body.trim() || picked.size === 0}
+            >
+              <Send className="h-4 w-4" />
+              {pending ? t('sending') : t('send')}
+            </Button>
+          </>
+        }
+      >
+        <div className="max-h-[60vh] space-y-4 overflow-y-auto">
             <div className="space-y-1.5">
               <Label htmlFor="a-title">{t('announcementTitle')}</Label>
               <Input
@@ -166,6 +175,8 @@ export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
                 value={title}
                 placeholder={t('titlePlaceholder')}
                 onChange={(e) => setTitle(e.target.value)}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'a-title-error' : undefined}
               />
             </div>
 
@@ -219,24 +230,9 @@ export function AnnouncementsClient({ announcements, groups, canSend }: Props) {
               <p className="text-xs text-muted-foreground">{t('audienceHint')}</p>
             </div>
 
-            {error ? <p className="text-sm text-danger">{error}</p> : null}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={pending}>
-              {t('cancel')}
-            </Button>
-            <Button
-              size="sm"
-              onClick={send}
-              disabled={pending || !title.trim() || !body.trim() || picked.size === 0}
-            >
-              <Send className="h-4 w-4" />
-              {pending ? t('sending') : t('send')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <FieldError id="a-title-error">{error}</FieldError>
+        </div>
+      </ResponsiveFormOverlay>
     </div>
   );
 }

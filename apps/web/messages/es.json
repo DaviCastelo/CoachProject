@@ -6,7 +6,15 @@
     "save": "Guardar",
     "cancel": "Cancelar",
     "attachments": "Adjuntos",
-    "comingSoon": "Pronto"
+    "comingSoon": "Pronto",
+    "programs": "Programas",
+    "instagram": "Instagram",
+    "contact": "Contacto",
+    "theme": "Tema",
+    "language": "Idioma",
+    "lightTheme": "Claro",
+    "darkTheme": "Oscuro",
+    "stepOf": "Paso {current} de {total}"
   },
   "nav": {
     "dashboard": "Panel",
@@ -22,7 +30,10 @@
     "announcements": "Avisos",
     "more": "Más",
     "skipToContent": "Ir al contenido",
-    "mainNavigation": "Navegación principal"
+    "mainNavigation": "Navegación principal",
+    "changeLanguage": "Cambiar idioma",
+    "toggleTheme": "Cambiar tema",
+    "accountMenu": "Menú de la cuenta"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -46,7 +57,11 @@
     "inviteTitle": "Aceptar invitación",
     "inviteDescription": "Has sido invitado a CA Tempo Training.",
     "inviteInvalid": "Esta invitación no es válida o ya fue aceptada.",
-    "inviteAccept": "Aceptar invitación"
+    "inviteAccept": "Aceptar invitación",
+    "signingIn": "Iniciando sesión…",
+    "invalidCredentials": "Correo o contraseña incorrectos.",
+    "emailRequired": "Ingresa tu correo electrónico.",
+    "loginFailed": "No se pudo iniciar sesión. Inténtalo de nuevo."
   },
   "landing": {
     "heroTitle": "CA TEMPO TRAINING",
@@ -72,7 +87,14 @@
   "submissions": {
     "title": "Inscripciones",
     "subtitle": "{count} en total",
-    "viewOnly": " · solo visualización"
+    "viewOnly": " · solo visualización",
+    "view": "Ver",
+    "viewAria": "Ver {name}",
+    "dob": "Nac.",
+    "empty": "Aún no hay inscripciones.",
+    "search": "Buscar por nombre",
+    "filterStatus": "Estado",
+    "allStatuses": "Todos los estados"
   },
   "coach": {
     "dashboardTitle": "Panel",
@@ -100,6 +122,9 @@
     "closed": "Cerrado",
     "eventCanceled": "Cancelado",
     "pleaseRespond": "Confirma la asistencia.",
+    "confirmed": "Voy",
+    "declined": "No voy",
+    "nextSession": "Próximo entrenamiento",
     "announcements": "Avisos",
     "noAnnouncements": "Sin avisos aún.",
     "markRead": "Marcar como leído",
@@ -508,6 +533,14 @@
   "schedule": {
     "title": "Agenda",
     "subtitle": "{count} eventos",
+    "visibleCount": "{count} en esta vista",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "today": "Hoy",
+    "week": "Semana",
+    "month": "Mes",
+    "list": "Lista",
+    "fieldPlaceholder": "Campo 3",
     "newEvent": "Nuevo evento",
     "newEventHint": "Elige uno o más grupos — todos verán el evento.",
     "eventTitle": "Título",

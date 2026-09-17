@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import { StaticImage } from '@/components/static-image';
 import { createServiceClient } from '@/lib/supabase/service';
@@ -8,6 +8,8 @@ import { SectionHeader } from '@/components/section-header';
 import { SkewImageFrame } from '@/components/skew-image-frame';
 import { AthleticCard } from '@/components/athletic-card';
 import { SpeedLines } from '@/components/speed-lines';
+import { formatDate } from '@/lib/format-datetime';
+import { programImageForSlug } from '@/lib/program-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,13 +20,9 @@ type ProgramRow = {
   starts_on: string | null;
 };
 
-function dateRange(start: string | null): string | null {
-  if (!start) return null;
-  return new Date(start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
 export default async function LandingPage() {
   const t = await getTranslations('landing');
+  const locale = await getLocale();
 
   const svc = createServiceClient();
   const { data } = await svc
@@ -98,21 +96,21 @@ export default async function LandingPage() {
           <p className="text-center text-muted-foreground">{t('viewAllPrograms')}</p>
         ) : (
           <div className="mb-8 grid gap-4 md:grid-cols-3">
-            {programs.map((p, i) => (
+            {programs.map((p) => (
               <Link key={p.slug} href={`/programs/${p.slug}`} className="block">
-                <AthleticCard className="overflow-hidden">
+                <AthleticCard lift className="overflow-hidden">
                   <div className="relative h-40">
                     <StaticImage
-                      src={`/images/gallery-${(i % 4) + 1}.png`}
+                      src={programImageForSlug(p.slug)}
                       alt=""
                       fill
-                      className="object-contain"
+                      className="object-cover"
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 to-transparent" />
-                    {dateRange(p.starts_on) ? (
+                    {p.starts_on ? (
                       <span className="absolute bottom-3 left-3 rounded bg-accent-500 px-2 py-0.5 text-xs font-medium text-ink-950">
-                        {dateRange(p.starts_on)}
+                        {formatDate(p.starts_on, locale)}
                       </span>
                     ) : null}
                   </div>

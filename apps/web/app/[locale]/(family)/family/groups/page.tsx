@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Users, UserCog, Shield } from 'lucide-react';
 import { listFamilyGroups } from '../actions';
 import { AthleticCard } from '@/components/athletic-card';
+import { EmptyState } from '@/components/empty-state';
 import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
@@ -13,15 +14,12 @@ export default async function FamilyGroupsPage() {
   return (
     <div className="mx-auto w-full max-w-3xl p-4">
       <div className="mb-6">
-        <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">{t('myGroups')}</h1>
+        <h1 className="mb-1 text-3xl font-semibold tracking-tight">{t('myGroups')}</h1>
         <p className="text-sm text-muted-foreground">{t('myGroupsSubtitle')}</p>
       </div>
 
       {groups.length === 0 ? (
-        <AthleticCard className="p-6 text-center">
-          <Users className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">{t('noGroups')}</p>
-        </AthleticCard>
+        <EmptyState namespace="family" titleKey="noGroups" iconName="grid" />
       ) : (
         <div className="space-y-3">
           {groups.map((g) => (

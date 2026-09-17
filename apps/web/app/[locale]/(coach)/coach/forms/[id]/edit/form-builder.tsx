@@ -51,6 +51,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-is-mobile';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 
 type Props = Readonly<{
   initial: FormDetail;
@@ -269,7 +277,7 @@ function TemplatePicker({
   return (
     <div className="rounded-lg border border-dashed border-input p-6 text-center">
       <LayoutTemplate className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-      <h3 className="font-display text-lg uppercase tracking-wide">{t('startTitle')}</h3>
+      <h3 className="text-lg font-semibold tracking-tight">{t('startTitle')}</h3>
       <p className="mx-auto mb-4 max-w-md text-sm text-muted-foreground">{t('startSubtitle')}</p>
       <div className="grid gap-3 sm:grid-cols-3">
         {TEMPLATE_IDS.map((id) => (
@@ -307,8 +315,8 @@ export function FormBuilder({ initial }: Props) {
   const [selected, setSelected] = useState<{ sectionId: string; fieldId: string } | null>(null);
   const [activeDrag, setActiveDrag] = useState<DragItem | null>(null);
   const [view, setView] = useState<'edit' | 'preview'>('edit');
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const isCompact = useIsMobile(1024);
 
   const isDirty = useMemo(
     () => JSON.stringify(schema) !== JSON.stringify(savedSchema),
@@ -391,7 +399,7 @@ export function FormBuilder({ initial }: Props) {
   function applyTemplate(id: TemplateId) {
     setSchema(TEMPLATES[id]());
     setSelected(null);
-    setMessage(t('templateApplied'));
+    toast.success(t('templateApplied'));
   }
 
   const handleRemoveSection = useCallback((sectionId: string) => {
@@ -423,29 +431,25 @@ export function FormBuilder({ initial }: Props) {
   }
 
   function handleSaveDraft() {
-    setError(null);
-    setMessage(null);
     startTransition(async () => {
       const res = await persistDraft();
       if (res.ok) {
         setSavedSchema(schema);
         setHasDraft(true);
-        setMessage(t('saved'));
+        toast.success(t('saved'));
         router.refresh();
       } else {
-        setError(res.error);
+        toast.error(res.error);
       }
     });
   }
 
   function handlePublish() {
-    setError(null);
-    setMessage(null);
     startTransition(async () => {
       if (isDirty) {
         const saveRes = await persistDraft();
         if (!saveRes.ok) {
-          setError(saveRes.error);
+          toast.error(saveRes.error);
           return;
         }
         setSavedSchema(schema);
@@ -455,10 +459,10 @@ export function FormBuilder({ initial }: Props) {
         setPublishedVersion(res.version);
         setHasDraft(false);
         setFormMeta((m) => ({ ...m, status: 'published' }));
-        setMessage(t('published', { version: res.version }));
+        toast.success(t('published', { version: res.version }));
         router.refresh();
       } else {
-        setError(res.error);
+        toast.error(res.error);
       }
     });
   }
@@ -478,7 +482,7 @@ export function FormBuilder({ initial }: Props) {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl uppercase tracking-wide">{formMeta.name}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{formMeta.name}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <Badge variant={formMeta.status === 'published' ? 'success' : 'secondary'}>
               {formMeta.status === 'published' ? t('statusPublished') : t('statusDraft')}
@@ -515,6 +519,15 @@ export function FormBuilder({ initial }: Props) {
               {t('tabPreview')}
             </button>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="lg:hidden"
+            onClick={() => setPaletteOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            {t('addField')}
+          </Button>
           <Button variant="outline" onClick={handleSaveDraft} disabled={pending}>
             {pending ? t('saving') : t('saveDraft')}
           </Button>
@@ -524,11 +537,8 @@ export function FormBuilder({ initial }: Props) {
         </div>
       </div>
 
-      {message ? <p className="text-sm text-success">{message}</p> : null}
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-
       {view === 'preview' ? (
-        <div className="mx-auto max-w-2xl rounded-lg border border-ink-700 p-4 accent-border-top">
+        <div className="mx-auto max-w-2xl rounded-lg border border-border p-4 accent-border-top">
           <Card className="p-4">
             <FormRenderer schema={schema} preview />
           </Card>
@@ -538,7 +548,7 @@ export function FormBuilder({ initial }: Props) {
       ) : (
         <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)_320px]">
           {/* Paleta */}
-          <aside className="lg:sticky lg:top-4 lg:self-start">
+          <aside className="hidden lg:sticky lg:top-4 lg:block lg:self-start">
             <Card className="p-3">
               <Palette onAdd={handleAddFieldFromPalette} />
             </Card>
@@ -637,6 +647,20 @@ export function FormBuilder({ initial }: Props) {
           </aside>
         </div>
       )}
+
+      <Sheet open={paletteOpen && isCompact} onOpenChange={setPaletteOpen}>
+        <SheetContent side="bottom" className="overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-lg font-semibold tracking-tight">{t('addField')}</SheetTitle>
+          </SheetHeader>
+          <Palette
+            onAdd={(type) => {
+              handleAddFieldFromPalette(type);
+              setPaletteOpen(false);
+            }}
+          />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

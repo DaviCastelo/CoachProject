@@ -382,16 +382,33 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
       noValidate
     >
       {steps.length > 1 ? (
-        <p className="mb-4 text-sm text-muted-foreground">
-          {t('step', { current: stepIdx + 1, total: steps.length })}
-        </p>
+        <div className="mb-4">
+          <p className="text-sm font-medium">{t('step', { current: stepIdx + 1, total: steps.length })}</p>
+          <div
+            className="mt-2 h-1 overflow-hidden rounded-full bg-muted"
+            role="progressbar"
+            aria-valuemin={1}
+            aria-valuemax={steps.length}
+            aria-valuenow={stepIdx + 1}
+            aria-label={t('step', { current: stepIdx + 1, total: steps.length })}
+          >
+            <div
+              className="h-full rounded-full bg-accent-500 transition-[width]"
+              style={{ width: `${((stepIdx + 1) / steps.length) * 100}%` }}
+            />
+          </div>
+        </div>
       ) : null}
 
       <Card className="space-y-4 p-6">{renderStepContent()}</Card>
 
-      {formError ? <p className="mt-3 text-sm text-danger">{formError}</p> : null}
+      {formError ? (
+        <p className="mt-3 text-sm text-danger" role="alert">
+          {formError}
+        </p>
+      ) : null}
 
-      <div className="mt-6 flex items-center justify-between gap-3">
+      <div className="sticky bottom-0 z-20 mt-6 -mx-6 flex items-center justify-between gap-3 border-t border-border bg-background/95 px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pb-0 md:pt-6">
         <Button
           type="button"
           variant="outline"

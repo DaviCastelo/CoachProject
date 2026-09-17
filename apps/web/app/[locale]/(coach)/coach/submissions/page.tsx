@@ -62,8 +62,8 @@ export default async function SubmissionsPage() {
   const canApprove = ctx.role === 'owner' || ctx.role === 'admin';
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-4">
-      <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">{t('title')}</h1>
+    <div className="mx-auto w-full max-w-3xl p-4">
+      <h1 className="mb-1 text-3xl font-semibold tracking-tight">{t('title')}</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         {t('subtitle', { count: rows.length })}{canApprove ? '' : t('viewOnly')}
       </p>

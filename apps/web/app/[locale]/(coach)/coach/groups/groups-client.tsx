@@ -7,11 +7,15 @@ import { useTranslations } from 'next-intl';
 import { Users, UserCog, Plus, Trash2, ChevronRight, CornerDownRight, Star } from 'lucide-react';
 import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
 import { createGroup, deleteGroup, type GroupListItem } from './actions';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AthleticCard } from '@/components/athletic-card';
+import { EmptyState } from '@/components/empty-state';
+import { FieldError } from '@/components/ui/field-error';
+import { ResponsiveFormOverlay } from '@/components/ui/responsive-form-overlay';
 import {
   Dialog,
   DialogContent,
@@ -55,6 +59,7 @@ export function GroupsClient({ groups, canManage }: Props) {
         ageGroup: ageGroup || null,
       });
       if (res.ok) {
+        toast.success(t('create'));
         setCreateOpen(false);
         setName('');
         setParentId('__none__');
@@ -62,6 +67,7 @@ export function GroupsClient({ groups, canManage }: Props) {
         router.refresh();
       } else {
         setError(res.error);
+        toast.error(res.error);
       }
     });
   }
@@ -72,16 +78,18 @@ export function GroupsClient({ groups, canManage }: Props) {
     startTransition(async () => {
       const res = await deleteGroup(toDelete.id);
       if (res.ok) {
+        toast.success(t('delete'));
         setToDelete(null);
         router.refresh();
       } else {
-        setError(
+        const msg =
           res.error === 'has_subgroups'
             ? t('deleteBlockedSubgroups')
             : res.error === 'has_members'
               ? t('deleteBlockedMembers')
-              : res.error,
-        );
+              : res.error;
+        setError(msg);
+        toast.error(msg);
       }
     });
   }
@@ -95,14 +103,13 @@ export function GroupsClient({ groups, canManage }: Props) {
         </Button>
       ) : null}
 
-      {error && !toDelete ? <p className="text-sm text-danger">{error}</p> : null}
-
       {ordered.length === 0 ? (
-        <AthleticCard className="p-6 text-center">
-          <Users className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-          <h2 className="mb-2 font-display text-xl uppercase tracking-wide">{t('emptyTitle')}</h2>
-          <p className="text-sm text-muted-foreground">{t('emptyDescription')}</p>
-        </AthleticCard>
+        <EmptyState
+          namespace="groups"
+          titleKey="emptyTitle"
+          descriptionKey="emptyDescription"
+          iconName="grid"
+        />
       ) : (
         <div className="space-y-2">
           {ordered.map((g) => (
@@ -168,67 +175,66 @@ export function GroupsClient({ groups, canManage }: Props) {
         </div>
       )}
 
-      {/* Criar grupo / subgrupo */}
-      <Dialog open={createOpen} onOpenChange={(o) => !pending && setCreateOpen(o)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('newGroup')}</DialogTitle>
-            <DialogDescription>{t('newGroupHint')}</DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="group-name">{t('name')}</Label>
-              <Input
-                id="group-name"
-                value={name}
-                placeholder={t('namePlaceholder')}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>{t('parentGroup')}</Label>
-              <Select value={parentId} onValueChange={setParentId}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">{t('noParent')}</SelectItem>
-                  {ordered.map((g) => (
-                    <SelectItem key={g.id} value={g.id}>
-                      {'— '.repeat(g.depth)}
-                      {g.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">{t('parentGroupHint')}</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="group-age">{t('ageGroup')}</Label>
-              <Input
-                id="group-age"
-                value={ageGroup}
-                placeholder="U12"
-                onChange={(e) => setAgeGroup(e.target.value)}
-              />
-            </div>
-
-            {error ? <p className="text-sm text-danger">{error}</p> : null}
-          </div>
-
-          <DialogFooter>
+      <ResponsiveFormOverlay
+        open={createOpen}
+        onOpenChange={(o) => !pending && setCreateOpen(o)}
+        title={t('newGroup')}
+        description={t('newGroupHint')}
+        footer={
+          <>
             <Button variant="outline" size="sm" onClick={() => setCreateOpen(false)} disabled={pending}>
               {t('cancel')}
             </Button>
             <Button size="sm" onClick={submitCreate} disabled={pending || !name.trim()}>
               {pending ? t('saving') : t('create')}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="group-name">{t('name')}</Label>
+            <Input
+              id="group-name"
+              value={name}
+              placeholder={t('namePlaceholder')}
+              onChange={(e) => setName(e.target.value)}
+              aria-invalid={Boolean(error && createOpen)}
+              aria-describedby={error && createOpen ? 'group-name-error' : undefined}
+            />
+            <FieldError id="group-name-error">{createOpen ? error : null}</FieldError>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>{t('parentGroup')}</Label>
+            <Select value={parentId} onValueChange={setParentId}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">{t('noParent')}</SelectItem>
+                {ordered.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>
+                    {'— '.repeat(g.depth)}
+                    {g.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{t('parentGroupHint')}</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="group-age">{t('ageGroup')}</Label>
+            <Input
+              id="group-age"
+              value={ageGroup}
+              placeholder="U12"
+              onChange={(e) => setAgeGroup(e.target.value)}
+            />
+          </div>
+        </div>
+      </ResponsiveFormOverlay>
 
       {/* Apagar grupo */}
       <Dialog open={toDelete !== null} onOpenChange={(o) => !pending && !o && setToDelete(null)}>
@@ -238,7 +244,7 @@ export function GroupsClient({ groups, canManage }: Props) {
             <DialogDescription>{t('deleteBody', { name: toDelete?.name ?? '' })}</DialogDescription>
           </DialogHeader>
 
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
+          <FieldError>{toDelete ? error : null}</FieldError>
 
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setToDelete(null)} disabled={pending}>
@@ -246,7 +252,7 @@ export function GroupsClient({ groups, canManage }: Props) {
             </Button>
             <Button
               variant="destructive"
-              size="sm"
+              size="sm"
               onClick={confirmDelete}
               disabled={pending}
             >

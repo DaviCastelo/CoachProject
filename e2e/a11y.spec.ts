@@ -19,4 +19,11 @@ test.describe('Accessibility', () => {
     const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(serious).toEqual([]);
   });
+
+  test('public header has Programs and Sign in links', async ({ page }) => {
+    await page.goto('/');
+    const header = page.getByRole('banner');
+    await expect(header.getByRole('link', { name: /programs|programas/i })).toBeVisible();
+    await expect(header.getByRole('link', { name: /sign in|entrar|iniciar sesión/i })).toBeVisible();
+  });
 });

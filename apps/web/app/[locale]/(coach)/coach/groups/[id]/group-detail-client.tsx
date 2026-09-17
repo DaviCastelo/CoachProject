@@ -309,7 +309,7 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
           {group.parentName ? (
             <p className="text-eyebrow text-accent-500">{group.parentName}</p>
           ) : null}
-          <h1 className="font-display text-3xl uppercase tracking-wide">{group.name}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{group.name}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {group.ageGroup ? <Badge variant="outline">{group.ageGroup}</Badge> : null}
             <Badge variant={group.status === 'active' ? 'success' : 'secondary'}>

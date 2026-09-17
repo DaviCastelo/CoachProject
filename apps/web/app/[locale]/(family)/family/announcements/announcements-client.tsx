@@ -2,19 +2,22 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { Megaphone } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { markAnnouncementRead, type FamilyAnnouncement } from '../actions';
 import { getAttachmentUrl } from '../../../(coach)/coach/announcements/actions';
 import { AnnouncementAttachments } from '@/components/announcement-attachments';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AthleticCard } from '@/components/athletic-card';
+import { EmptyState } from '@/components/empty-state';
+import { formatDateTime } from '@/lib/format-datetime';
+import { FieldError } from '@/components/ui/field-error';
 
 type Props = Readonly<{ announcements: FamilyAnnouncement[] }>;
 
 export function FamilyAnnouncementsClient({ announcements }: Props) {
   const t = useTranslations('family');
+  const locale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -30,16 +33,13 @@ export function FamilyAnnouncementsClient({ announcements }: Props) {
 
   if (announcements.length === 0) {
     return (
-      <AthleticCard className="p-6 text-center">
-        <Megaphone className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">{t('noAnnouncements')}</p>
-      </AthleticCard>
+      <EmptyState namespace="family" titleKey="noAnnouncements" iconName="clipboard" />
     );
   }
 
   return (
     <div className="space-y-3">
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      <FieldError>{error}</FieldError>
       {unread.length > 0 ? (
         <p className="text-sm text-muted-foreground">
           {t('unreadCount', { count: unread.length })}
@@ -63,7 +63,7 @@ export function FamilyAnnouncementsClient({ announcements }: Props) {
 
               {a.sentAt ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {new Date(a.sentAt).toLocaleString()}
+                  {formatDateTime(a.sentAt, locale)}
                 </p>
               ) : null}
             </div>
