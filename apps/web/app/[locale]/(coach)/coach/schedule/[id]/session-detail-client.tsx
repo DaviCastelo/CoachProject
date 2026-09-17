@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ArrowLeft, Check, X, Clock, Send, Ban, MapPin, Trash2 } from 'lucide-react';
 import { tallyRsvp } from '@ca-tempo/domain';
 import {
@@ -18,6 +18,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AthleticCard } from '@/components/athletic-card';
+import { formatDateTime } from '@/lib/format-datetime';
+import { FieldError } from '@/components/ui/field-error';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -42,6 +45,7 @@ const RSVP_BADGE: Record<string, { variant: 'success' | 'danger' | 'secondary'; 
 
 export function SessionDetailClient({ session, canEdit }: Props) {
   const t = useTranslations('schedule');
+  const locale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +64,7 @@ export function SessionDetailClient({ session, canEdit }: Props) {
         router.refresh();
       } else {
         setError(res.error);
+        toast.error(res.error);
       }
     });
   }
@@ -76,10 +81,9 @@ export function SessionDetailClient({ session, canEdit }: Props) {
 
       <div>
         <p className="text-eyebrow text-accent-500">{t(`eventTypes.${session.eventType}`)}</p>
-        <h1 className="font-display text-3xl uppercase tracking-wide">{session.title}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">{session.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {new Date(session.startsAt).toLocaleString()} —{' '}
-          {new Date(session.endsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {formatDateTime(session.startsAt, locale)} — {formatDateTime(session.endsAt, locale)}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {session.groupNames.map((name) => (
@@ -100,23 +104,23 @@ export function SessionDetailClient({ session, canEdit }: Props) {
         </div>
       </div>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      <FieldError>{error}</FieldError>
 
       {/* Resumo do RSVP */}
       <div className="grid grid-cols-3 gap-3">
         <AthleticCard className="p-4 text-center">
           <Check className="mx-auto mb-1 h-5 w-5 text-success" />
-          <p className="font-display text-2xl">{tally.going}</p>
+          <p className="text-2xl font-semibold">{tally.going}</p>
           <p className="text-xs text-muted-foreground">{t('going')}</p>
         </AthleticCard>
         <AthleticCard className="p-4 text-center">
           <X className="mx-auto mb-1 h-5 w-5 text-danger" />
-          <p className="font-display text-2xl">{tally.notGoing}</p>
+          <p className="text-2xl font-semibold">{tally.notGoing}</p>
           <p className="text-xs text-muted-foreground">{t('notGoing')}</p>
         </AthleticCard>
         <AthleticCard className="p-4 text-center">
           <Clock className="mx-auto mb-1 h-5 w-5 text-muted-foreground" />
-          <p className="font-display text-2xl">{tally.noReply}</p>
+          <p className="text-2xl font-semibold">{tally.noReply}</p>
           <p className="text-xs text-muted-foreground">{t('noReply')}</p>
         </AthleticCard>
       </div>
@@ -232,7 +236,7 @@ export function SessionDetailClient({ session, canEdit }: Props) {
             </Button>
             <Button
               variant="destructive"
-              size="sm"
+              size="sm"
               disabled={pending}
               onClick={() =>
                 run(() => cancelSession(session.id, reason), () => setCancelOpen(false))

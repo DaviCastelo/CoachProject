@@ -4,11 +4,13 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { UserCog, Eye, EyeOff, KeyRound } from 'lucide-react';
+import { toast } from 'sonner';
 import { getOwnProfile, updateOwnProfile } from '@/lib/actions/profile';
 import { changeOwnPassword } from '@/lib/actions/athlete-account';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FieldError } from '@/components/ui/field-error';
 import {
   Dialog,
   DialogContent,
@@ -19,12 +21,25 @@ import {
 } from '@/components/ui/dialog';
 
 /** Edição do próprio perfil — disponível para admin, coach, staff, família e atleta. */
-export function ProfileButton() {
+export function ProfileButton({
+  hideTrigger = false,
+  open: openProp,
+  onOpenChange,
+}: Readonly<{
+  hideTrigger?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}> = {}) {
   const t = useTranslations('profile');
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = openProp ?? uncontrolledOpen;
+  function setOpen(next: boolean) {
+    onOpenChange?.(next);
+    if (openProp === undefined) setUncontrolledOpen(next);
+  }
   const [tab, setTab] = useState<'info' | 'password'>('info');
   const [loading, setLoading] = useState(false);
 
@@ -37,13 +52,11 @@ export function ProfileButton() {
   const [show, setShow] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
     setError(null);
-    setSuccess(null);
     void getOwnProfile().then((p) => {
       if (p) {
         setEmail(p.email);
@@ -56,21 +69,19 @@ export function ProfileButton() {
 
   function saveInfo() {
     setError(null);
-    setSuccess(null);
     startTransition(async () => {
       const res = await updateOwnProfile({ fullName, phone });
       if (!res.ok) {
         setError(res.error === 'name_required' ? t('errorNameRequired') : res.error);
         return;
       }
-      setSuccess(t('saved'));
+      toast.success(t('saved'));
       router.refresh();
     });
   }
 
   function savePassword() {
     setError(null);
-    setSuccess(null);
     if (password.length < 8) {
       setError(t('errorWeak'));
       return;
@@ -91,22 +102,24 @@ export function ProfileButton() {
       }
       setPassword('');
       setConfirm('');
-      setSuccess(t('passwordChanged'));
+      toast.success(t('passwordChanged'));
     });
   }
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-12 w-12"
-        onClick={() => setOpen(true)}
-        aria-label={t('title')}
-        title={t('title')}
-      >
-        <UserCog className="h-8 w-8" />
-      </Button>
+      {hideTrigger ? null : (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-11 w-11"
+          onClick={() => setOpen(true)}
+          aria-label={t('title')}
+          title={t('title')}
+        >
+          <UserCog className="h-5 w-5" />
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={(o) => !pending && setOpen(o)}>
         <DialogContent>
@@ -121,7 +134,6 @@ export function ProfileButton() {
               onClick={() => {
                 setTab('info');
                 setError(null);
-                setSuccess(null);
               }}
               className={`border-b-2 px-3 py-2 text-sm ${
                 tab === 'info'
@@ -136,7 +148,6 @@ export function ProfileButton() {
               onClick={() => {
                 setTab('password');
                 setError(null);
-                setSuccess(null);
               }}
               className={`border-b-2 px-3 py-2 text-sm ${
                 tab === 'password'
@@ -177,8 +188,7 @@ export function ProfileButton() {
                 <p className="text-xs text-muted-foreground">{t('emailLocked')}</p>
               </div>
 
-              {error ? <p className="text-sm text-danger">{error}</p> : null}
-              {success ? <p className="text-sm text-success">{success}</p> : null}
+              <FieldError>{error}</FieldError>
             </div>
           ) : (
             <div className="space-y-4">
@@ -216,8 +226,7 @@ export function ProfileButton() {
                 />
               </div>
 
-              {error ? <p className="text-sm text-danger">{error}</p> : null}
-              {success ? <p className="text-sm text-success">{success}</p> : null}
+              <FieldError>{error}</FieldError>
             </div>
           )}
 

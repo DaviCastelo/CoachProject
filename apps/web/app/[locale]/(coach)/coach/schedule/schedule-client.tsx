@@ -3,16 +3,22 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
-import { CalendarPlus, CalendarDays, Check, X, Clock, Send, ChevronRight } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import { CalendarPlus, Check, X, Clock, Send, ChevronRight } from 'lucide-react';
 import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
 import { createSession, publishSession, type SessionListItem } from './actions';
 import type { GroupListItem } from '../groups/actions';
+import { formatDateTime } from '@/lib/format-datetime';
+import { useIsMobile } from '@/hooks/use-is-mobile';
+import { ScheduleCalendarLazy } from '@/components/schedule-calendar-lazy';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AthleticCard } from '@/components/athletic-card';
+import { EmptyState } from '@/components/empty-state';
+import { FieldError } from '@/components/ui/field-error';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +27,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+} from '@/components/ui/sheet';
 import {
   Select,
   SelectContent,
@@ -46,7 +59,9 @@ function toLocalInput(date: Date): string {
 
 export function ScheduleClient({ sessions, groups, canEdit }: Props) {
   const t = useTranslations('schedule');
+  const locale = useLocale();
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -102,6 +117,7 @@ export function ScheduleClient({ sessions, groups, canEdit }: Props) {
       setOpen(false);
       setTitle('');
       setPicked(new Set());
+      toast.success(t('createAndPublish'));
       router.refresh();
     });
   }
@@ -110,13 +126,127 @@ export function ScheduleClient({ sessions, groups, canEdit }: Props) {
     setError(null);
     startTransition(async () => {
       const res = await publishSession(id);
-      if (!res.ok) setError(res.error);
-      else router.refresh();
+      if (!res.ok) toast.error(res.error);
+      else {
+        toast.success(t('publish'));
+        router.refresh();
+      }
     });
   }
 
   const upcoming = sessions.filter((s) => new Date(s.endsAt) >= now);
   const past = sessions.filter((s) => new Date(s.endsAt) < now).reverse();
+
+  const formFields = (
+    <div className="max-h-[60vh] space-y-4 overflow-y-auto">
+      <div className="space-y-1.5">
+        <Label htmlFor="s-title">{t('eventTitle')}</Label>
+        <Input
+          id="s-title"
+          value={title}
+          placeholder={t('eventTitlePlaceholder')}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>{t('eventType')}</Label>
+        <Select value={eventType} onValueChange={setEventType}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {EVENT_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>
+                {t(`eventTypes.${type}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="s-start">{t('startsAt')}</Label>
+          <Input
+            id="s-start"
+            type="datetime-local"
+            value={startsAt}
+            onChange={(e) => setStartsAt(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="s-end">{t('endsAt')}</Label>
+          <Input
+            id="s-end"
+            type="datetime-local"
+            value={endsAt}
+            onChange={(e) => setEndsAt(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="s-field">{t('fieldLabel')}</Label>
+        <Input
+          id="s-field"
+          value={fieldLabel}
+          placeholder={t('fieldPlaceholder')}
+          onChange={(e) => setFieldLabel(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>{t('participatingGroups')}</Label>
+        {orderedGroups.length === 0 ? (
+          <p className="text-xs text-muted-foreground">{t('noGroups')}</p>
+        ) : (
+          <div className="max-h-40 space-y-1 overflow-y-auto">
+            {orderedGroups.map((g) => (
+              <label
+                key={g.id}
+                className="flex cursor-pointer items-center gap-2 rounded-md border border-input px-2 py-1.5 text-sm"
+                style={{ marginLeft: `${g.depth * 0.75}rem` }}
+              >
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-accent-500"
+                  checked={picked.has(g.id)}
+                  onChange={() => toggleGroup(g.id)}
+                />
+                <span className="flex-1 truncate">{g.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {t('memberCount', { count: g.memberCount })}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+        <label className="flex cursor-pointer items-center gap-2 pt-1 text-sm">
+          <input
+            type="checkbox"
+            className="h-4 w-4 accent-accent-500"
+            checked={includeSubgroups}
+            onChange={(e) => setIncludeSubgroups(e.target.checked)}
+          />
+          {t('includeSubgroups')}
+        </label>
+      </div>
+
+      <FieldError>{error}</FieldError>
+    </div>
+  );
+
+  const formActions = (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={pending}>
+        {t('cancel')}
+      </Button>
+      <Button size="sm" onClick={submit} disabled={pending || !title.trim() || picked.size === 0}>
+        {pending ? t('saving') : t('createAndPublish')}
+      </Button>
+    </>
+  );
 
   return (
     <div className="space-y-4">
@@ -127,22 +257,25 @@ export function ScheduleClient({ sessions, groups, canEdit }: Props) {
         </Button>
       ) : null}
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-
       {sessions.length === 0 ? (
-        <AthleticCard className="p-6 text-center">
-          <CalendarDays className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-          <h2 className="mb-2 font-display text-xl uppercase tracking-wide">{t('emptyTitle')}</h2>
-          <p className="text-sm text-muted-foreground">{t('emptyDescription')}</p>
-        </AthleticCard>
+        <EmptyState
+          namespace="schedule"
+          titleKey="emptyTitle"
+          descriptionKey="emptyDescription"
+          iconName="calendar"
+        />
       ) : (
         <>
+          <div className="hidden md:block">
+            <ScheduleCalendarLazy sessions={sessions} />
+          </div>
           <SessionSection
             label={t('upcoming')}
             items={upcoming}
             onPublish={publish}
             pending={pending}
             canEdit={canEdit}
+            locale={locale}
           />
           <SessionSection
             label={t('past')}
@@ -150,126 +283,35 @@ export function ScheduleClient({ sessions, groups, canEdit }: Props) {
             onPublish={publish}
             pending={pending}
             canEdit={false}
+            locale={locale}
           />
         </>
       )}
 
-      <Dialog open={open} onOpenChange={(o) => !pending && setOpen(o)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('newEvent')}</DialogTitle>
-            <DialogDescription>{t('newEventHint')}</DialogDescription>
-          </DialogHeader>
-
-          <div className="max-h-[60vh] space-y-4 overflow-y-auto">
-            <div className="space-y-1.5">
-              <Label htmlFor="s-title">{t('eventTitle')}</Label>
-              <Input
-                id="s-title"
-                value={title}
-                placeholder={t('eventTitlePlaceholder')}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>{t('eventType')}</Label>
-              <Select value={eventType} onValueChange={setEventType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {EVENT_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {t(`eventTypes.${type}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="s-start">{t('startsAt')}</Label>
-                <Input
-                  id="s-start"
-                  type="datetime-local"
-                  value={startsAt}
-                  onChange={(e) => setStartsAt(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="s-end">{t('endsAt')}</Label>
-                <Input
-                  id="s-end"
-                  type="datetime-local"
-                  value={endsAt}
-                  onChange={(e) => setEndsAt(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="s-field">{t('fieldLabel')}</Label>
-              <Input
-                id="s-field"
-                value={fieldLabel}
-                placeholder="Field 3"
-                onChange={(e) => setFieldLabel(e.target.value)}
-              />
-            </div>
-
-            {/* ★ Requisito central: escolher UM OU MAIS grupos */}
-            <div className="space-y-1.5">
-              <Label>{t('participatingGroups')}</Label>
-              {orderedGroups.length === 0 ? (
-                <p className="text-xs text-muted-foreground">{t('noGroups')}</p>
-              ) : (
-                <div className="max-h-40 space-y-1 overflow-y-auto">
-                  {orderedGroups.map((g) => (
-                    <label
-                      key={g.id}
-                      className="flex cursor-pointer items-center gap-2 rounded-md border border-input px-2 py-1.5 text-sm"
-                      style={{ marginLeft: `${g.depth * 0.75}rem` }}
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 accent-accent-500"
-                        checked={picked.has(g.id)}
-                        onChange={() => toggleGroup(g.id)}
-                      />
-                      <span className="flex-1 truncate">{g.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {t('memberCount', { count: g.memberCount })}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              )}
-              <label className="flex cursor-pointer items-center gap-2 pt-1 text-sm">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 accent-accent-500"
-                  checked={includeSubgroups}
-                  onChange={(e) => setIncludeSubgroups(e.target.checked)}
-                />
-                {t('includeSubgroups')}
-              </label>
-            </div>
-
-            {error ? <p className="text-sm text-danger">{error}</p> : null}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={pending}>
-              {t('cancel')}
-            </Button>
-            <Button size="sm" onClick={submit} disabled={pending || !title.trim() || picked.size === 0}>
-              {pending ? t('saving') : t('createAndPublish')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isMobile ? (
+        <Sheet open={open} onOpenChange={(o) => !pending && setOpen(o)}>
+          <SheetContent side="bottom" className="overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle className="text-lg font-semibold">{t('newEvent')}</SheetTitle>
+            </SheetHeader>
+            {formFields}
+            <SheetFooter>{formActions}</SheetFooter>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={open} onOpenChange={(o) => !pending && setOpen(o)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="font-semibold uppercase-none tracking-tight">
+                {t('newEvent')}
+              </DialogTitle>
+              <DialogDescription>{t('newEventHint')}</DialogDescription>
+            </DialogHeader>
+            {formFields}
+            <DialogFooter>{formActions}</DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
@@ -280,13 +322,16 @@ function SessionSection({
   onPublish,
   pending,
   canEdit,
+  locale,
 }: Readonly<{
   label: string;
   items: SessionListItem[];
   onPublish: (id: string) => void;
   pending: boolean;
   canEdit: boolean;
+  locale: string;
 }>) {
+
   const t = useTranslations('schedule');
   if (items.length === 0) return null;
 
@@ -311,7 +356,7 @@ function SessionSection({
                 ) : null}
               </div>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                {new Date(s.startsAt).toLocaleString()} · {s.groupNames.join(', ') || '—'}
+                {formatDateTime(s.startsAt, locale)} · {s.groupNames.join(', ') || '—'}
               </p>
               <p className="mt-1 flex flex-wrap items-center gap-3 text-xs">
                 <span className="inline-flex items-center gap-1 text-success">

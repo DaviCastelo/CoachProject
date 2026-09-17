@@ -6,6 +6,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { Button } from '@/components/ui/button';
 import { AthleticCard } from '@/components/athletic-card';
 import { PageHero } from '@/components/page-hero';
+import { programImageForSlug } from '@/lib/program-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,25 +14,8 @@ type PageProps = Readonly<{ params: Promise<{ locale: string; slug: string }> }>
 
 type OptionRow = { name: string; description: string | null; price_cents: number };
 
-const GALLERY_IMAGES = [
-  '/images/gallery-1.png',
-  '/images/gallery-2.png',
-  '/images/gallery-3.png',
-  '/images/gallery-4.png',
-];
-
 function price(cents: number): string {
   return `$${(cents / 100).toFixed(0)}`;
-}
-
-function hashSlug(slug: string): number {
-  let h = 0;
-  for (let i = 0; i < slug.length; i++) {
-    const code = slug.codePointAt(i) ?? 0;
-    h = (h + code) % GALLERY_IMAGES.length;
-    if (code > 0xffff) i++;
-  }
-  return h;
 }
 
 function RegisterButton({
@@ -117,7 +101,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
     .eq('id', program.form_id)
     .maybeSingle();
 
-  const heroImage = GALLERY_IMAGES[hashSlug(slug)];
+  const heroImage = programImageForSlug(slug);
 
   const jsonLd = {
     '@context': 'https://schema.org',

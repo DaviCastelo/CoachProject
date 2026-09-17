@@ -6,6 +6,7 @@ import { DeleteFormButton } from './delete-form-button';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AthleticCard } from '@/components/athletic-card';
+import { EmptyState } from '@/components/empty-state';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,10 +23,10 @@ export default async function FormsPage() {
   const t = await getTranslations('forms');
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-4">
+    <div className="mx-auto w-full max-w-3xl p-4">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">{t('title')}</h1>
+          <h1 className="mb-1 text-3xl font-semibold tracking-tight">{t('title')}</h1>
           <p className="text-sm text-muted-foreground">{t('subtitle', { count: forms.length })}</p>
         </div>
         <Button asChild size="sm">
@@ -34,13 +35,14 @@ export default async function FormsPage() {
       </div>
 
       {forms.length === 0 ? (
-        <AthleticCard className="p-6 text-center">
-          <h2 className="mb-2 font-display text-xl uppercase tracking-wide">{t('emptyTitle')}</h2>
-          <p className="mb-4 text-sm text-muted-foreground">{t('emptyDescription')}</p>
-          <Button asChild>
-            <Link href="/coach/forms/new">{t('newForm')}</Link>
-          </Button>
-        </AthleticCard>
+        <EmptyState
+          namespace="forms"
+          titleKey="emptyTitle"
+          descriptionKey="emptyDescription"
+          actionKey="newForm"
+          actionHref="/coach/forms/new"
+          iconName="clipboard"
+        />
       ) : (
         <div className="space-y-3">
           {forms.map((form) => (

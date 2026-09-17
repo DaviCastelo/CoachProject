@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Eye, FileText, Users, KeyRound, EyeOff } from 'lucide-react';
 import { buildGroupTree, flattenGroupTree } from '@ca-tempo/domain';
 import { createAthleteAccount } from '@/lib/actions/athlete-account';
@@ -11,6 +11,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { formatDateTime } from '@/lib/format-datetime';
+import { FieldError } from '@/components/ui/field-error';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -108,9 +111,13 @@ export function SubmissionsTable({
   canApprove: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations('submissions');
   const tg = useTranslations('groups');
+  const locale = useLocale();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const [openRow, setOpenRow] = useState<SubmissionRow | null>(null);
   const [details, setDetails] = useState<RegistrationDetails | null>(null);
@@ -153,9 +160,11 @@ export function SubmissionsTable({
           already_has_account: tg('errorAlreadyHasAccount'),
         };
         setError(map[res.error] ?? res.error);
+        toast.error(map[res.error] ?? res.error);
         return;
       }
       setAccessDone(tg('athleteAccountReady'));
+      toast.success(tg('athleteAccountReady'));
       setAthleteAccess(null);
       router.refresh();
     });
@@ -215,14 +224,23 @@ export function SubmissionsTable({
     else setError('No signed waiver PDF found for this athlete.');
   }
 
+  const filteredRows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return rows.filter((r) => {
+      if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+      if (q && !r.athleteName.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [rows, query, statusFilter]);
+
   if (rows.length === 0) {
-    return <p className="text-muted-foreground">No registrations yet.</p>;
+    return <p className="text-muted-foreground">{t('empty')}</p>;
   }
 
   // Agrupa as inscrições por formulário (mantém a ordem por data já vinda do servidor).
   const groups: { key: string; name: string; rows: SubmissionRow[] }[] = [];
   const groupIndex = new Map<string, number>();
-  for (const r of rows) {
+  for (const r of filteredRows) {
     const key = r.formId ?? '__none__';
     let idx = groupIndex.get(key);
     if (idx === undefined) {
@@ -241,14 +259,39 @@ export function SubmissionsTable({
 
   return (
     <div className="space-y-3">
-      {error && !athleteAccess ? <p className="text-sm text-danger">{error}</p> : null}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('search')}
+          aria-label={t('search')}
+          className="sm:flex-1"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          aria-label={t('filterStatus')}
+          className="h-12 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="all">{t('allStatuses')}</option>
+          {['pending', 'approved', 'rejected', 'waitlisted', 'canceled', 'completed'].map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+      {error && !athleteAccess ? <FieldError>{error}</FieldError> : null}
       {accessDone ? <p className="text-sm text-success">{accessDone}</p> : null}
 
-      {groups.map((g) => (
+      {filteredRows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t('empty')}</p>
+      ) : (
+      groups.map((g) => (
         <section key={g.key} className="space-y-2">
           <div className="flex items-center gap-2 pt-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-display text-sm uppercase tracking-wide text-muted-foreground">
+            <h2 className="text-sm font-semibold tracking-tight text-muted-foreground">
               {g.name}
             </h2>
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -266,10 +309,10 @@ export function SubmissionsTable({
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {[r.program, r.option].filter(Boolean).join(' · ') || '—'}
-                  {r.dob ? ` · DOB ${r.dob}` : ''}
+                  {r.dob ? ` · ${t('dob')} ${r.dob}` : ''}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {new Date(r.createdAt).toLocaleString()}
+                  {formatDateTime(r.createdAt, locale)}
                 </p>
               </div>
 
@@ -278,15 +321,16 @@ export function SubmissionsTable({
                 variant="outline"
                 size="sm"
                 onClick={() => openDetails(r)}
-                aria-label={`View ${r.athleteName}`}
+                aria-label={t('viewAria', { name: r.athleteName })}
               >
                 <Eye className="h-4 w-4" />
-                View
+                {t('view')}
               </Button>
             </Card>
           ))}
         </section>
-      ))}
+      ))
+      )}
 
       <Dialog
         open={openRow !== null}
@@ -326,7 +370,7 @@ export function SubmissionsTable({
               <div className="space-y-4">
                 {details.athlete ? (
                   <div>
-                    <p className="mb-1 font-display text-xs uppercase tracking-wide text-muted-foreground">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       Athlete
                     </p>
                     <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
@@ -339,7 +383,7 @@ export function SubmissionsTable({
 
                 {extraData.length > 0 ? (
                   <div>
-                    <p className="mb-1 font-display text-xs uppercase tracking-wide text-muted-foreground">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       Form answers
                     </p>
                     <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
@@ -353,7 +397,7 @@ export function SubmissionsTable({
                 {/* Atribuição de grupos ao aprovar (brief §5: Registro → Usuário → Grupo → Roster) */}
                 {canApprove && openRow?.status !== 'approved' ? (
                   <div>
-                    <p className="mb-1 flex items-center gap-1.5 font-display text-xs uppercase tracking-wide text-muted-foreground">
+                    <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       <Users className="h-3.5 w-3.5" />
                       {tg('assignToGroups')}
                     </p>
@@ -502,7 +546,7 @@ export function SubmissionsTable({
               <p className="text-xs text-muted-foreground">{tg('temporaryPasswordHint')}</p>
             </div>
 
-            {error ? <p className="text-sm text-danger">{error}</p> : null}
+            {error ? <FieldError>{error}</FieldError> : null}
           </div>
 
           <DialogFooter>

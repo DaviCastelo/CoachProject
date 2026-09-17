@@ -5,12 +5,8 @@ import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { Link } from '@/i18n/routing';
 import { BrandLogo } from '@/components/brand-logo';
-import { LocaleSwitcher } from '@/components/locale-switcher';
-import { ProfileButton } from '@/components/profile-button';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { Button } from '@/components/ui/button';
+import { AccountMenu } from '@/components/account-menu';
 import {
-  LogOut,
   LayoutDashboard,
   ClipboardList,
   FileText,
@@ -24,6 +20,7 @@ import { cn } from '@/lib/utils';
 interface AppShellProps {
   children: React.ReactNode;
   variant: 'coach' | 'family';
+  pendingRegistrations?: number;
 }
 
 type NavItem = {
@@ -39,9 +36,10 @@ type NavItem = {
     | '/family/announcements';
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  badge?: number;
 };
 
-export function AppShell({ children, variant }: AppShellProps) {
+export function AppShell({ children, variant, pendingRegistrations }: AppShellProps) {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const pathname = usePathname();
@@ -51,11 +49,16 @@ export function AppShell({ children, variant }: AppShellProps) {
     variant === 'coach'
       ? [
           { href: '/coach', label: t('dashboard'), icon: LayoutDashboard },
-          { href: '/coach/groups', label: t('groups'), icon: Users },
           { href: '/coach/schedule', label: t('schedule'), icon: CalendarDays },
-          { href: '/coach/announcements', label: t('announcements'), icon: Megaphone },
-          { href: '/coach/submissions', label: t('registrations'), icon: ClipboardList },
+          { href: '/coach/groups', label: t('groups'), icon: Users },
+          {
+            href: '/coach/submissions',
+            label: t('registrations'),
+            icon: ClipboardList,
+            badge: pendingRegistrations,
+          },
           { href: '/coach/forms', label: t('forms'), icon: FileText },
+          { href: '/coach/announcements', label: t('announcements'), icon: Megaphone },
         ]
       : [
           { href: '/family', label: t('schedule'), icon: CalendarDays },
@@ -71,16 +74,13 @@ export function AppShell({ children, variant }: AppShellProps) {
     return path.startsWith(href);
   }
 
-  // Em 375px, 6 itens deixam ~62px cada — rótulos como "Formulários" não
-  // caberiam. Os 4 primeiros ficam sempre visíveis; o resto entra no "Mais".
   const MAX_VISIBLE = 4;
-  const primaryItems = navItems.slice(0, MAX_VISIBLE);
-  const overflowItems = navItems.slice(MAX_VISIBLE);
+  const primaryItems = variant === 'coach' ? navItems.slice(0, MAX_VISIBLE) : navItems;
+  const overflowItems = variant === 'coach' ? navItems.slice(MAX_VISIBLE) : [];
   const overflowActive = overflowItems.some((i) => isActive(i.href));
 
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Atalho de teclado: pula a navegação e vai direto ao conteúdo. */}
+    <div className="flex min-h-dvh md:min-h-screen">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:ring-2 focus:ring-accent-500"
@@ -88,42 +88,72 @@ export function AppShell({ children, variant }: AppShellProps) {
         {t('skipToContent')}
       </a>
 
-      <header className="sticky top-0 z-30 border-b border-ink-800 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-14 items-center justify-between px-4">
+      <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 flex-col border-r border-border bg-background md:flex">
+        <div className="flex h-14 items-center px-4">
           <Link href={variant === 'coach' ? '/coach' : '/family'}>
-            <BrandLogo size={36} showName alt={tCommon('appName')} />
+            <BrandLogo size={32} showName alt={tCommon('appName')} />
           </Link>
-          <div className="flex items-center gap-1">
-            <ProfileButton />
-            <LocaleSwitcher />
-            <ThemeToggle />
-            <form action="/auth/signout" method="post">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-12 w-12"
-                type="submit"
-                aria-label={t('logout')}
-                title={t('logout')}
-              >
-                <LogOut className="h-8 w-8" />
-              </Button>
-            </form>
-          </div>
         </div>
-      </header>
+        <nav className="flex flex-1 flex-col gap-0.5 p-2" aria-label={t('mainNavigation')}>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'relative flex min-h-11 items-center gap-3 rounded-md px-3 text-sm transition-colors',
+                  active
+                    ? 'bg-accent-500/10 text-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                )}
+              >
+                {active ? (
+                  <span
+                    className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r bg-accent-500"
+                    aria-hidden="true"
+                  />
+                ) : null}
+                <Icon className="h-5 w-5 shrink-0" />
+                <span className="flex-1 truncate">{item.label}</span>
+                {item.badge && item.badge > 0 ? (
+                  <span className="rounded-full bg-accent-500 px-1.5 py-0.5 text-[10px] font-semibold text-ink-950">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                ) : null}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
 
-      <main id="main-content" className="flex-1 pb-20">
-        {children}
-      </main>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex h-14 items-center justify-between px-4">
+            <Link href={variant === 'coach' ? '/coach' : '/family'} className="md:hidden">
+              <BrandLogo size={32} showName alt={tCommon('appName')} />
+            </Link>
+            <span className="hidden md:block" />
+            <AccountMenu />
+          </div>
+        </header>
+
+        <main
+          id="main-content"
+          className="flex-1 pb-[calc(var(--spacing-touch)+var(--spacing-safe-bottom))] md:pb-6"
+        >
+          {children}
+        </main>
+      </div>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-ink-800 bg-background"
+        className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background pb-[var(--spacing-safe-bottom)] md:hidden"
         aria-label={t('mainNavigation')}
       >
-        {/* Itens extras, abertos pelo "Mais" */}
         {moreOpen && overflowItems.length > 0 ? (
-          <div className="border-b border-ink-800">
+          <div className="border-b border-border">
             {overflowItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -163,11 +193,16 @@ export function AppShell({ children, variant }: AppShellProps) {
               >
                 {active ? (
                   <span
-                    className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-accent-500"
+                    className="absolute top-0 left-1/2 h-[3px] w-8 -translate-x-1/2 bg-accent-500"
                     aria-hidden="true"
                   />
                 ) : null}
-                <Icon className="h-5 w-5 shrink-0" />
+                <span className="relative">
+                  <Icon className="h-5 w-5 shrink-0" />
+                  {item.badge && item.badge > 0 ? (
+                    <span className="absolute -right-2 -top-1 h-1.5 w-1.5 rounded-full bg-accent-500" />
+                  ) : null}
+                </span>
                 <span className="max-w-full truncate">{item.label}</span>
               </Link>
             );
@@ -187,7 +222,7 @@ export function AppShell({ children, variant }: AppShellProps) {
             >
               {overflowActive ? (
                 <span
-                  className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-accent-500"
+                  className="absolute top-0 left-1/2 h-[3px] w-8 -translate-x-1/2 bg-accent-500"
                   aria-hidden="true"
                 />
               ) : null}

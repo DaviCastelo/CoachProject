@@ -8,7 +8,7 @@ export default async function AuthLayout({
   const messages = await getMessages();
   return (
     <NextIntlClientProvider messages={messages}>
-      <div className="relative min-h-screen bg-ink-950">
+      <div className="relative min-h-dvh bg-background">
         <div
           className="pointer-events-none absolute inset-0 opacity-30"
           style={{

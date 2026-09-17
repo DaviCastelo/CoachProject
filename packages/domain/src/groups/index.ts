@@ -19,3 +19,5 @@ export {
   type AttendanceStatus,
   type RsvpTally,
 } from './rsvp';
+
+export { pickScheduleInitialDate, countStartsInRange } from './schedule-view';

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { FieldError } from '@/components/ui/field-error';
 import {
   Select,
   SelectContent,
@@ -57,7 +58,7 @@ export default function NewFormPage() {
 
   return (
     <div className="mx-auto w-full max-w-lg p-4">
-      <h1 className="mb-6 font-display text-3xl uppercase tracking-wide">{t('createTitle')}</h1>
+      <h1 className="mb-6 text-3xl font-semibold tracking-tight">{t('createTitle')}</h1>
 
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,7 +114,7 @@ export default function NewFormPage() {
             />
           </div>
 
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
+          <FieldError>{error}</FieldError>
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => router.back()}>

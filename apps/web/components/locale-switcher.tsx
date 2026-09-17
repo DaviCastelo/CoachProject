@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, usePathname, routing } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { Globe, Check } from 'lucide-react';
@@ -18,6 +18,7 @@ function shortCode(locale: string): string {
 
 export function LocaleSwitcher() {
   const locale = useLocale();
+  const tNav = useTranslations('nav');
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -56,13 +57,13 @@ export function LocaleSwitcher() {
       <Button
         variant="ghost"
         size="sm"
-        className="h-12 gap-1.5"
+        className="h-11 gap-1.5"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="Change language"
+        aria-label={tNav('changeLanguage')}
       >
-        <Globe className="h-8 w-8" />
+        <Globe className="h-5 w-5" />
         <span className="text-xs uppercase">{shortCode(locale)}</span>
       </Button>
 

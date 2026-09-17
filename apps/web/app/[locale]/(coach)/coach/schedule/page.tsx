@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { requireRole } from '@/lib/auth/guards';
+import { PageContainer } from '@/components/page-container';
 import { listSessions } from './actions';
 import { listGroups } from '../groups/actions';
 import { ScheduleClient } from './schedule-client';
@@ -14,13 +15,13 @@ export default async function SchedulePage() {
   const canEdit = ctx.role === 'owner' || ctx.role === 'admin' || ctx.role === 'coach';
 
   return (
-    <div className="mx-auto w-full max-w-3xl p-4">
+    <PageContainer width="wide">
       <div className="mb-6">
-        <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">{t('title')}</h1>
+        <h1 className="mb-1 text-3xl font-semibold tracking-tight">{t('title')}</h1>
         <p className="text-sm text-muted-foreground">{t('subtitle', { count: sessions.length })}</p>
       </div>
 
       <ScheduleClient sessions={sessions} groups={groups} canEdit={canEdit} />
-    </div>
+    </PageContainer>
   );
 }

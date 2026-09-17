@@ -17,6 +17,7 @@
   --color-accent-100: #f5edda;
   --color-accent-500: #c8a24a;
   --color-accent-600: #a8853a;
+  --color-accent-700: #a16207;
 
   /* Cores de estado: os valores abaixo são os do tema CLARO. No escuro elas
      reprovavam no contraste AA (danger 2.8:1, info 2.7:1, success 3.4:1,
@@ -33,6 +34,7 @@
 
   --radius-card: 12px;
   --spacing-touch: 56px;
+  --spacing-safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* Escala de z-index (evita valores arbitrários brigando entre si):
        10  conteúdo sobreposto dentro de um bloco
@@ -144,8 +146,9 @@
   }
 
   h1, h2, h3 {
-    font-family: var(--font-display);
-    letter-spacing: 0.02em;
+    font-family: var(--font-sans);
+    letter-spacing: -0.02em;
+    font-weight: 600;
   }
 }
 
@@ -179,13 +182,17 @@
 
   .athletic-card {
     border-color: var(--border);
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+
+  .athletic-card-lift {
     transition:
       transform 200ms ease,
       border-color 200ms ease,
       box-shadow 200ms ease;
   }
 
-  .athletic-card:hover {
+  .athletic-card-lift:hover {
     transform: translateY(-2px);
     border-color: var(--color-accent-500);
     box-shadow: 0 8px 32px rgba(200, 162, 74, 0.12);
@@ -235,8 +242,55 @@
       animation: none;
     }
 
-    .athletic-card:hover {
+    .athletic-card-lift:hover {
       transform: none;
     }
   }
+}
+
+.schedule-calendar .fc {
+  --fc-border-color: var(--border);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: var(--muted);
+  --fc-today-bg-color: color-mix(in srgb, var(--color-accent-500) 14%, transparent);
+  --fc-now-indicator-color: var(--color-accent-500);
+  --fc-neutral-text-color: var(--muted-foreground);
+  --fc-page-text-color: var(--foreground);
+  --fc-small-font-size: 0.8rem;
+}
+
+.schedule-calendar .fc-header-toolbar {
+  display: none;
+}
+
+.schedule-calendar .fc-theme-standard td,
+.schedule-calendar .fc-theme-standard th {
+  border-color: var(--border);
+}
+
+.schedule-calendar .fc-col-header,
+.schedule-calendar .fc-col-header-cell,
+.schedule-calendar .fc-scrollgrid-section-header,
+.schedule-calendar .fc-scrollgrid-section-header th {
+  background: var(--card);
+}
+
+.schedule-calendar .fc-col-header-cell-cushion {
+  padding: 0.5rem 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.schedule-calendar .fc-scrollgrid-section-header {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+.schedule-calendar .fc-event-mine {
+  box-shadow: inset 3px 0 0 var(--color-accent-500);
+}
+
+.schedule-calendar .fc-list-day-cushion {
+  background: var(--muted);
 }

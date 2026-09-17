@@ -71,7 +71,7 @@ export default async function RegisterPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto w-full max-w-xl flex-1 px-4 py-8">
-      <AthleticCard className="accent-border-top p-6">
+      <AthleticCard className="accent-border-top overflow-visible p-6">
         <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">{form.name}</h1>
         {form.description ? (
           <p className="mb-6 text-muted-foreground">{form.description}</p>

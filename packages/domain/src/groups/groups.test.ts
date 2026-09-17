@@ -7,6 +7,7 @@ import {
   type GroupNodeInput,
 } from './tree';
 import { tallyRsvp, isRsvpStatus, canRespondToSession } from './rsvp';
+import { pickScheduleInitialDate, countStartsInRange } from './schedule-view';
 
 const U12: GroupNodeInput = { id: 'u12', name: 'U12', parentGroupId: null };
 const BOYS: GroupNodeInput = { id: 'boys', name: 'U12 Boys', parentGroupId: 'u12' };
@@ -156,5 +157,40 @@ describe('canRespondToSession', () => {
     expect(canRespondToSession({ status: 'scheduled', endsAt: '2026-09-10T09:00:00Z' }, now)).toBe(
       false,
     );
+  });
+});
+
+describe('pickScheduleInitialDate', () => {
+  const now = Date.parse('2026-09-16T12:00:00Z');
+
+  it('returns undefined when there are no sessions', () => {
+    expect(pickScheduleInitialDate([], now)).toBeUndefined();
+  });
+
+  it('opens on the soonest future session', () => {
+    const date = pickScheduleInitialDate(
+      ['2026-09-09T18:00:00Z', '2026-09-18T18:00:00Z', '2026-09-20T18:00:00Z'],
+      now,
+    );
+    expect(date?.toISOString()).toBe('2026-09-18T18:00:00.000Z');
+  });
+
+  it('falls back to the most recent past session', () => {
+    const date = pickScheduleInitialDate(['2026-09-09T18:00:00Z', '2026-09-11T18:00:00Z'], now);
+    expect(date?.toISOString()).toBe('2026-09-11T18:00:00.000Z');
+  });
+});
+
+describe('countStartsInRange', () => {
+  it('counts starts inside [start, end)', () => {
+    const start = new Date('2026-09-07T00:00:00Z');
+    const end = new Date('2026-09-14T00:00:00Z');
+    expect(
+      countStartsInRange(
+        ['2026-09-09T18:00:00Z', '2026-09-11T18:00:00Z', '2026-09-16T18:00:00Z'],
+        start,
+        end,
+      ),
+    ).toBe(2);
   });
 });

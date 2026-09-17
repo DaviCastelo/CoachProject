@@ -6,7 +6,15 @@
     "save": "Save",
     "cancel": "Cancel",
     "attachments": "Attachments",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "programs": "Programs",
+    "instagram": "Instagram",
+    "contact": "Contact",
+    "theme": "Theme",
+    "language": "Language",
+    "lightTheme": "Light",
+    "darkTheme": "Dark",
+    "stepOf": "Step {current} of {total}"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -22,7 +30,10 @@
     "announcements": "Announcements",
     "more": "More",
     "skipToContent": "Skip to content",
-    "mainNavigation": "Main navigation"
+    "mainNavigation": "Main navigation",
+    "changeLanguage": "Change language",
+    "toggleTheme": "Toggle theme",
+    "accountMenu": "Account menu"
   },
   "auth": {
     "login": "Sign in",
@@ -46,7 +57,11 @@
     "inviteTitle": "Accept invitation",
     "inviteDescription": "You have been invited to join CA Tempo Training.",
     "inviteInvalid": "This invitation is invalid or has already been accepted.",
-    "inviteAccept": "Accept invitation"
+    "inviteAccept": "Accept invitation",
+    "signingIn": "Signing in…",
+    "invalidCredentials": "Email or password is incorrect.",
+    "emailRequired": "Enter your email address.",
+    "loginFailed": "Could not sign in. Try again."
   },
   "landing": {
     "heroTitle": "CA TEMPO TRAINING",
@@ -72,7 +87,14 @@
   "submissions": {
     "title": "Registrations",
     "subtitle": "{count} total",
-    "viewOnly": " · view only"
+    "viewOnly": " · view only",
+    "view": "View",
+    "viewAria": "View {name}",
+    "dob": "DOB",
+    "empty": "No registrations yet.",
+    "search": "Search by name",
+    "filterStatus": "Status",
+    "allStatuses": "All statuses"
   },
   "coach": {
     "dashboardTitle": "Dashboard",
@@ -100,6 +122,9 @@
     "closed": "Closed",
     "eventCanceled": "Canceled",
     "pleaseRespond": "Please confirm attendance.",
+    "confirmed": "Going",
+    "declined": "Not going",
+    "nextSession": "Next session",
     "announcements": "Announcements",
     "noAnnouncements": "No announcements yet.",
     "markRead": "Mark as read",
@@ -508,6 +533,14 @@
   "schedule": {
     "title": "Schedule",
     "subtitle": "{count} events",
+    "visibleCount": "{count} in this view",
+    "prev": "Previous",
+    "next": "Next",
+    "today": "Today",
+    "week": "Week",
+    "month": "Month",
+    "list": "List",
+    "fieldPlaceholder": "Field 3",
     "newEvent": "New event",
     "newEventHint": "Pick one or more groups — all of them will see the event.",
     "eventTitle": "Title",

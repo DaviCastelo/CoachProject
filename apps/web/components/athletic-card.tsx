@@ -4,11 +4,14 @@ import { Card } from '@/components/ui/card';
 interface AthleticCardProps {
   children: React.ReactNode;
   className?: string;
-  asChild?: boolean;
+  /** Hover lift + gold glow — only for showcase cards, never lists. */
+  lift?: boolean;
 }
 
-export function AthleticCard({ children, className }: AthleticCardProps) {
+export function AthleticCard({ children, className, lift = false }: AthleticCardProps) {
   return (
-    <Card className={cn('athletic-card overflow-hidden', className)}>{children}</Card>
+    <Card className={cn('athletic-card overflow-hidden', lift && 'athletic-card-lift', className)}>
+      {children}
+    </Card>
   );
 }
