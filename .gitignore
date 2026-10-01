@@ -44,6 +44,6 @@ npm-debug.log*
 pnpm-debug.log*
 
 # serwist
-public/sw.js
-public/sw.js.map
-public/swe-worker-*.js
+**/public/sw.js
+**/public/sw.js.map
+**/public/swe-worker-*.js
