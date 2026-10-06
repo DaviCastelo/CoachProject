@@ -658,5 +658,30 @@
     "errorWeak": "A senha precisa de pelo menos 8 caracteres.",
     "errorMismatch": "As senhas não são iguais.",
     "errorSame": "Escolha uma senha diferente da atual."
+  },
+  "pay": {
+    "title": "Conclua seu pagamento",
+    "titleDone": "Seu pagamento",
+    "amountLabel": "Valor a pagar",
+    "invoiceLabel": "Fatura",
+    "invoiceNumber": "Fatura {number}",
+    "partial": "{paid} de {total} recebidos até agora.",
+    "dueOn": "Vence em {date}",
+    "paidTitle": "Pagamento recebido",
+    "paidBody": "Está tudo certo. Não precisa fazer mais nada.",
+    "voidTitle": "Esta fatura foi cancelada",
+    "voidBody": "Não há nada a pagar. Se isso parecer errado, fale com o seu coach.",
+    "refundedTitle": "Este pagamento foi estornado",
+    "refundedBody": "O valor voltou para você. Qualquer dúvida, fale com o seu coach.",
+    "venmoTitle": "Pagar pelo Venmo",
+    "venmoOpen": "Abrir o Venmo e pagar {amount}",
+    "venmoHandleLabel": "Enviar para",
+    "noteLabel": "Escreva esta observação",
+    "noteWhy": "É por essa observação que o coach liga o pagamento ao seu atleta. Sem ela, a confirmação pode demorar alguns dias a mais.",
+    "otherTitle": "Outras formas de pagar",
+    "otherBody": "Também dá para pagar em dinheiro, cheque ou Zelle. Combine com o seu coach.",
+    "confirmDelay": "Depois que você pagar, o coach confirma aqui. Isso costuma acontecer em até um dia.",
+    "copy": "Copiar",
+    "copied": "Copiado"
   }
 }

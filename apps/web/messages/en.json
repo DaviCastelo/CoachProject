@@ -658,5 +658,30 @@
     "errorWeak": "Password must be at least 8 characters.",
     "errorMismatch": "Passwords do not match.",
     "errorSame": "Choose a password different from the current one."
+  },
+  "pay": {
+    "title": "Complete your payment",
+    "titleDone": "Your payment",
+    "amountLabel": "Amount due",
+    "invoiceLabel": "Invoice",
+    "invoiceNumber": "Invoice {number}",
+    "partial": "{paid} of {total} received so far.",
+    "dueOn": "Due {date}",
+    "paidTitle": "Payment received",
+    "paidBody": "You are all set. Nothing else is needed.",
+    "voidTitle": "This invoice was canceled",
+    "voidBody": "Nothing is owed. If that looks wrong, talk to your coach.",
+    "refundedTitle": "This payment was refunded",
+    "refundedBody": "The amount went back to you. Reach out to your coach with any questions.",
+    "venmoTitle": "Pay with Venmo",
+    "venmoOpen": "Open Venmo and pay {amount}",
+    "venmoHandleLabel": "Send to",
+    "noteLabel": "Add this note",
+    "noteWhy": "The note is how your coach matches the payment to your athlete. Without it, confirming can take a few extra days.",
+    "otherTitle": "Other ways to pay",
+    "otherBody": "You can also pay by cash, check or Zelle. Talk to your coach to arrange it.",
+    "confirmDelay": "Once you pay, your coach confirms it here. That usually happens within a day.",
+    "copy": "Copy",
+    "copied": "Copied"
   }
 }

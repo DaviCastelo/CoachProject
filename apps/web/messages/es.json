@@ -658,5 +658,30 @@
     "errorWeak": "La contraseña necesita al menos 8 caracteres.",
     "errorMismatch": "Las contraseñas no coinciden.",
     "errorSame": "Elige una contraseña distinta de la actual."
+  },
+  "pay": {
+    "title": "Completa tu pago",
+    "titleDone": "Tu pago",
+    "amountLabel": "Monto a pagar",
+    "invoiceLabel": "Factura",
+    "invoiceNumber": "Factura {number}",
+    "partial": "{paid} de {total} recibidos hasta ahora.",
+    "dueOn": "Vence el {date}",
+    "paidTitle": "Pago recibido",
+    "paidBody": "Todo listo. No necesitas hacer nada más.",
+    "voidTitle": "Esta factura fue cancelada",
+    "voidBody": "No hay nada que pagar. Si esto parece un error, habla con tu entrenador.",
+    "refundedTitle": "Este pago fue reembolsado",
+    "refundedBody": "El monto volvió a tu cuenta. Cualquier duda, habla con tu entrenador.",
+    "venmoTitle": "Pagar con Venmo",
+    "venmoOpen": "Abrir Venmo y pagar {amount}",
+    "venmoHandleLabel": "Enviar a",
+    "noteLabel": "Escribe esta nota",
+    "noteWhy": "Con esa nota tu entrenador relaciona el pago con tu atleta. Sin ella, la confirmación puede tardar algunos días más.",
+    "otherTitle": "Otras formas de pagar",
+    "otherBody": "También puedes pagar en efectivo, con cheque o por Zelle. Coordínalo con tu entrenador.",
+    "confirmDelay": "Después de pagar, tu entrenador lo confirma aquí. Suele ocurrir en un día.",
+    "copy": "Copiar",
+    "copied": "Copiado"
   }
 }
