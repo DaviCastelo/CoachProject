@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { CheckCircle2, Info, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, Info, XCircle } from 'lucide-react';
 import { createServiceClient } from '@/lib/supabase/service';
 import { AthleticCard } from '@/components/athletic-card';
 import { CopyButton } from '@/components/copy-button';
@@ -54,7 +54,7 @@ export default async function PaymentInstructionsPage({ params }: PageProps) {
     await Promise.all([
       svc
         .from('invoice_balances')
-        .select('paid_cents, balance_cents')
+        .select('paid_cents, pending_cents, balance_cents')
         .eq('invoice_id', invoice.id)
         .maybeSingle(),
       svc.from('organizations').select('name').eq('id', invoice.organization_id).maybeSingle(),
@@ -73,11 +73,16 @@ export default async function PaymentInstructionsPage({ params }: PageProps) {
   const venmoHandle = offline.venmo_handle?.replace(/^@/, '') ?? null;
 
   const paid = balance?.paid_cents ?? 0;
+  const pending = balance?.pending_cents ?? 0;
   const due = balance?.balance_cents ?? invoice.total_cents;
   const isPaid = invoice.status === 'paid' || due <= 0;
   const isVoid = invoice.status === 'void' || invoice.status === 'uncollectible';
   const isRefunded = invoice.status === 'refunded';
-  const isPartial = !isPaid && paid > 0;
+  // ACH já em compensação. Mostrar instrução de Venmo agora é pedir para a
+  // família pagar a mesma fatura duas vezes, e o segundo pagamento vira
+  // crédito que alguém tem que devolver na mão.
+  const isPending = !isPaid && pending > 0;
+  const isPartial = !isPaid && !isPending && paid > 0;
 
   // O texto que vai na observação do Venmo. É ele que transforma a
   // conferência manual de "quem será que mandou esses $600?" em um
@@ -102,7 +107,7 @@ export default async function PaymentInstructionsPage({ params }: PageProps) {
       {/* Numa fatura já resolvida, "Conclua seu pagamento" contradiz o que
           aparece logo abaixo. O título acompanha o estado. */}
       <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-        {isPaid || isVoid || isRefunded ? t('titleDone') : t('title')}
+        {isPaid || isVoid || isRefunded || isPending ? t('titleDone') : t('title')}
       </h1>
 
       <AthleticCard className="mt-6 p-5">
@@ -141,6 +146,14 @@ export default async function PaymentInstructionsPage({ params }: PageProps) {
             {t('paidTitle')}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">{t('paidBody')}</p>
+        </AthleticCard>
+      ) : isPending ? (
+        <AthleticCard className="mt-4 p-5">
+          <p className="flex items-center gap-2 font-medium text-warning">
+            <Clock className="h-5 w-5 shrink-0" aria-hidden="true" />
+            {t('processingTitle')}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{t('processingBody')}</p>
         </AthleticCard>
       ) : isVoid || isRefunded ? (
         <AthleticCard className="mt-4 p-5">

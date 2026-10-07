@@ -682,6 +682,22 @@
     "otherBody": "You can also pay by cash, check or Zelle. Talk to your coach to arrange it.",
     "confirmDelay": "Once you pay, your coach confirms it here. That usually happens within a day.",
     "copy": "Copy",
-    "copied": "Copied"
+    "copied": "Copied",
+    "chooseLegend": "Payment method",
+    "recommended": "Recommended",
+    "bankTitle": "Bank account",
+    "bankBody": "Connect your bank securely. Takes 3 to 5 days to clear, and it is the option that keeps the most money with the club.",
+    "cardTitle": "Card, Apple Pay or Google Pay",
+    "cardBody": "Confirms right away.",
+    "cashAppTitle": "Cash App",
+    "cashAppBody": "Pay from your Cash App balance.",
+    "continueAction": "Continue to pay {amount}",
+    "offlineTitle": "Prefer Venmo, cash or check?",
+    "offlineBody": "You can pay your coach directly. We will show you how.",
+    "offlineAction": "See how to pay",
+    "processingTitle": "Payment on the way",
+    "processingBody": "Your bank is sending it. Bank transfers take 3 to 5 business days to clear. You do not need to pay again.",
+    "doneTitle": "Confirming your payment",
+    "doneBody": "This takes a few seconds. Reload the page in a moment to see it confirmed."
   }
 }

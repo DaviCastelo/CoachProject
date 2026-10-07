@@ -682,6 +682,22 @@
     "otherBody": "También puedes pagar en efectivo, con cheque o por Zelle. Coordínalo con tu entrenador.",
     "confirmDelay": "Después de pagar, tu entrenador lo confirma aquí. Suele ocurrir en un día.",
     "copy": "Copiar",
-    "copied": "Copiado"
+    "copied": "Copiado",
+    "chooseLegend": "Forma de pago",
+    "recommended": "Recomendado",
+    "bankTitle": "Cuenta bancaria",
+    "bankBody": "Conexión segura con tu banco. Tarda de 3 a 5 días en acreditarse, y es la opción que deja más dinero en el club.",
+    "cardTitle": "Tarjeta, Apple Pay o Google Pay",
+    "cardBody": "Se confirma al instante.",
+    "cashAppTitle": "Cash App",
+    "cashAppBody": "Paga con el saldo de tu Cash App.",
+    "continueAction": "Continuar y pagar {amount}",
+    "offlineTitle": "¿Prefieres Venmo, efectivo o cheque?",
+    "offlineBody": "Puedes pagarle directamente a tu entrenador. Te mostramos cómo.",
+    "offlineAction": "Ver cómo pagar",
+    "processingTitle": "Pago en camino",
+    "processingBody": "Tu banco lo está enviando. Las transferencias tardan de 3 a 5 días hábiles en acreditarse. No necesitas pagar de nuevo.",
+    "doneTitle": "Confirmando tu pago",
+    "doneBody": "Esto tarda unos segundos. Recarga la página en un momento para verlo confirmado."
   }
 }

@@ -682,6 +682,22 @@
     "otherBody": "Também dá para pagar em dinheiro, cheque ou Zelle. Combine com o seu coach.",
     "confirmDelay": "Depois que você pagar, o coach confirma aqui. Isso costuma acontecer em até um dia.",
     "copy": "Copiar",
-    "copied": "Copiado"
+    "copied": "Copiado",
+    "chooseLegend": "Forma de pagamento",
+    "recommended": "Recomendado",
+    "bankTitle": "Conta bancária",
+    "bankBody": "Conexão segura com o seu banco. Leva de 3 a 5 dias para compensar, e é a opção que deixa mais dinheiro com o clube.",
+    "cardTitle": "Cartão, Apple Pay ou Google Pay",
+    "cardBody": "Confirma na hora.",
+    "cashAppTitle": "Cash App",
+    "cashAppBody": "Pague pelo saldo do seu Cash App.",
+    "continueAction": "Continuar e pagar {amount}",
+    "offlineTitle": "Prefere Venmo, dinheiro ou cheque?",
+    "offlineBody": "Dá para pagar direto ao seu coach. A gente mostra como.",
+    "offlineAction": "Ver como pagar",
+    "processingTitle": "Pagamento a caminho",
+    "processingBody": "Seu banco está enviando. Transferência bancária leva de 3 a 5 dias úteis para compensar. Não precisa pagar de novo.",
+    "doneTitle": "Confirmando seu pagamento",
+    "doneBody": "Isso leva alguns segundos. Recarregue a página daqui a pouco para ver confirmado."
   }
 }
