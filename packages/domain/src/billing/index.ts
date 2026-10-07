@@ -55,3 +55,13 @@ export {
   type StatementMatch,
   type MatchSummary,
 } from './reconcile';
+
+export {
+  AGING_BUCKETS,
+  daysOverdue,
+  agingBucket,
+  summarizeAging,
+  type AgingBucket,
+  type AgingInput,
+  type AgingReport,
+} from './aging';
