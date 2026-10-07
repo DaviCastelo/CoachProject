@@ -2,6 +2,8 @@ import type Stripe from 'stripe';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServiceClient } from '@/lib/supabase/service';
 import { StripeGateway } from '@/lib/stripe/gateway';
+import { enqueuePaymentReceived } from '@/lib/notifications/enqueue';
+import { flushNotificationsAfterResponse } from '@/lib/notifications/dispatch';
 
 /**
  * Webhook da Stripe.
@@ -215,7 +217,7 @@ async function applyIntent(
     throw new Error(`PaymentIntent ${intentId} chegou sem invoice_id no metadata`);
   }
 
-  const { error } = await db.rpc('apply_stripe_payment', {
+  const { data: paymentId, error } = await db.rpc('apply_stripe_payment', {
     p_invoice_id: invoiceId,
     p_external_id: payment.externalId,
     p_method: payment.method,
@@ -228,6 +230,14 @@ async function applyIntent(
 
   if (error) {
     throw new Error(`apply_stripe_payment falhou: ${error.message}`);
+  }
+
+  // Recibo só quando o dinheiro existe de verdade. No ACH o pagamento fica
+  // `pending` por dias, e mandar recibo nessa hora faria a família achar que
+  // acabou — e o clube achar que recebeu.
+  if (payment.status === 'succeeded' && typeof paymentId === 'string') {
+    await enqueuePaymentReceived(paymentId);
+    flushNotificationsAfterResponse();
   }
 }
 

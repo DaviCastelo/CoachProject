@@ -778,6 +778,19 @@
     "setResBody_timed": "El sistema lo libera solo cuando vence el plazo. Es lo que hacen la mayoría de los clubes.",
     "setResBody_none": "El cupo es de la familia solo cuando entra el pago.",
     "setResBody_unlimited": "Alguien tiene que liberarlo a mano.",
-    "setResHours": "Horas de reserva"
+    "setResHours": "Horas de reserva",
+    "outboxTitle": "Bandeja de salida",
+    "outboxCounts": "{pending} esperando · {sent} enviados · {failed} con error",
+    "outboxNotConfigured": "El envío de correo todavía no está configurado, así que estos mensajes están esperando. Nada se pierde: cuando se conecte la cuenta de Resend, saldrán. Faltan estas variables de entorno:",
+    "outboxEmpty": "Todavía no hay mensajes.",
+    "outboxStatus_pending": "Esperando",
+    "outboxStatus_sent": "Enviado",
+    "outboxStatus_failed": "Falló",
+    "outboxStatus_skipped": "Descartado",
+    "remindersAction": "Recordar vencidas",
+    "remindersSending": "Encolando…",
+    "remindersQueued": "{count, plural, one {# recordatorio encolado} other {# recordatorios encolados}}",
+    "remindersNone": "Nada que recordar. O no hay vencidas, o el recordatorio de hoy ya salió.",
+    "remindersError": "No se pudieron encolar los recordatorios."
   }
 }

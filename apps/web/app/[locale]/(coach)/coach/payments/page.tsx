@@ -5,11 +5,12 @@ import { requireRole } from '@/lib/auth/guards';
 import { PageContainer } from '@/components/page-container';
 import { Button } from '@/components/ui/button';
 import { formatMoney } from '@/lib/format-money';
-import { listPendingInvoices, listUninvoicedRegistrations } from './actions';
+import { listPendingInvoices, listUninvoicedRegistrations, getNotificationQueue } from './actions';
 import { AgingSummary } from './aging-summary';
 import { Uninvoiced } from './uninvoiced';
 import { PendingList } from './pending-list';
 import { StatementImport } from './statement-import';
+import { NotificationQueuePanel } from './notification-queue';
 
 /**
  * Centro de cobrança.
@@ -26,9 +27,10 @@ export default async function PaymentsPage() {
   const t = await getTranslations('payments');
   const locale = await getLocale();
 
-  const [invoices, uninvoiced] = await Promise.all([
+  const [invoices, uninvoiced, queue] = await Promise.all([
     listPendingInvoices(),
     listUninvoicedRegistrations(),
+    getNotificationQueue(),
   ]);
 
   const totalCents = invoices.reduce((sum, invoice) => sum + invoice.dueCents, 0);
@@ -66,6 +68,8 @@ export default async function PaymentsPage() {
       <StatementImport />
 
       <PendingList invoices={invoices} />
+
+      <NotificationQueuePanel queue={queue} />
     </PageContainer>
   );
 }

@@ -5,6 +5,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { requireRole } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
+import { enqueueInvoiceCreated } from '@/lib/notifications/enqueue';
+import { flushNotificationsAfterResponse } from '@/lib/notifications/dispatch';
 
 export type StatusResult = { ok: true } | { ok: false; error: string };
 
@@ -62,8 +64,28 @@ export async function approveRegistrationWithGroups(
 
   if (error) return { ok: false, error: error.message };
 
+  // A RPC emite a fatura sozinha quando o formulário de origem tem
+  // `requires_payment`. Se emitiu, a família precisa receber o link — senão
+  // a cobrança existe e ninguém sabe dela.
+  //
+  // Lido DEPOIS da RPC, em vez de a RPC devolver o id, para não mudar a
+  // assinatura de uma função que já está em produção.
+  const { data: registration } = await db
+    .from('registrations')
+    .select('invoice_id')
+    .eq('id', registrationId)
+    .maybeSingle();
+
+  const invoiceId = registration?.invoice_id as string | null | undefined;
+  if (invoiceId) {
+    // Não bloqueia nem derruba a aprovação: enfileirar é consequência.
+    await enqueueInvoiceCreated(invoiceId);
+    flushNotificationsAfterResponse();
+  }
+
   revalidatePath('/coach/submissions');
   revalidatePath('/coach/groups');
+  revalidatePath('/[locale]/coach/payments', 'page');
   return { ok: true };
 }
 
