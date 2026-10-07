@@ -13,6 +13,7 @@ import {
   Users,
   CalendarDays,
   Megaphone,
+  DollarSign,
   MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ type NavItem = {
     | '/coach/schedule'
     | '/coach/announcements'
     | '/coach/submissions'
+    | '/coach/payments'
     | '/coach/forms'
     | '/family'
     | '/family/groups'
@@ -57,6 +59,7 @@ export function AppShell({ children, variant, pendingRegistrations }: AppShellPr
             icon: ClipboardList,
             badge: pendingRegistrations,
           },
+          { href: '/coach/payments', label: t('payments'), icon: DollarSign },
           { href: '/coach/forms', label: t('forms'), icon: FileText },
           { href: '/coach/announcements', label: t('announcements'), icon: Megaphone },
         ]

@@ -40,3 +40,18 @@ export {
   type InvoiceStatus,
   type ReservationPolicy,
 } from './invoice';
+
+export {
+  parseCsv,
+  parseAmountToCents,
+  parseStatement,
+  extractInvoiceNumber,
+  matchStatement,
+  summarizeMatches,
+  type StatementRow,
+  type StatementParseResult,
+  type OpenInvoice,
+  type MatchStatus,
+  type StatementMatch,
+  type MatchSummary,
+} from './reconcile';
