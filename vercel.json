@@ -5,9 +5,8 @@
   "outputDirectory": "apps/web/.next",
   "crons": [
     {
-      "comment": "Rede de segurança da caixa de saída. O envio normal acontece logo após a resposta, via after(); este cron existe para retentativa quando a Resend estava fora do ar, e para limpar a fila antiga.",
       "path": "/api/cron/notifications",
-      "schedule": "0 * * * *"
+      "schedule": "0 11 * * *"
     }
   ]
 }
