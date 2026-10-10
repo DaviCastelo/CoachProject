@@ -121,6 +121,22 @@ export class StripeGateway implements PaymentGateway {
       {
         mode: 'payment',
         payment_method_types: types.length > 0 ? types : ['card'],
+
+        // A conta vem com Adaptive Pricing LIGADO por padrão, e ninguém na CA
+        // Tempo escolheu isso: a Stripe ativa sozinha em contas elegíveis.
+        // Com ele, quem abre o checkout de fora dos EUA recebe o preço
+        // convertido e o PaymentIntent nasce na moeda do visitante.
+        //
+        // Visto na prática num teste em produção: fatura de US$ 1,00 virou
+        // "R$ 5,19" já pré-selecionado, e o `intent.amount` seria 519. Como o
+        // nosso livro inteiro é em centavos da moeda da FATURA, isso gravaria
+        // 519 contra um total de 100 e deixaria o saldo em -419, sem erro
+        // nenhum na tela.
+        //
+        // Desligar não prejudica família estrangeira: ela paga em dólar e a
+        // conversão fica com o banco dela, sem o spread da Stripe em cima.
+        adaptive_pricing: { enabled: false },
+
         payment_method_options: {
           us_bank_account: {
             financial_connections: {
@@ -201,6 +217,8 @@ export class StripeGateway implements PaymentGateway {
       status,
       method: stripeMethodToOurs(charge),
       amountCents: intent.amount,
+      // Sempre minúsculas na Stripe, mas normalizamos para não depender disso.
+      currency: intent.currency.toLowerCase(),
       feeCents: feeFromCharge(charge),
       paidAt:
         status === 'succeeded' && charge?.created

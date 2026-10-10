@@ -217,6 +217,36 @@ async function applyIntent(
     throw new Error(`PaymentIntent ${intentId} chegou sem invoice_id no metadata`);
   }
 
+  // `amountCents` não significa nada sozinho: 519 é um número bom em centavos
+  // de real e um número errado em centavos de dólar. O nosso livro é inteiro
+  // na moeda da fatura, então somar sem conferir é gravar mentira.
+  //
+  // Isto foi visto acontecendo: com Adaptive Pricing ligado na conta, um
+  // checkout aberto do Brasil converteu US$ 1,00 em R$ 5,19 e o intent
+  // nasceria em `brl`. A sessão agora manda `adaptive_pricing: false`, mas
+  // essa é a defesa do lado de cá, que vale mesmo que alguém religue a
+  // conversão por outro caminho.
+  //
+  // Parar aqui é de propósito. Preferimos a fatura em aberto e o erro gravado
+  // em webhook_events a um saldo negativo que ninguém explica em dezembro.
+  const { data: invoice } = await db
+    .from('invoices')
+    .select('currency')
+    .eq('id', invoiceId)
+    .maybeSingle();
+
+  if (!invoice) {
+    throw new Error(`Fatura ${invoiceId} não existe para o PaymentIntent ${intentId}`);
+  }
+
+  const invoiceCurrency = String(invoice.currency).toLowerCase();
+  if (payment.currency !== invoiceCurrency) {
+    throw new Error(
+      `Moeda divergente no PaymentIntent ${intentId}: fatura ${invoiceId} está em ` +
+        `${invoiceCurrency} e o pagamento veio em ${payment.currency}. Nada foi aplicado.`,
+    );
+  }
+
   const { data: paymentId, error } = await db.rpc('apply_stripe_payment', {
     p_invoice_id: invoiceId,
     p_external_id: payment.externalId,
