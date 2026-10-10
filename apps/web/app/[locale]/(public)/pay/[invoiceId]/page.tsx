@@ -7,6 +7,7 @@ import { AthleticCard } from '@/components/athletic-card';
 import { Button } from '@/components/ui/button';
 import { formatMoney } from '@/lib/format-money';
 import { formatDate } from '@/lib/format-datetime';
+import { isStripeConfigured } from '@/lib/stripe/client';
 import { startCheckout } from './actions';
 
 /**
@@ -70,6 +71,11 @@ export default async function PayPage({ params, searchParams }: PageProps) {
   const isPending = !isPaid && pending > 0;
   const canPay = !isPaid && !isVoid && !isRefunded && !isPending;
 
+  // Sem chave da Stripe não existe pagamento online neste ambiente. É o estado
+  // real de produção enquanto o clube não entrega as chaves `live`, e sem esta
+  // checagem a família clicaria em pagar para receber um 500.
+  const canPayOnline = isStripeConfigured();
+
   const options: Option[] = [
     { value: 'bank', title: t('bankTitle'), body: t('bankBody'), recommended: true },
     { value: 'card', title: t('cardTitle'), body: t('cardBody') },
@@ -127,63 +133,73 @@ export default async function PayPage({ params, searchParams }: PageProps) {
             <StatusCard tone="pending" title={t('doneTitle')} body={t('doneBody')} />
           ) : null}
 
-          <form action={startCheckout} className="mt-4 space-y-3">
-            <input type="hidden" name="invoiceId" value={invoice.id} />
+          {canPayOnline ? (
+            <form action={startCheckout} className="mt-4 space-y-3">
+              <input type="hidden" name="invoiceId" value={invoice.id} />
 
-            <fieldset className="space-y-3">
-              <legend className="sr-only">{t('chooseLegend')}</legend>
+              <fieldset className="space-y-3">
+                <legend className="sr-only">{t('chooseLegend')}</legend>
 
-              {options.map((option, index) => (
-                <label
-                  key={option.value}
-                  // Hover mexe no FUNDO, seleção manda na BORDA. Quando os
-                  // dois disputavam `border-color`, passar o mouse sobre a
-                  // opção já escolhida apagava o dourado dela.
-                  //
-                  // O anel de foco fica no card porque o input é sr-only:
-                  // sem isso quem navega por teclado não enxerga onde está.
-                  className="block cursor-pointer rounded-card border border-border bg-card p-4 transition-colors hover:bg-muted/40 has-[:checked]:border-accent-500 has-[:checked]:bg-accent-500/5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent-500 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background"
-                >
-                  {/* O input precisa ser IRMÃO anterior do círculo: `peer-*`
-                      só alcança irmãos posteriores, não descendentes de
-                      irmãos. Com o input fora deste flex, o círculo nunca
-                      mudava e só a borda do card reagia à seleção. */}
-                  <span className="flex items-start gap-3">
-                    <input
-                      type="radio"
-                      name="method"
-                      value={option.value}
-                      defaultChecked={index === 0}
-                      className="peer sr-only"
-                    />
-                    <span
-                      aria-hidden="true"
-                      className="mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-ink-400 peer-checked:border-[5px] peer-checked:border-accent-500 dark:border-ink-600"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium">{option.title}</span>
-                        {option.recommended ? (
-                          <span className="rounded bg-accent-500 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-950">
-                            {t('recommended')}
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className="mt-1 block text-sm text-muted-foreground">
-                        {option.body}
+                {options.map((option, index) => (
+                  <label
+                    key={option.value}
+                    // Hover mexe no FUNDO, seleção manda na BORDA. Quando os
+                    // dois disputavam `border-color`, passar o mouse sobre a
+                    // opção já escolhida apagava o dourado dela.
+                    //
+                    // O anel de foco fica no card porque o input é sr-only:
+                    // sem isso quem navega por teclado não enxerga onde está.
+                    className="block cursor-pointer rounded-card border border-border bg-card p-4 transition-colors hover:bg-muted/40 has-[:checked]:border-accent-500 has-[:checked]:bg-accent-500/5 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent-500 has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background"
+                  >
+                    {/* O input precisa ser IRMÃO anterior do círculo: `peer-*`
+                        só alcança irmãos posteriores, não descendentes de
+                        irmãos. Com o input fora deste flex, o círculo nunca
+                        mudava e só a borda do card reagia à seleção. */}
+                    <span className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="method"
+                        value={option.value}
+                        defaultChecked={index === 0}
+                        className="peer sr-only"
+                      />
+                      <span
+                        aria-hidden="true"
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-ink-400 peer-checked:border-[5px] peer-checked:border-accent-500 dark:border-ink-600"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium">{option.title}</span>
+                          {option.recommended ? (
+                            <span className="rounded bg-accent-500 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-950">
+                              {t('recommended')}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="mt-1 block text-sm text-muted-foreground">
+                          {option.body}
+                        </span>
                       </span>
                     </span>
-                  </span>
-                </label>
-              ))}
-            </fieldset>
+                  </label>
+                ))}
+              </fieldset>
 
-            <Button type="submit" size="lg" className="w-full">
-              {t('continueAction', {
-                amount: formatMoney(due, locale, invoice.currency),
-              })}
-            </Button>
-          </form>
+              <Button type="submit" size="lg" className="w-full">
+                {t('continueAction', {
+                  amount: formatMoney(due, locale, invoice.currency),
+                })}
+              </Button>
+            </form>
+          ) : (
+            // Nada de botão que não leva a lugar nenhum. O cartão de pagamento
+            // direto, abaixo, continua funcionando sem gateway.
+            <StatusCard
+              tone="neutral"
+              title={t('onlineUnavailableTitle')}
+              body={t('onlineUnavailableBody')}
+            />
+          )}
 
           <AthleticCard className="mt-4 p-5">
             <h2 className="font-medium">{t('offlineTitle')}</h2>

@@ -34,3 +34,18 @@ export function getStripe(): Stripe {
 export function isStripeTestMode(): boolean {
   return (process.env.STRIPE_SECRET_KEY ?? '').startsWith('sk_test_');
 }
+
+/**
+ * Existe chave da Stripe neste ambiente?
+ *
+ * `getStripe()` é preguiçoso de propósito: sem isto, a ausência da chave só
+ * aparece quando alguém clica em pagar, e aparece como erro 500 na cara da
+ * família. A tela de pagamento pergunta antes e, se não houver gateway,
+ * mostra só o caminho offline — que funciona sem chave nenhuma.
+ *
+ * Mesma ideia do `getEmailProvider()`, que devolve null enquanto não há conta
+ * Resend: faltar configuração é um estado previsto, não uma falha.
+ */
+export function isStripeConfigured(): boolean {
+  return (process.env.STRIPE_SECRET_KEY ?? '').length > 0;
+}

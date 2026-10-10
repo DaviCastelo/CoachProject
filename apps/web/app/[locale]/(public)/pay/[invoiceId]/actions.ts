@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import type { PaymentMethod } from '@ca-tempo/domain';
 import { createServiceClient } from '@/lib/supabase/service';
 import { StripeGateway } from '@/lib/stripe/gateway';
+import { isStripeConfigured } from '@/lib/stripe/client';
 
 /**
  * Inicia o checkout da Stripe para uma fatura.
@@ -34,6 +35,11 @@ export async function startCheckout(formData: FormData): Promise<void> {
   const choice = String(formData.get('method') ?? 'bank');
 
   if (!UUID.test(invoiceId)) redirect('/');
+
+  // A tela já esconde este formulário quando não há chave, então chegar aqui
+  // significa POST direto. Voltar para a página é melhor que estourar: lá a
+  // família enxerga o caminho offline, que não depende de gateway.
+  if (!isStripeConfigured()) redirect(`/pay/${invoiceId}`);
 
   const methods = METHOD_SETS[choice];
   if (!methods) redirect(`/pay/${invoiceId}`);
