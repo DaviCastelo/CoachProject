@@ -6,98 +6,25 @@ import type {
   GatewayPayment,
   RefundResult,
   WebhookEvent,
-  PaymentMethod,
-  PaymentStatus,
 } from '@ca-tempo/domain';
 import { getStripe } from './client';
+import {
+  METHOD_TO_STRIPE,
+  stripeMethodToOurs,
+  mapStatus,
+  asCharge,
+  feeFromCharge,
+} from './mapping';
 
 /**
  * Adaptador da Stripe para a interface `PaymentGateway`.
  *
  * Cobre cartão, ACH, Cash App e Link. O que é marcado na mão (Venmo, dinheiro,
  * cheque, Zelle) vive no OfflineGateway — a Stripe não sabe que existe.
- */
-
-/**
- * Nossos métodos → os tipos que a Stripe aceita em `payment_method_types`.
  *
- * `apple_pay` e `google_pay` NÃO são tipos próprios na Stripe: eles chegam
- * dentro de `card`. Por isso mapeiam para 'card' e são deduplicados depois.
+ * A tradução pura entre os dois vocabulários mora em `./mapping`, onde dá para
+ * testar sem subir rede nem banco.
  */
-const METHOD_TO_STRIPE: Partial<Record<PaymentMethod, Stripe.Checkout.SessionCreateParams.PaymentMethodType>> = {
-  card: 'card',
-  us_bank_account: 'us_bank_account',
-  cash_app: 'cashapp',
-  link: 'link',
-  apple_pay: 'card',
-  google_pay: 'card',
-};
-
-/** Caminho de volta: o que a Stripe informou no pagamento → nosso enum. */
-function stripeMethodToOurs(charge: Stripe.Charge | null): PaymentMethod {
-  const details = charge?.payment_method_details;
-  if (!details) return 'other';
-
-  switch (details.type) {
-    case 'us_bank_account':
-      return 'us_bank_account';
-    case 'cashapp':
-      return 'cash_app';
-    case 'link':
-      return 'link';
-    case 'card': {
-      // Carteira digital chega como cartão com um rótulo dentro.
-      const wallet = details.card?.wallet?.type;
-      if (wallet === 'apple_pay') return 'apple_pay';
-      if (wallet === 'google_pay') return 'google_pay';
-      if (wallet === 'link') return 'link';
-      return 'card';
-    }
-    default:
-      return 'other';
-  }
-}
-
-/**
- * Status da Stripe → nosso enum.
- *
- * O caso que importa é o ACH: ele fica em `processing` por dias e só depois
- * vira succeeded ou falha por falta de saldo. Mapear `processing` para
- * 'pending' é o que impede o sistema de liberar uma vaga antes do dinheiro
- * existir de verdade.
- */
-function mapStatus(intent: Stripe.PaymentIntent): PaymentStatus {
-  switch (intent.status) {
-    case 'succeeded':
-      return 'succeeded';
-    case 'processing':
-      return 'pending';
-    case 'canceled':
-      return 'canceled';
-    case 'requires_payment_method':
-      // Depois de uma tentativa frustrada a Stripe devolve o intent a este
-      // estado. Sem o `last_payment_error` seria indistinguível de um intent
-      // recém-criado que ninguém pagou ainda.
-      return intent.last_payment_error ? 'failed' : 'pending';
-    case 'requires_confirmation':
-    case 'requires_action':
-    case 'requires_capture':
-      return 'pending';
-    default:
-      return 'pending';
-  }
-}
-
-function asCharge(value: string | Stripe.Charge | null | undefined): Stripe.Charge | null {
-  return value && typeof value !== 'string' ? value : null;
-}
-
-/** A taxa real só existe depois que a transação entra no saldo. Antes é null. */
-function feeFromCharge(charge: Stripe.Charge | null): number | null {
-  const tx = charge?.balance_transaction;
-  if (!tx || typeof tx === 'string') return null;
-  return tx.fee;
-}
 
 export class StripeGateway implements PaymentGateway {
   readonly provider = 'stripe' as const;
