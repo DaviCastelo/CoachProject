@@ -87,6 +87,15 @@ export type GatewayPayment = {
   status: PaymentStatus;
   method: PaymentMethod;
   amountCents: number;
+  /**
+   * Moeda em que o pagamento foi EFETIVAMENTE feito, em minúsculas ('usd').
+   *
+   * Não é decoração: `amountCents` só significa alguma coisa junto com ela. A
+   * Stripe pode cobrar numa moeda diferente da que pedimos, e aí 519 centavos
+   * de real entrariam no lugar de 100 centavos de dólar. Quem aplica o
+   * pagamento compara esta moeda com a da fatura antes de somar.
+   */
+  currency: string;
   /** Taxa real cobrada pela processadora. `null` quando ainda não liquidou. */
   feeCents: number | null;
   paidAt: string | null;
