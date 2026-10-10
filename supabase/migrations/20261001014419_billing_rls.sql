@@ -25,7 +25,7 @@ alter table invoice_counters enable row level security;
 -- SECURITY DEFINER de propósito: a função lê `invoices` por dentro, e se
 -- rodasse com os poderes do chamador a política de `payments` consultaria
 -- `invoices`, cuja política consultaria de volta — foi exatamente a recursão
--- infinita que estourou em announcements (ver 0022). Definer corta o ciclo.
+-- infinita que estourou em announcements (ver announcements_rls). Definer corta o ciclo.
 create or replace function can_view_invoice(p_invoice uuid)
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (
@@ -46,7 +46,7 @@ returns boolean language sql stable security definer set search_path = public as
   )
 $$;
 
--- A faxina do grant implícito a `public`/`anon` está na 0030.
+-- A faxina do grant implícito a `public`/`anon` está na billing_lock_definer_execute.
 grant execute on function can_view_invoice(uuid) to authenticated;
 
 -- ---------------------------------------------------------------------------

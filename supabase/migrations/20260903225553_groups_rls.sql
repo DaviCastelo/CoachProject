@@ -8,7 +8,7 @@ alter table group_members enable row level security;
 alter table group_coaches enable row level security;
 
 -- ---------------------------------------------------------------------------
--- groups — refina a policy da 0011 (que dava ALL a qualquer staff, coach incluso)
+-- groups — refina a policy da intake_rls (que dava ALL a qualquer staff, coach incluso)
 -- ---------------------------------------------------------------------------
 
 drop policy if exists groups_staff_all on groups;

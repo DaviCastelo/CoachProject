@@ -1,4 +1,4 @@
--- Mesma faxina da 0007, agora para a função de cobrança.
+-- Mesma faxina da lock_definer_execute, agora para a função de cobrança.
 --
 -- `create function` concede `execute` a `public` por padrão, e no Supabase isso
 -- publica a função em /rest/v1/rpc/<nome> para o papel `anon`. O linter de
