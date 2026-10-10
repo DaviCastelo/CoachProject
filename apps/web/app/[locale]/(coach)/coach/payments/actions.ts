@@ -12,6 +12,12 @@ import {
 } from '@ca-tempo/domain';
 import { requireRole } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
+import {
+  enqueueInvoiceCreated,
+  enqueuePaymentReceived,
+  enqueueInvoiceReminder,
+} from '@/lib/notifications/enqueue';
+import { flushNotificationsAfterResponse } from '@/lib/notifications/dispatch';
 
 export type ActionResult = { ok: true; count: number } | { ok: false; error: string };
 
@@ -117,8 +123,46 @@ export async function markPaidBulk(
 
   if (error) return { ok: false, error: error.message };
 
+  await enqueueReceiptsFor(db, invoiceIds);
+
+  flushNotificationsAfterResponse();
   revalidatePath('/[locale]/coach/payments', 'page');
   return { ok: true, count: (data as number | null) ?? 0 };
+}
+
+/**
+ * Enfileira o recibo dos pagamentos offline recém-lançados.
+ *
+ * A RPC em lote devolve só a contagem, não os ids. Em vez de mudar a
+ * assinatura dela, procuramos aqui o último pagamento offline de cada
+ * fatura. A chave de deduplicação da caixa de saída garante que o mesmo
+ * pagamento não gere dois recibos, então reprocessar é inofensivo.
+ */
+async function enqueueReceiptsFor(db: SupabaseClient, invoiceIds: string[]): Promise<void> {
+  if (invoiceIds.length === 0) return;
+
+  const { data } = await db
+    .from('payments')
+    .select('id, invoice_id, created_at')
+    .in('invoice_id', invoiceIds)
+    .eq('provider', 'offline')
+    .eq('status', 'succeeded')
+    .order('created_at', { ascending: false });
+
+  const maisRecentePorFatura = new Map<string, string>();
+  for (const row of data ?? []) {
+    const invoice = row.invoice_id as string;
+    if (!maisRecentePorFatura.has(invoice)) {
+      maisRecentePorFatura.set(invoice, row.id as string);
+    }
+  }
+
+  // Em série, não em paralelo: um lote de semana de camp pode ter 70 faturas,
+  // e 70 chamadas simultâneas por causa de recibo não vale o risco numa
+  // operação que é secundária à baixa em si.
+  for (const paymentId of maisRecentePorFatura.values()) {
+    await enqueuePaymentReceived(paymentId);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -198,6 +242,9 @@ export async function confirmStatementImport(
 
   if (error) return { ok: false, error: error.message };
 
+  await enqueueReceiptsFor(db, items.map((i) => i.invoiceId));
+
+  flushNotificationsAfterResponse();
   revalidatePath('/[locale]/coach/payments', 'page');
   return { ok: true, count: (data as number | null) ?? 0 };
 }
@@ -277,6 +324,11 @@ export async function createInvoiceFor(
 
   if (error) return { ok: false, error: error.message };
 
+  // Emitir sem avisar é cobrar no escuro: a fatura passa a existir e a
+  // família não fica sabendo. Enfileirar não derruba a emissão se falhar.
+  await enqueueInvoiceCreated(data as string);
+
+  flushNotificationsAfterResponse();
   revalidatePath('/[locale]/coach/payments', 'page');
   return { ok: true, invoiceId: data as string };
 }
@@ -375,7 +427,110 @@ export async function savePaymentSettings(
 
   if (error) return { ok: false, error: error.message };
 
+  flushNotificationsAfterResponse();
   revalidatePath('/[locale]/coach/payments', 'page');
   revalidatePath('/[locale]/coach/payments/settings', 'page');
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Caixa de saída de notificações
+// ---------------------------------------------------------------------------
+
+export type NotificationQueue = {
+  /** A conta de e-mail já está configurada? */
+  configured: boolean;
+  missing: string[];
+  pending: number;
+  sent: number;
+  failed: number;
+  /** As últimas da fila, para o admin ver o que está parado. */
+  recent: {
+    id: string;
+    type: string;
+    recipient: string;
+    subject: string;
+    status: string;
+    error: string | null;
+    createdAt: string;
+  }[];
+};
+
+export async function getNotificationQueue(): Promise<NotificationQueue> {
+  const ctx = await requireRole(['owner', 'admin', 'coach', 'staff']);
+  const db = (await createClient()) as unknown as SupabaseClient;
+
+  const { data } = await db
+    .from('notifications')
+    .select('id, type, recipient, subject, status, error, created_at')
+    .eq('organization_id', ctx.orgId)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  const rows = data ?? [];
+
+  const counts = { pending: 0, sent: 0, failed: 0 };
+  for (const row of rows) {
+    const status = row.status as string;
+    if (status === 'pending') counts.pending += 1;
+    else if (status === 'sent') counts.sent += 1;
+    else if (status === 'failed') counts.failed += 1;
+  }
+
+  // A contagem de pendentes vem de query própria: a lista está limitada a 20
+  // e, se houver 300 presas, mostrar "20" seria mentira tranquilizadora.
+  const { count: pendingTotal } = await db
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('organization_id', ctx.orgId)
+    .eq('status', 'pending');
+
+  return {
+    configured: Boolean(process.env.RESEND_API_KEY && process.env.NOTIFICATIONS_FROM_EMAIL),
+    missing: [
+      process.env.RESEND_API_KEY ? null : 'RESEND_API_KEY',
+      process.env.NOTIFICATIONS_FROM_EMAIL ? null : 'NOTIFICATIONS_FROM_EMAIL',
+    ].filter((v): v is string => v !== null),
+    pending: pendingTotal ?? counts.pending,
+    sent: counts.sent,
+    failed: counts.failed,
+    recent: rows.map((row) => ({
+      id: row.id as string,
+      type: row.type as string,
+      recipient: row.recipient as string,
+      subject: row.subject as string,
+      status: row.status as string,
+      error: (row.error as string | null) ?? null,
+      createdAt: row.created_at as string,
+    })),
+  };
+}
+
+/**
+ * Enfileira lembrete para as faturas vencidas da organização.
+ *
+ * A chave de deduplicação limita a um por fatura por dia, então clicar duas
+ * vezes não manda dois e-mails. Faturas com pagamento em compensação são
+ * puladas dentro do `enqueueInvoiceReminder`.
+ */
+export async function sendOverdueReminders(): Promise<ActionResult> {
+  await requireRole(['owner', 'admin']);
+
+  const invoices = await listPendingInvoices();
+  const hoje = Date.now();
+
+  const vencidas = invoices.filter((invoice) => {
+    if (invoice.hasPending) return false;
+    const referencia = invoice.dueOn ?? invoice.createdAt;
+    return new Date(referencia).getTime() < hoje;
+  });
+
+  let count = 0;
+  for (const invoice of vencidas) {
+    if (await enqueueInvoiceReminder(invoice.id)) count += 1;
+  }
+
+  flushNotificationsAfterResponse();
+  revalidatePath('/[locale]/coach/payments', 'page');
+  return { ok: true, count };
 }

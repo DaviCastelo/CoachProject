@@ -778,6 +778,19 @@
     "setResBody_timed": "O sistema libera sozinho quando o prazo acaba. É o que a maioria dos clubes faz.",
     "setResBody_none": "A vaga só é da família quando o pagamento entra.",
     "setResBody_unlimited": "Alguém precisa liberar na mão.",
-    "setResHours": "Horas de reserva"
+    "setResHours": "Horas de reserva",
+    "outboxTitle": "Caixa de saída de e-mail",
+    "outboxCounts": "{pending} esperando · {sent} enviados · {failed} com falha",
+    "outboxNotConfigured": "O envio de e-mail ainda não está configurado, então estas mensagens estão esperando. Nada se perde: quando a conta Resend for ligada, elas saem. Variáveis de ambiente que faltam:",
+    "outboxEmpty": "Nenhuma mensagem ainda.",
+    "outboxStatus_pending": "Esperando",
+    "outboxStatus_sent": "Enviado",
+    "outboxStatus_failed": "Falhou",
+    "outboxStatus_skipped": "Descartado",
+    "remindersAction": "Lembrar vencidas",
+    "remindersSending": "Enfileirando…",
+    "remindersQueued": "{count, plural, one {# lembrete enfileirado} other {# lembretes enfileirados}}",
+    "remindersNone": "Nada a lembrar. Ou não há vencidas, ou o lembrete de hoje já saiu.",
+    "remindersError": "Não foi possível enfileirar os lembretes."
   }
 }

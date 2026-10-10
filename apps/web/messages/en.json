@@ -778,6 +778,19 @@
     "setResBody_timed": "The system releases it on its own when the time runs out. This is what most clubs do.",
     "setResBody_none": "The spot only becomes theirs once the payment lands.",
     "setResBody_unlimited": "Someone has to release it by hand.",
-    "setResHours": "Hours to hold"
+    "setResHours": "Hours to hold",
+    "outboxTitle": "Email outbox",
+    "outboxCounts": "{pending} waiting · {sent} sent · {failed} failed",
+    "outboxNotConfigured": "Email sending is not set up yet, so these messages are waiting. Nothing is lost: once the Resend account is connected they go out. Missing environment variables:",
+    "outboxEmpty": "No messages yet.",
+    "outboxStatus_pending": "Waiting",
+    "outboxStatus_sent": "Sent",
+    "outboxStatus_failed": "Failed",
+    "outboxStatus_skipped": "Skipped",
+    "remindersAction": "Remind overdue",
+    "remindersSending": "Queueing…",
+    "remindersQueued": "{count, plural, one {# reminder queued} other {# reminders queued}}",
+    "remindersNone": "Nothing to remind. Either nothing is overdue or reminders already went out today.",
+    "remindersError": "Could not queue the reminders."
   }
 }
