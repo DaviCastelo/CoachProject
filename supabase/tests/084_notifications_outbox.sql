@@ -10,7 +10,7 @@
 --    quem não é quem paga, queima a confiança da família na plataforma.
 
 begin;
-select plan(15);
+select plan(16);
 
 insert into organizations (id, slug, name) values
   ('00000000-0000-0000-0000-00000001a001','org-notif','Org Notif');
@@ -205,6 +205,18 @@ select throws_ok(
   '42501',
   null,
   'Only the server writes to the outbox'
+);
+
+-- A 0033 concedia esta função a `authenticated` e ela é SECURITY DEFINER sem
+-- checagem por dentro: bastava um UUID de fatura para extrair o e-mail e o
+-- nome de QUALQUER família, de qualquer organização, furando a RLS. O UUID
+-- viaja no link público `/pay/<uuid>`, então não é segredo. A 0035 tirou o
+-- grant; esta asserção é o que impede alguém de concedê-lo de novo sem notar.
+select throws_ok(
+  $$select email from invoice_billing_contact('00000000-0000-0000-0000-00000001f001')$$,
+  '42501',
+  null,
+  'The billing contact lookup is server-only: no logged-in user can call it'
 );
 
 select * from finish();
