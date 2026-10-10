@@ -44,6 +44,21 @@ npm-debug.log*
 pnpm-debug.log*
 
 # serwist
-public/sw.js
-public/sw.js.map
-public/swe-worker-*.js
+#
+# Os padrões abaixo precisam do `**/`. Um padrão de .gitignore que contém `/`
+# é ancorado na pasta do próprio .gitignore, então `public/sw.js` aqui na raiz
+# só casaria com `<raiz>/public/sw.js`, que não existe — o arquivo de verdade
+# nasce em `apps/web/public/sw.js` e entrou rastreado por isso.
+**/public/sw.js
+**/public/sw.js.map
+**/public/swe-worker-*.js
+
+# Claude Code
+#
+# Ignora tudo e reabre uma exceção, para arquivo novo da ferramenta não entrar
+# sozinho depois. O que mais importa aqui é `worktrees/`: são checkouts
+# inteiros, com `.next` dentro, e um deles já ficou para trás neste projeto.
+# `launch.json` fica versionado de propósito: descreve o dev server e serve
+# para qualquer pessoa que abra o repositório.
+.claude/*
+!.claude/launch.json

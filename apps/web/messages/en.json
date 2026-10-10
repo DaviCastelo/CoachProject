@@ -696,6 +696,8 @@
     "offlineTitle": "Prefer Venmo, cash or check?",
     "offlineBody": "You can pay your coach directly. We will show you how.",
     "offlineAction": "See how to pay",
+    "onlineUnavailableTitle": "Online payment is not set up yet",
+    "onlineUnavailableBody": "Paying by bank or card is not available for this club yet. You can still pay your coach directly, and the steps are right below.",
     "processingTitle": "Payment on the way",
     "processingBody": "Your bank is sending it. Bank transfers take 3 to 5 business days to clear. You do not need to pay again.",
     "doneTitle": "Confirming your payment",

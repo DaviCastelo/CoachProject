@@ -13,15 +13,44 @@ Com isso, a Vercel usa `apps/web/vercel.json` e detecta o Next.js automaticament
 
 ### Variáveis de ambiente (Production)
 
+Sem estas o app não sobe:
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://dbnoddzaqjgtfnymyqjm.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable key — Settings → API → anon/public>
 SUPABASE_SERVICE_ROLE_KEY=<service_role secret — Settings → API → service_role>
 NEXT_PUBLIC_SITE_URL=https://ca-tempo.vercel.app
-COOKIE_SECRET=<min 32 caracteres aleatórios>
+```
+
+Sem estas o app sobe, mas **não cobra ninguém**. A tela de pagamento detecta a
+ausência e mostra só o caminho offline (Venmo, dinheiro, cheque), em vez de
+oferecer um botão que daria erro:
+
+```
+STRIPE_SECRET_KEY=<Developers → API keys. Em produção prefira rk_live_ restrita>
+STRIPE_WEBHOOK_SECRET=<whsec_… criado junto com o endpoint de webhook>
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=<pk_live_…>
+```
+
+Sem estas o app sobe e as notificações **ficam na fila** com status `pending`,
+visíveis no painel de pagamentos. Nada é perdido: no dia em que a conta Resend
+existir, basta preencher e fazer redeploy, sem mudança de código:
+
+```
+RESEND_API_KEY=
+NOTIFICATIONS_FROM_EMAIL=<remetente de um domínio verificado na Resend>
+```
+
+E esta protege o cron que drena a fila. Sem ela a rota responde `503` e fica
+fechada, em vez de aberta para qualquer um esvaziar a fila de e-mails:
+
+```
+CRON_SECRET=<32 bytes aleatórios>
 ```
 
 **Importante:** `SUPABASE_SERVICE_ROLE_KEY` deve ser a chave **service_role** (secret), **não** a mesma chave de `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Se estiverem iguais, operações server-side que dependem da service role falham com erro de RLS.
+
+**Nota sobre o cron:** o plano Hobby da Vercel só aceita agendamento **diário**. O `vercel.json` usa `0 11 * * *` por isso — com `0 * * * *` a configuração é recusada na criação do deploy e a branch nem chega a construir, sem aparecer como deploy falho.
 
 Após alterar variáveis na Vercel, faça **Redeploy** (Deployments → ⋯ → Redeploy) para o runtime carregar os novos valores.
 
