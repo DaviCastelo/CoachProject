@@ -5,9 +5,9 @@
   "outputDirectory": "apps/web/.next",
   "crons": [
     {
-      "comment": "Rede de segurança da caixa de saída. O envio normal acontece logo após a resposta, via after(); este cron existe para retentativa quando a Resend estava fora do ar, e para limpar a fila antiga.",
+      "comment": "Rede de segurança da caixa de saída: retentativa do que falhou e descarte do que envelheceu. O envio normal NÃO depende disto — acontece logo após a resposta, via after(), em segundos. Por isso uma vez por dia basta. Horário em UTC: 11h equivale a 6h/7h da manhã em America/New_York, antes do expediente do cliente. Diário também é o teto do plano Hobby da Vercel; de hora em hora o deploy é recusado na validação.",
       "path": "/api/cron/notifications",
-      "schedule": "0 * * * *"
+      "schedule": "0 11 * * *"
     }
   ]
 }
