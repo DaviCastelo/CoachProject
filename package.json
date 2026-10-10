@@ -8,7 +8,7 @@
     "start": "pnpm --filter @ca-tempo/web start",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "test": "pnpm --filter @ca-tempo/domain test",
+    "test": "pnpm -r --if-present test",
     "test:e2e": "playwright test",
     "db:types": "supabase gen types typescript --local > packages/db/src/generated.ts",
     "format": "prettier --write .",

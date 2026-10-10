@@ -2,6 +2,7 @@ import type Stripe from 'stripe';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServiceClient } from '@/lib/supabase/service';
 import { StripeGateway } from '@/lib/stripe/gateway';
+import { currencyMatches } from '@/lib/stripe/mapping';
 import { enqueuePaymentReceived } from '@/lib/notifications/enqueue';
 import { flushNotificationsAfterResponse } from '@/lib/notifications/dispatch';
 
@@ -239,11 +240,10 @@ async function applyIntent(
     throw new Error(`Fatura ${invoiceId} não existe para o PaymentIntent ${intentId}`);
   }
 
-  const invoiceCurrency = String(invoice.currency).toLowerCase();
-  if (payment.currency !== invoiceCurrency) {
+  if (!currencyMatches(payment.currency, String(invoice.currency))) {
     throw new Error(
       `Moeda divergente no PaymentIntent ${intentId}: fatura ${invoiceId} está em ` +
-        `${invoiceCurrency} e o pagamento veio em ${payment.currency}. Nada foi aplicado.`,
+        `${invoice.currency} e o pagamento veio em ${payment.currency}. Nada foi aplicado.`,
     );
   }
 
