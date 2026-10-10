@@ -1,0 +1,6 @@
+# Saída de ferramenta. Formatar aqui faz o próximo `pnpm db:types` produzir um
+# diff falso, que alguém tem que reformatar de novo para o arquivo voltar ao
+# que o gerador escreve.
+packages/db/src/generated.ts
+
+pnpm-lock.yaml
