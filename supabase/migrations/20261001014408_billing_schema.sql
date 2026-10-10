@@ -75,7 +75,7 @@ create index on invoices (athlete_id);
 create index on invoices (household_id);
 create index on invoices (organization_id, due_on) where status = 'open';
 
--- A coluna já existia em 0010 reservada ("FK adicionada na Fase 4"). Agora fecha.
+-- A coluna já existia em intake_schema reservada ("FK adicionada na Fase 4"). Agora fecha.
 alter table registrations
   add constraint registrations_invoice_id_fkey
   foreign key (invoice_id) references invoices(id) on delete set null;
@@ -241,9 +241,9 @@ grant execute on function next_invoice_number(uuid) to service_role;
 -- Grants
 -- ---------------------------------------------------------------------------
 
--- 0008 dá `select` a anon por default privileges. Dados financeiros não têm
+-- A api_grants dá `select` a anon por default privileges. Dados financeiros não têm
 -- por que ser legíveis pelo público nem em teoria, então tiramos o grant.
--- A RLS (0029) continua sendo a defesa principal; isto é a segunda camada.
+-- A RLS (billing_rls) continua sendo a defesa principal; isto é a segunda camada.
 revoke all on invoices, payments, refunds, webhook_events, invoice_counters from anon;
 revoke all on invoice_balances from anon;
 

@@ -30,7 +30,7 @@ create index if not exists announcement_attachments_ann_idx
 alter table announcement_attachments enable row level security;
 
 -- Quem pode ver o aviso pode ver o anexo: destinatário, staff ou autor.
--- Usa os helpers definer da 0022 para não recair na recursão de RLS.
+-- Usa os helpers definer da announcements_rls para não recair na recursão de RLS.
 drop policy if exists announcement_attachments_read on announcement_attachments;
 create policy announcement_attachments_read on announcement_attachments
   for select using (

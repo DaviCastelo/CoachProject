@@ -1,7 +1,7 @@
 -- Fase 4 — fecha um vazamento de contato entre organizações.
 --
--- A 0033 criou `invoice_billing_contact` e a concedeu a `authenticated`. Foi
--- erro meu, e contra a regra escrita no cabeçalho da 0031: "Definer sem
+-- A notifications_outbox criou `invoice_billing_contact` e a concedeu a `authenticated`. Foi
+-- erro meu, e contra a regra escrita no cabeçalho da billing_rpcs: "Definer sem
 -- checagem explícita é porta dos fundos; o padrão aqui é sempre validar
 -- primeiro e só então ler".
 --
@@ -22,7 +22,7 @@
 -- JWT de quem está logado. Sem o grant a função some do PostgREST para o
 -- usuário final e continua funcionando igual para o servidor.
 --
--- Mesma faxina que a 0030 fez no `can_view_invoice`. A trava contra
+-- Mesma faxina que a billing_lock_definer_execute fez no `can_view_invoice`. A trava contra
 -- reintrodução é a asserção em supabase/tests/084, que reprova se alguém
 -- conceder de novo.
 

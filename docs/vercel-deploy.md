@@ -74,7 +74,7 @@ O CRUD do coach (`/coach/forms`) usa o JWT do usuário logado + RLS `forms_staff
 
 **Correção (código + banco):**
 
-1. Aplicar migration `0016_public_registration_submit.sql` no Supabase de produção:
+1. Aplicar migration `20260823120000_public_registration_submit.sql` no Supabase de produção:
    ```bash
    supabase login
    supabase link --project-ref dbnoddzaqjgtfnymyqjm

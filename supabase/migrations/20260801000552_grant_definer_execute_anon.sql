@@ -1,4 +1,4 @@
--- A 0007 revogou EXECUTE de anon nas auxiliares de RLS, mas isso quebra qualquer
+-- A migration lock_definer_execute revogou EXECUTE de anon nas auxiliares de RLS, mas isso quebra qualquer
 -- SELECT feito como anon (ex.: /api/health, e leituras públicas futuras da Fase 2)
 -- em tabelas cujas policies chamam essas funções (organizations, locations,
 -- org_settings, athletes, households, guardian_athletes).

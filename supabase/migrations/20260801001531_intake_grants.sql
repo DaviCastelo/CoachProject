@@ -1,5 +1,5 @@
 -- Fase 2 — grants para as roles da API nas novas tabelas/enums.
--- As default privileges definidas na 0008 já cobrem tabelas novas, mas reafirmamos
+-- As default privileges definidas na api_grants já cobrem tabelas novas, mas reafirmamos
 -- explicitamente para garantir (idempotente). RLS continua controlando as linhas.
 
 grant usage on type program_type to authenticated, anon;
