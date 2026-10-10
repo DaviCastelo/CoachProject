@@ -15,6 +15,7 @@ import {
   asCharge,
   feeFromCharge,
 } from './mapping';
+import { idempotencyKeyFor } from './idempotency';
 
 /**
  * Adaptador da Stripe para a interface `PaymentGateway`.
@@ -44,67 +45,69 @@ export class StripeGateway implements PaymentGateway {
       ),
     ];
 
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: 'payment',
-        payment_method_types: types.length > 0 ? types : ['card'],
+    const payload: Stripe.Checkout.SessionCreateParams = {
+      mode: 'payment',
+      payment_method_types: types.length > 0 ? types : ['card'],
 
-        // A conta vem com Adaptive Pricing LIGADO por padrão, e ninguém na CA
-        // Tempo escolheu isso: a Stripe ativa sozinha em contas elegíveis.
-        // Com ele, quem abre o checkout de fora dos EUA recebe o preço
-        // convertido e o PaymentIntent nasce na moeda do visitante.
-        //
-        // Visto na prática num teste em produção: fatura de US$ 1,00 virou
-        // "R$ 5,19" já pré-selecionado, e o `intent.amount` seria 519. Como o
-        // nosso livro inteiro é em centavos da moeda da FATURA, isso gravaria
-        // 519 contra um total de 100 e deixaria o saldo em -419, sem erro
-        // nenhum na tela.
-        //
-        // Desligar não prejudica família estrangeira: ela paga em dólar e a
-        // conversão fica com o banco dela, sem o spread da Stripe em cima.
-        adaptive_pricing: { enabled: false },
+      // A conta vem com Adaptive Pricing LIGADO por padrão, e ninguém na CA
+      // Tempo escolheu isso: a Stripe ativa sozinha em contas elegíveis.
+      // Com ele, quem abre o checkout de fora dos EUA recebe o preço
+      // convertido e o PaymentIntent nasce na moeda do visitante.
+      //
+      // Visto na prática num teste em produção: fatura de US$ 1,00 virou
+      // "R$ 5,19" já pré-selecionado, e o `intent.amount` seria 519. Como o
+      // nosso livro inteiro é em centavos da moeda da FATURA, isso gravaria
+      // 519 contra um total de 100 e deixaria o saldo em -419, sem erro
+      // nenhum na tela.
+      //
+      // Desligar não prejudica família estrangeira: ela paga em dólar e a
+      // conversão fica com o banco dela, sem o spread da Stripe em cima.
+      adaptive_pricing: { enabled: false },
 
-        payment_method_options: {
-          us_bank_account: {
-            financial_connections: {
-              // Conecta o banco na hora, em vez de esperar dias pelos
-              // microdepósitos de confirmação (metade das pessoas desiste ali).
-              permissions: ['payment_method'],
-            },
+      payment_method_options: {
+        us_bank_account: {
+          financial_connections: {
+            // Conecta o banco na hora, em vez de esperar dias pelos
+            // microdepósitos de confirmação (metade das pessoas desiste ali).
+            permissions: ['payment_method'],
           },
         },
-        line_items: [
-          {
-            quantity: 1,
-            price_data: {
-              currency: params.currency,
-              unit_amount: params.amountCents,
-              product_data: { name: params.description },
-            },
+      },
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: params.currency,
+            unit_amount: params.amountCents,
+            product_data: { name: params.description },
           },
-        ],
-        customer_email: params.customerEmail,
-        success_url: params.successUrl,
-        cancel_url: params.cancelUrl,
-        // Metadata vai e volta: é por aqui que o webhook sabe qual fatura
-        // quitar. Sem isso o pagamento chega órfão.
+        },
+      ],
+      customer_email: params.customerEmail,
+      success_url: params.successUrl,
+      cancel_url: params.cancelUrl,
+      // Metadata vai e volta: é por aqui que o webhook sabe qual fatura
+      // quitar. Sem isso o pagamento chega órfão.
+      metadata: {
+        ...params.metadata,
+        invoice_id: params.invoiceId,
+        organization_id: params.organizationId,
+      },
+      payment_intent_data: {
         metadata: {
-          ...params.metadata,
           invoice_id: params.invoiceId,
           organization_id: params.organizationId,
         },
-        payment_intent_data: {
-          metadata: {
-            invoice_id: params.invoiceId,
-            organization_id: params.organizationId,
-          },
-        },
       },
-      {
-        // Duplo clique no botão não pode virar duas sessões de cobrança.
-        idempotencyKey: `checkout:${params.invoiceId}:${params.amountCents}`,
-      },
-    );
+    };
+
+    const session = await stripe.checkout.sessions.create(payload, {
+      // Duplo clique no botão não pode virar duas sessões de cobrança. A
+      // chave deriva do corpo INTEIRO: mudou qualquer parâmetro do pedido,
+      // muda a chave. Montá-la à mão com invoiceId e valor já custou dois
+      // bugs, o último derrubando a tela de pagamento em produção.
+      idempotencyKey: idempotencyKeyFor('checkout', params.invoiceId, payload),
+    });
 
     if (!session.url) {
       throw new Error(`Stripe devolveu sessão ${session.id} sem URL de checkout`);
@@ -158,13 +161,17 @@ export class StripeGateway implements PaymentGateway {
   async refund(externalId: string, amountCents?: number): Promise<RefundResult> {
     const stripe = getStripe();
 
-    const refund = await stripe.refunds.create(
-      {
-        payment_intent: externalId,
-        ...(amountCents === undefined ? {} : { amount: amountCents }),
-      },
-      { idempotencyKey: `refund:${externalId}:${amountCents ?? 'full'}` },
-    );
+    const payload: Stripe.RefundCreateParams = {
+      payment_intent: externalId,
+      ...(amountCents === undefined ? {} : { amount: amountCents }),
+    };
+
+    // Mesma regra do checkout: a chave sai do corpo, não de campos escolhidos
+    // à mão. Hoje o corpo só varia em valor e os dois jeitos dariam no mesmo,
+    // mas é aqui que o próximo campo seria esquecido.
+    const refund = await stripe.refunds.create(payload, {
+      idempotencyKey: idempotencyKeyFor('refund', externalId, payload),
+    });
 
     return {
       externalId: refund.id,
