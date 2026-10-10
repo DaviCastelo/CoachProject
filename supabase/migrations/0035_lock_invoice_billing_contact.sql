@@ -1,0 +1,29 @@
+-- Fase 4 — fecha um vazamento de contato entre organizações.
+--
+-- A 0033 criou `invoice_billing_contact` e a concedeu a `authenticated`. Foi
+-- erro meu, e contra a regra escrita no cabeçalho da 0031: "Definer sem
+-- checagem explícita é porta dos fundos; o padrão aqui é sempre validar
+-- primeiro e só então ler".
+--
+-- A função é SECURITY DEFINER e NÃO valida nada por dentro: recebe um
+-- invoice_id e devolve e-mail, nome e idioma de quem paga. Com o grant, a RLS
+-- de `invoices` virava decoração para quem soubesse um UUID:
+--
+--   guardian de OUTRA organização, pela tabela:  0 linhas  (RLS fez o papel)
+--   o MESMO usuário, pela RPC:                   maria.privada@... / Maria
+--
+-- O UUID não é adivinhável, mas também não é segredo: ele é a credencial da
+-- tela pública de pagamento, viaja em `/pay/<uuid>` por e-mail e WhatsApp, e
+-- aparece na tela do coach. Quem recebe um link desses e tem qualquer login
+-- extraía o contato da família.
+--
+-- O grant era simplesmente desnecessário. Os três chamadores em
+-- `lib/notifications/enqueue.ts` usam `createServiceClient()`, nenhum usa o
+-- JWT de quem está logado. Sem o grant a função some do PostgREST para o
+-- usuário final e continua funcionando igual para o servidor.
+--
+-- Mesma faxina que a 0030 fez no `can_view_invoice`. A trava contra
+-- reintrodução é a asserção em supabase/tests/084, que reprova se alguém
+-- conceder de novo.
+
+revoke execute on function invoice_billing_contact(uuid) from authenticated;
