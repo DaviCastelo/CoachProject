@@ -1,5 +1,5 @@
 begin;
-select plan(2);
+select plan(3);
 
 -- Reusa setup mínimo do 040
 insert into organizations (id, slug, name) values
@@ -27,12 +27,29 @@ select lives_ok(
   'anon role can call submit_public_registration'
 );
 
+select throws_ok(
+  $$select submit_public_registration(
+    '00000000-0000-0000-0000-0000000000eb'::uuid,
+    '{"name":"Ana"}'::jsonb,
+    '{"first_name":"Ana","last_name":"Silva","date_of_birth":"2015-05-01"}'::jsonb,
+    '{"first_name":"Pat","last_name":"Silva","email":"pat-pin@example.com"}'::jsonb,
+    '{}'::jsonb,
+    null,
+    null,
+    null,
+    null,
+    '00000000-0000-0000-0000-000000000099'::uuid
+  )$$,
+  'forbidden',
+  'anon cannot pin an athlete id'
+);
+
 reset role;
 
 select is(
   (select count(*)::int from form_submissions where organization_id='00000000-0000-0000-0000-0000000000e1'),
   1,
-  'submission row created via public RPC'
+  'forbidden pin rolls back and leaves only the anonymous submission'
 );
 
 select * from finish();

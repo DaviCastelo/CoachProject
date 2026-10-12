@@ -13,6 +13,8 @@ import { buildWaiverPdf } from '@/lib/waiver-pdf';
 
 export type RegistrationExtras = {
   programOptionId?: string | null;
+  /** Atleta escolhido por quem já está logado. Ignorado sem sessão. */
+  athleteId?: string | null;
   waiver?: { signatureType: string; signatureData: string; consent: boolean } | null;
 };
 
@@ -120,6 +122,23 @@ export async function loadProgram(
   svc: SupabaseClient,
   formId: string,
 ): Promise<ProgramRow | null> {
+  const { data: form } = await svc
+    .from('forms')
+    .select('program_id')
+    .eq('id', formId)
+    .maybeSingle();
+  const linkedId = (form as { program_id: string | null } | null)?.program_id ?? null;
+
+  if (linkedId) {
+    const { data: linked } = await svc
+      .from('programs')
+      .select('id, name, waiver_template_id')
+      .eq('id', linkedId)
+      .eq('status', 'published')
+      .maybeSingle();
+    if (linked) return linked as ProgramRow;
+  }
+
   const { data: program } = await svc
     .from('programs')
     .select('id, name, waiver_template_id')

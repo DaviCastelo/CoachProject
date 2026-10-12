@@ -3,6 +3,7 @@ import { requireRole } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { SubmissionsTable, type SubmissionRow } from './submissions-table';
+import { registrationFamilySignals } from '@/lib/family/registration-signals';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,10 +12,19 @@ type RawReg = {
   status: string;
   created_at: string;
   athlete_id: string | null;
-  athletes: { first_name: string; last_name: string; date_of_birth: string } | null;
+  athletes: {
+    first_name: string;
+    last_name: string;
+    date_of_birth: string;
+    user_id: string | null;
+    created_at: string;
+  } | null;
   programs: { name: string } | null;
   program_options: { name: string } | null;
-  form_submissions: { form_versions: { forms: { id: string; name: string } | null } | null } | null;
+  form_submissions: {
+    guardians: { email: string | null; user_id: string | null; created_at: string } | null;
+    form_versions: { forms: { id: string; name: string } | null } | null;
+  } | null;
 };
 
 type RawWaiver = { athlete_id: string; pdf_url: string | null };
@@ -27,7 +37,7 @@ export default async function SubmissionsPage() {
   const { data: regsData } = await db
     .from('registrations')
     .select(
-      'id, status, created_at, athlete_id, athletes(first_name, last_name, date_of_birth), programs(name), program_options(name), form_submissions(form_versions(forms(id, name)))',
+      'id, status, created_at, athlete_id, athletes(first_name, last_name, date_of_birth, user_id, created_at), programs(name), program_options(name), form_submissions(guardians(email, user_id, created_at), form_versions(forms(id, name)))',
     )
     .eq('organization_id', ctx.orgId)
     .order('created_at', { ascending: false })
@@ -45,19 +55,31 @@ export default async function SubmissionsPage() {
     if (w.pdf_url) pdfByAthlete.add(w.athlete_id);
   }
 
-  const rows: SubmissionRow[] = ((regsData ?? []) as unknown as RawReg[]).map((r) => ({
-    id: r.id,
-    status: r.status,
-    createdAt: r.created_at,
-    athleteId: r.athlete_id,
-    athleteName: r.athletes ? `${r.athletes.first_name} ${r.athletes.last_name}` : '—',
-    dob: r.athletes?.date_of_birth ?? null,
-    program: r.programs?.name ?? null,
-    option: r.program_options?.name ?? null,
-    formId: r.form_submissions?.form_versions?.forms?.id ?? null,
-    formName: r.form_submissions?.form_versions?.forms?.name ?? null,
-    hasWaiver: r.athlete_id ? pdfByAthlete.has(r.athlete_id) : false,
-  }));
+  const rows: SubmissionRow[] = ((regsData ?? []) as unknown as RawReg[]).map((r) => {
+    const guardian = r.form_submissions?.guardians ?? null;
+    const signals = registrationFamilySignals({
+      athleteCreatedAt: r.athletes?.created_at ?? null,
+      registrationCreatedAt: r.created_at,
+      guardianCreatedAt: guardian?.created_at ?? null,
+      athleteUserId: r.athletes?.user_id ?? null,
+      guardianUserId: guardian?.user_id ?? null,
+    });
+
+    return {
+      id: r.id,
+      status: r.status,
+      createdAt: r.created_at,
+      athleteId: r.athlete_id,
+      athleteName: r.athletes ? `${r.athletes.first_name} ${r.athletes.last_name}` : '—',
+      dob: r.athletes?.date_of_birth ?? null,
+      program: r.programs?.name ?? null,
+      option: r.program_options?.name ?? null,
+      formId: r.form_submissions?.form_versions?.forms?.id ?? null,
+      formName: r.form_submissions?.form_versions?.forms?.name ?? null,
+      hasWaiver: r.athlete_id ? pdfByAthlete.has(r.athlete_id) : false,
+      ...signals,
+    };
+  });
 
   const canApprove = ctx.role === 'owner' || ctx.role === 'admin';
 

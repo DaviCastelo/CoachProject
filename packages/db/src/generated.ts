@@ -474,6 +474,7 @@ export type Database = {
           id: string
           name: string
           organization_id: string
+          program_id: string | null
           redirect_url: string | null
           requires_payment: boolean
           requires_waiver: boolean
@@ -488,6 +489,7 @@ export type Database = {
           id?: string
           name: string
           organization_id: string
+          program_id?: string | null
           redirect_url?: string | null
           requires_payment?: boolean
           requires_waiver?: boolean
@@ -502,6 +504,7 @@ export type Database = {
           id?: string
           name?: string
           organization_id?: string
+          program_id?: string | null
           redirect_url?: string | null
           requires_payment?: boolean
           requires_waiver?: boolean
@@ -516,6 +519,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forms_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
@@ -2261,6 +2271,7 @@ export type Database = {
       process_registration_submission: {
         Args: {
           p_athlete: Json
+          p_athlete_id?: string
           p_guardian: Json
           p_household?: Json
           p_program_id?: string
@@ -2312,6 +2323,7 @@ export type Database = {
       submit_public_registration: {
         Args: {
           p_athlete: Json
+          p_athlete_id?: string
           p_data: Json
           p_form_version_id: string
           p_guardian: Json
