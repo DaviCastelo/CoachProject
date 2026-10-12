@@ -123,13 +123,9 @@ async function loadKnownFamily(organizationId: string): Promise<{
   } = await db.auth.getUser();
   if (!user) return { signedIn: false, athletes: [], guardian: null };
 
-  const [{ data: athleteRows }, { data: guardianRow }] = await Promise.all([
-    db
-      .from('athletes')
-      .select('id, first_name, last_name, date_of_birth')
-      .eq('organization_id', organizationId)
-      .is('deleted_at', null)
-      .order('first_name'),
+  // auth_athlete_ids(), não a leitura de staff: coach logado não vê o elenco inteiro.
+  const [{ data: familyIds }, { data: guardianRow }] = await Promise.all([
+    db.rpc('auth_athlete_ids'),
     db
       .from('guardians')
       .select('first_name, last_name, email')
@@ -137,6 +133,18 @@ async function loadKnownFamily(organizationId: string): Promise<{
       .limit(1)
       .maybeSingle(),
   ]);
+
+  const ids = familyIds ?? [];
+  const { data: athleteRows } =
+    ids.length === 0
+      ? { data: [] }
+      : await db
+          .from('athletes')
+          .select('id, first_name, last_name, date_of_birth')
+          .in('id', ids)
+          .eq('organization_id', organizationId)
+          .is('deleted_at', null)
+          .order('first_name');
 
   const athletes = ((athleteRows ?? []) as {
     id: string;

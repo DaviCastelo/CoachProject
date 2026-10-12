@@ -48,8 +48,8 @@ reset role;
 
 select is(
   (select count(*)::int from form_submissions where organization_id='00000000-0000-0000-0000-0000000000e1'),
-  2,
-  'submission row created via public RPC'
+  1,
+  'forbidden pin rolls back and leaves only the anonymous submission'
 );
 
 select * from finish();
