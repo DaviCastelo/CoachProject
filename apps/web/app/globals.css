@@ -236,10 +236,486 @@
     animation: hero-zoom 20s ease-in-out infinite alternate;
   }
 
+  .landing-hero-stage {
+    animation: landing-hero-reveal 1.15s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  .landing-hero-slide {
+    position: absolute;
+    inset: 0;
+  }
+
+  .landing-hero-slide-b {
+    opacity: 0;
+  }
+
+  .landing-hero-slide-a {
+    animation: landing-hero-cycle-a 14s ease-in-out 1.2s infinite;
+  }
+
+  .landing-hero-slide-b {
+    animation: landing-hero-cycle-b 14s ease-in-out 1.2s infinite;
+  }
+
+  .landing-hero-photo {
+    object-fit: cover;
+    object-position: center 18%;
+    animation: landing-hero-drift 8s ease-in-out infinite alternate;
+  }
+
+  .landing-hero-word-left {
+    animation: landing-hero-from-left 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.35s both;
+  }
+
+  .landing-hero-word-right {
+    animation: landing-hero-from-right 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.5s both;
+  }
+
+  .landing-hero-subtitle,
+  .landing-hero-actions {
+    animation: fade-up 0.55s ease 0.85s both;
+  }
+
+  .landing-hero-pitch {
+    position: relative;
+    width: min(32rem, 88vw);
+    height: 7.25rem;
+  }
+
+  .landing-hero-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 78%;
+    transform-origin: left center;
+    background: var(--color-accent-500);
+    animation: landing-hero-line 0.65s ease 0.7s both;
+  }
+
+  .landing-hero-goal {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 22%;
+    height: 58%;
+    overflow: visible;
+    color: var(--color-accent-500);
+  }
+
+  .landing-hero-goal path {
+    fill: none;
+    stroke: currentColor;
+    stroke-linejoin: miter;
+  }
+
+  .landing-hero-net {
+    transform-box: fill-box;
+    transform-origin: left center;
+    animation: landing-hero-net 1.25s linear 1.05s both;
+  }
+
+  .landing-hero-net path {
+    stroke-width: 0.7;
+    opacity: 0.5;
+  }
+
+  .landing-hero-frame {
+    stroke-width: 2.6;
+    stroke-linecap: square;
+    stroke-dasharray: 180;
+    stroke-dashoffset: 180;
+    animation: landing-hero-goal-draw 0.55s ease 0.55s forwards;
+  }
+
+  .landing-hero-ball {
+    position: absolute;
+    left: 0;
+    bottom: 6%;
+    width: 22px;
+    height: 22px;
+    animation: landing-hero-shot 1.25s linear 1.05s both;
+  }
+
+  .landing-hero-ball svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+  }
+
+  .landing-hero-ticker {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    overflow: hidden;
+    border-top: 1px solid color-mix(in srgb, var(--color-accent-500) 55%, transparent);
+    background: rgba(10, 10, 10, 0.72);
+  }
+
+  .landing-hero-ticker-track {
+    display: flex;
+    width: max-content;
+    animation: landing-hero-ticker 22s linear infinite;
+  }
+
+  .landing-hero-ticker-item {
+    padding: 0.55rem 1.25rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-ink-200, #e7e5e4);
+  }
+
+  .landing-hero-ticker-item::before {
+    content: '';
+    display: inline-block;
+    width: 0.35rem;
+    height: 0.35rem;
+    margin-right: 1.25rem;
+    border-radius: 999px;
+    background: var(--color-accent-500);
+    transform: translateY(-0.05rem);
+  }
+
+  @keyframes landing-hero-reveal {
+    from {
+      clip-path: inset(0 0 100% 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  @keyframes landing-hero-cycle-a {
+    0%,
+    40% {
+      opacity: 1;
+    }
+    50%,
+    90% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes landing-hero-cycle-b {
+    0%,
+    40% {
+      opacity: 0;
+    }
+    50%,
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes landing-hero-drift {
+    from {
+      transform: scale(1.08) translate3d(0, 0, 0);
+    }
+    to {
+      transform: scale(1.14) translate3d(-1.5%, -1%, 0);
+    }
+  }
+
+  @keyframes landing-hero-from-left {
+    from {
+      opacity: 0;
+      transform: translateX(-10vw);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes landing-hero-from-right {
+    from {
+      opacity: 0;
+      transform: translateX(10vw);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes landing-hero-line {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes landing-hero-goal-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes landing-hero-shot {
+    0% {
+      left: 0%;
+      bottom: 6%;
+      transform: scale(1) rotate(0deg);
+    }
+    12% {
+      left: 16.4%;
+      bottom: 32.9%;
+      transform: scale(0.95) rotate(36deg);
+    }
+    25% {
+      left: 32.3%;
+      bottom: 54.4%;
+      transform: scale(0.9) rotate(75deg);
+    }
+    38% {
+      left: 46.1%;
+      bottom: 68%;
+      transform: scale(0.84) rotate(114deg);
+    }
+    50% {
+      left: 57%;
+      bottom: 73.5%;
+      transform: scale(0.79) rotate(150deg);
+    }
+    62% {
+      left: 66.2%;
+      bottom: 72.3%;
+      transform: scale(0.74) rotate(186deg);
+    }
+    75% {
+      left: 74.3%;
+      bottom: 63.4%;
+      transform: scale(0.69) rotate(225deg);
+    }
+    88% {
+      left: 80.3%;
+      bottom: 46.6%;
+      transform: scale(0.63) rotate(264deg);
+    }
+    100% {
+      left: 84%;
+      bottom: 24%;
+      transform: scale(0.58) rotate(300deg);
+    }
+  }
+
+  @keyframes landing-hero-net {
+    0%,
+    86% {
+      transform: translateX(0);
+    }
+    93% {
+      transform: translateX(4px);
+    }
+    100% {
+      transform: translateX(1px);
+    }
+  }
+
+  @keyframes landing-hero-ticker {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .scene-rule {
+    display: block;
+    width: min(10rem, 42%);
+    height: 2px;
+    margin: 0 auto 2rem;
+    background: var(--color-accent-500);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .scene-head .text-eyebrow {
+      animation: landing-hero-from-left 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    .scene-head h2 {
+      animation: landing-hero-from-right 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.08s both;
+    }
+
+    .scene-rule {
+      transform: scaleX(0);
+      transform-origin: center;
+      animation: landing-hero-line 0.7s ease 0.18s both;
+    }
+
+    .scene-cut {
+      animation: landing-hero-reveal 1.05s cubic-bezier(0.2, 0.7, 0.2, 1) 0.12s both;
+    }
+
+    .scene-poster img {
+      animation: scene-settle 1.6s ease 0.2s both;
+    }
+
+    .scene-photo {
+      animation: landing-hero-from-left 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.1s both;
+    }
+
+    .scene-copy {
+      animation: landing-hero-from-right 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.22s both;
+    }
+
+    .scene-streak span {
+      animation: scene-streak 0.45s ease both;
+    }
+
+    .scene-streak span:nth-child(2) {
+      animation-delay: 0.06s;
+    }
+
+    .scene-streak span:nth-child(3) {
+      animation-delay: 0.12s;
+    }
+
+    .scene-streak span:nth-child(4) {
+      animation-delay: 0.18s;
+    }
+
+    .scene-card {
+      animation: fade-up 0.7s ease both;
+    }
+
+    .scene-card:nth-child(2) {
+      animation-delay: 0.14s;
+    }
+
+    .scene-card:nth-child(3) {
+      animation-delay: 0.28s;
+    }
+
+    .scene-card .athletic-card {
+      position: relative;
+    }
+
+    .scene-card .athletic-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      z-index: 2;
+      height: 2px;
+      transform: scaleX(0);
+      transform-origin: left center;
+      background: var(--color-accent-500);
+      animation: landing-hero-line 0.55s ease both;
+    }
+
+    .scene-card:nth-child(2) .athletic-card::before {
+      animation-delay: 0.14s;
+    }
+
+    .scene-card:nth-child(3) .athletic-card::before {
+      animation-delay: 0.28s;
+    }
+
+    .scene-card img {
+      animation: scene-settle 1.3s ease both;
+    }
+
+    .scene-card:nth-child(2) img {
+      animation-delay: 0.14s;
+    }
+
+    .scene-card:nth-child(3) img {
+      animation-delay: 0.28s;
+    }
+
+    .scene-head .text-eyebrow,
+    .scene-head h2,
+    .scene-rule,
+    .scene-cut,
+    .scene-poster img,
+    .scene-photo,
+    .scene-copy,
+    .scene-streak span,
+    .scene-card,
+    .scene-card img,
+    .scene-card .athletic-card::before {
+      animation-play-state: paused;
+    }
+
+    [data-landing-scene][data-show] .scene-head .text-eyebrow,
+    [data-landing-scene][data-show] .scene-head h2,
+    [data-landing-scene][data-show] .scene-rule,
+    [data-landing-scene][data-show] .scene-cut,
+    [data-landing-scene][data-show] .scene-poster img,
+    [data-landing-scene][data-show] .scene-photo,
+    [data-landing-scene][data-show] .scene-copy,
+    [data-landing-scene][data-show] .scene-streak span,
+    [data-landing-scene][data-show] .scene-card,
+    [data-landing-scene][data-show] .scene-card img,
+    [data-landing-scene][data-show] .scene-card .athletic-card::before {
+      animation-play-state: running;
+    }
+  }
+
+  @keyframes scene-settle {
+    from {
+      transform: scale(1.08);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes scene-streak {
+    from {
+      transform: translateX(-18px) rotate(25deg);
+    }
+    to {
+      transform: translateX(0) rotate(25deg);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-fade-up,
-    .animate-hero-zoom {
+    .animate-hero-zoom,
+    .landing-hero-stage,
+    .landing-hero-slide-a,
+    .landing-hero-slide-b,
+    .landing-hero-photo,
+    .landing-hero-word-left,
+    .landing-hero-word-right,
+    .landing-hero-subtitle,
+    .landing-hero-actions,
+    .landing-hero-line,
+    .landing-hero-ball,
+    .landing-hero-frame,
+    .landing-hero-net,
+    .landing-hero-ticker-track {
       animation: none;
+    }
+
+    .landing-hero-slide-b,
+    .landing-hero-ball,
+    .landing-hero-goal {
+      display: none;
+    }
+
+    .landing-hero-word-left,
+    .landing-hero-word-right,
+    .landing-hero-subtitle,
+    .landing-hero-actions {
+      opacity: 1;
+      transform: none;
     }
 
     .athletic-card-lift:hover {

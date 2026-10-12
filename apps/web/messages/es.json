@@ -67,6 +67,11 @@
   },
   "landing": {
     "heroTitle": "CA TEMPO TRAINING",
+    "heroLead": "CA TEMPO",
+    "heroTrail": "TRAINING",
+    "tickerPrivate": "Entrenamiento privado",
+    "tickerGroups": "Grupos pequeños",
+    "tickerCamps": "Campamentos",
     "heroSubtitle": "Entrenamiento privado, grupos pequeños y campamentos — todo en una plataforma.",
     "ctaLogin": "Iniciar sesión",
     "ctaPrograms": "Ver Programas",
