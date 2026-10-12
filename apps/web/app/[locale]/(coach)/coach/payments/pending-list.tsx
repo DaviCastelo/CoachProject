@@ -7,6 +7,7 @@ import { Clock } from 'lucide-react';
 import { AthleticCard } from '@/components/athletic-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CopyButton } from '@/components/copy-button';
 import { formatMoney } from '@/lib/format-money';
 import { formatDate } from '@/lib/format-datetime';
 import { markPaidBulk, type PendingInvoice } from './actions';
@@ -15,6 +16,26 @@ const METHODS = ['venmo', 'cash', 'check', 'zelle'] as const;
 
 function daysSince(iso: string): number {
   return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
+}
+
+/**
+ * O link que a família abre para pagar.
+ *
+ * Até aqui ele não existia em tela nenhuma. A fatura era emitida, o e-mail com
+ * o link ia para a fila, e como a fila ainda não envia (falta a conta Resend),
+ * a cobrança morria ali: nem online, nem Venmo, porque a tela de instruções
+ * mora no mesmo endereço. Quem emitia não tinha como entregar.
+ *
+ * Sem prefixo de idioma de propósito: o `as-needed` do next-intl resolve pelo
+ * navegador de quem abre, e a família não tem por que receber um link em
+ * inglês porque o coach estava com a tela em inglês.
+ */
+function paymentUrl(invoiceId: string): string {
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (typeof window === 'undefined' ? '' : window.location.origin);
+
+  return `${base}/pay/${invoiceId}`;
 }
 
 export function PendingList({ invoices }: { invoices: PendingInvoice[] }) {
@@ -116,9 +137,15 @@ export function PendingList({ invoices }: { invoices: PendingInvoice[] }) {
           {visible.map((invoice) => {
             const days = daysSince(invoice.createdAt);
             return (
-              <li key={invoice.id} className="border-b border-border last:border-b-0">
+              // O botão de copiar fica FORA do label de propósito: dentro, o
+              // clique nele marcaria a fatura para baixa manual, que é o
+              // oposto do que a pessoa quis fazer.
+              <li
+                key={invoice.id}
+                className="flex items-start border-b border-border last:border-b-0"
+              >
                 <label
-                  className={`flex cursor-pointer items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/40 ${
+                  className={`flex min-w-0 flex-1 cursor-pointer items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/40 ${
                     invoice.hasPending ? 'cursor-not-allowed opacity-60' : ''
                   }`}
                 >
@@ -158,6 +185,17 @@ export function PendingList({ invoices }: { invoices: PendingInvoice[] }) {
                     {formatMoney(invoice.dueCents, locale)}
                   </span>
                 </label>
+
+                <span className="shrink-0 py-3 pr-4 pl-2">
+                  <CopyButton
+                    value={paymentUrl(invoice.id)}
+                    label={t('copyLinkAria', {
+                      athlete: invoice.athleteName,
+                      number: invoice.number,
+                    })}
+                    texts={{ copy: t('copyLink'), copied: t('copiedLink') }}
+                  />
+                </span>
               </li>
             );
           })}

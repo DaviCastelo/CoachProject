@@ -14,6 +14,7 @@ import {
   CalendarDays,
   Megaphone,
   DollarSign,
+  Package,
   MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,6 +33,7 @@ type NavItem = {
     | '/coach/announcements'
     | '/coach/submissions'
     | '/coach/payments'
+    | '/coach/programs'
     | '/coach/forms'
     | '/family'
     | '/family/groups'
@@ -60,6 +62,10 @@ export function AppShell({ children, variant, pendingRegistrations }: AppShellPr
             badge: pendingRegistrations,
           },
           { href: '/coach/payments', label: t('payments'), icon: DollarSign },
+          // Fica colado em Pagamentos de propósito: é aqui que o preço de uma
+          // inscrição nasce, e quem vem procurar "onde mudo o valor" chega
+          // primeiro na tela de dinheiro.
+          { href: '/coach/programs', label: t('programs'), icon: Package },
           { href: '/coach/forms', label: t('forms'), icon: FileText },
           { href: '/coach/announcements', label: t('announcements'), icon: Megaphone },
         ]

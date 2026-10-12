@@ -318,10 +318,16 @@ export function FormBuilder({ initial }: Props) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const isCompact = useIsMobile(1024);
 
-  const isDirty = useMemo(
+  // Ajuste de formulário (hoje só "exige pagamento") não mexe no schema, então
+  // a comparação abaixo não o enxergaria e o botão de salvar ficaria apagado
+  // com a mudança por gravar.
+  const [metaDirty, setMetaDirty] = useState(false);
+
+  const schemaDirty = useMemo(
     () => JSON.stringify(schema) !== JSON.stringify(savedSchema),
     [schema, savedSchema],
   );
+  const isDirty = schemaDirty || metaDirty;
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const sortableSectionIds = schema.sections.map((s) => `section:${s.id}`);
@@ -427,6 +433,7 @@ export function FormBuilder({ initial }: Props) {
       description: formMeta.description,
       success_message: formMeta.success_message,
       requires_waiver: formMeta.requires_waiver,
+      requires_payment: formMeta.requires_payment,
     });
   }
 
@@ -435,6 +442,7 @@ export function FormBuilder({ initial }: Props) {
       const res = await persistDraft();
       if (res.ok) {
         setSavedSchema(schema);
+        setMetaDirty(false);
         setHasDraft(true);
         toast.success(t('saved'));
         router.refresh();
@@ -453,6 +461,7 @@ export function FormBuilder({ initial }: Props) {
           return;
         }
         setSavedSchema(schema);
+        setMetaDirty(false);
       }
       const res = await publishForm(formMeta.id);
       if (res.ok) {
@@ -494,6 +503,28 @@ export function FormBuilder({ initial }: Props) {
               <Badge variant="warning">{t('unpublishedChanges')}</Badge>
             ) : null}
           </div>
+
+          {/* É esta marcação que faz a aprovação da inscrição emitir a fatura
+              sozinha. A coluna existia no banco desde a fase de cobrança sem
+              controle em tela nenhuma, então a automação estava escrita e fora
+              de alcance: todo formulário nascia e continuava sem cobrança. */}
+          <label className="mt-3 flex max-w-prose items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4 shrink-0 accent-[var(--color-accent-500)]"
+              checked={formMeta.requires_payment}
+              onChange={(e) => {
+                setFormMeta((m) => ({ ...m, requires_payment: e.target.checked }));
+                setMetaDirty(true);
+              }}
+            />
+            <span>
+              {t('requiresPayment')}
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                {t('requiresPaymentHelp')}
+              </span>
+            </span>
+          </label>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* Tabs Editor / Pré-visualizar */}

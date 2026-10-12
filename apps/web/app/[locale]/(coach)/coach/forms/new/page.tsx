@@ -33,6 +33,7 @@ export default function NewFormPage() {
   const [name, setName] = useState('');
   const [type, setType] = useState('registration');
   const [requiresWaiver, setRequiresWaiver] = useState(false);
+  const [requiresPayment, setRequiresPayment] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +47,7 @@ export default function NewFormPage() {
         name,
         type,
         requires_waiver: requiresWaiver,
+        requires_payment: requiresPayment,
         success_message: successMessage || undefined,
       });
       if (res.ok) {
@@ -101,6 +103,25 @@ export default function NewFormPage() {
               onChange={(e) => setRequiresWaiver(e.target.checked)}
             />
             {t('requiresWaiver')}
+          </label>
+
+          {/* Este é o que liga a emissão automática da fatura na aprovação.
+              A coluna existia no banco desde a fase de cobrança e não tinha
+              controle em tela nenhuma, então a automação estava escrita e
+              inalcançável: todo formulário nascia sem cobrança. */}
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={requiresPayment}
+              onChange={(e) => setRequiresPayment(e.target.checked)}
+            />
+            <span>
+              {t('requiresPayment')}
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                {t('requiresPaymentHelp')}
+              </span>
+            </span>
           </label>
 
           <div className="space-y-1.5">
