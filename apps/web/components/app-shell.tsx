@@ -36,6 +36,7 @@ type NavItem = {
     | '/coach/programs'
     | '/coach/forms'
     | '/family'
+    | '/family/registrations'
     | '/family/groups'
     | '/family/announcements';
   label: string;
@@ -71,6 +72,7 @@ export function AppShell({ children, variant, pendingRegistrations }: AppShellPr
         ]
       : [
           { href: '/family', label: t('schedule'), icon: CalendarDays },
+          { href: '/family/registrations', label: t('registrations'), icon: ClipboardList },
           { href: '/family/groups', label: t('groups'), icon: Users },
           { href: '/family/announcements', label: t('announcements'), icon: Megaphone },
         ];
