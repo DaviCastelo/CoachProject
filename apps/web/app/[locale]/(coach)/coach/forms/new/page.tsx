@@ -1,152 +1,17 @@
-'use client';
+import { requireRole } from '@/lib/auth/guards';
+import { createClient } from '@/lib/supabase/server';
+import { NewFormForm, type ProgramChoice } from './new-form-form';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
-import { slugify } from '@ca-tempo/domain';
-import { createForm } from '../actions';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import { FieldError } from '@/components/ui/field-error';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+export const dynamic = 'force-dynamic';
 
-const FORM_TYPES = [
-  { value: 'registration', labelKey: 'typeRegistration' as const },
-  { value: 'evaluation', labelKey: 'typeEvaluation' as const },
-  { value: 'survey', labelKey: 'typeSurvey' as const },
-  { value: 'intake', labelKey: 'typeIntake' as const },
-];
+export default async function NewFormPage() {
+  const ctx = await requireRole(['owner', 'admin']);
+  const db = await createClient();
+  const { data } = await db
+    .from('programs')
+    .select('id, name')
+    .eq('organization_id', ctx.orgId)
+    .order('name', { ascending: true });
 
-export default function NewFormPage() {
-  const t = useTranslations('forms');
-  const tCommon = useTranslations('common');
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [name, setName] = useState('');
-  const [type, setType] = useState('registration');
-  const [requiresWaiver, setRequiresWaiver] = useState(false);
-  const [requiresPayment, setRequiresPayment] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const slugPreview = slugify(name) || '—';
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    startTransition(async () => {
-      const res = await createForm({
-        name,
-        type,
-        requires_waiver: requiresWaiver,
-        requires_payment: requiresPayment,
-        success_message: successMessage || undefined,
-      });
-      if (res.ok) {
-        router.push(`/coach/forms/${res.id}/edit`);
-      } else {
-        setError(res.error);
-      }
-    });
-  }
-
-  return (
-    <div className="mx-auto w-full max-w-lg p-4">
-      <h1 className="mb-6 text-3xl font-semibold tracking-tight">{t('createTitle')}</h1>
-
-      <Card className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="name">{t('name')}</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('namePlaceholder')}
-              required
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>{t('slugPreview')}</Label>
-            <p className="text-sm text-muted-foreground">/register/{slugPreview}</p>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>{t('type')}</Label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {FORM_TYPES.map((ft) => (
-                  <SelectItem key={ft.value} value={ft.value}>
-                    {t(ft.labelKey)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={requiresWaiver}
-              onChange={(e) => setRequiresWaiver(e.target.checked)}
-            />
-            {t('requiresWaiver')}
-          </label>
-
-          {/* Este é o que liga a emissão automática da fatura na aprovação.
-              A coluna existia no banco desde a fase de cobrança e não tinha
-              controle em tela nenhuma, então a automação estava escrita e
-              inalcançável: todo formulário nascia sem cobrança. */}
-          <label className="flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={requiresPayment}
-              onChange={(e) => setRequiresPayment(e.target.checked)}
-            />
-            <span>
-              {t('requiresPayment')}
-              <span className="mt-0.5 block text-xs text-muted-foreground">
-                {t('requiresPaymentHelp')}
-              </span>
-            </span>
-          </label>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="success">{t('successMessage')}</Label>
-            <textarea
-              id="success"
-              className="flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
-              value={successMessage}
-              onChange={(e) => setSuccessMessage(e.target.value)}
-              placeholder={t('successMessagePlaceholder')}
-            />
-          </div>
-
-          <FieldError>{error}</FieldError>
-
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
-              {tCommon('cancel')}
-            </Button>
-            <Button type="submit" disabled={pending || !name.trim()}>
-              {pending ? t('creating') : t('create')}
-            </Button>
-          </div>
-        </form>
-      </Card>
-    </div>
-  );
+  return <NewFormForm programs={(data ?? []) as ProgramChoice[]} />;
 }

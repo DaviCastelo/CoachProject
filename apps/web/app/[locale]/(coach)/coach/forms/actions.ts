@@ -150,6 +150,7 @@ export async function createForm(input: {
   requires_waiver?: boolean;
   requires_payment?: boolean;
   success_message?: string;
+  program_id?: string | null;
 }): Promise<CreateFormResult> {
   const ctx = await requireRole(['owner', 'admin']);
   const db = await getDb();
@@ -167,6 +168,24 @@ export async function createForm(input: {
   if (!baseSlug) return { ok: false, error: 'Could not generate a valid slug from the name.' };
   const slug = ensureUniqueSlug(baseSlug, slugs);
 
+  const paid = input.requires_payment ?? false;
+  const requestedProgramId = input.program_id || null;
+  if (paid && !requestedProgramId) {
+    return { ok: false, error: 'Choose a program for this paid form.' };
+  }
+
+  let linkedProgram: { id: string; form_id: string | null } | null = null;
+  if (paid && requestedProgramId) {
+    const { data: program } = await db
+      .from('programs')
+      .select('id, form_id')
+      .eq('id', requestedProgramId)
+      .eq('organization_id', ctx.orgId)
+      .maybeSingle();
+    linkedProgram = program as { id: string; form_id: string | null } | null;
+    if (!linkedProgram) return { ok: false, error: 'Program not found.' };
+  }
+
   const { data: form, error: formError } = await db
     .from('forms')
     .insert({
@@ -176,8 +195,9 @@ export async function createForm(input: {
       type: input.type,
       status: 'draft',
       requires_waiver: input.requires_waiver ?? false,
-      requires_payment: input.requires_payment ?? false,
+      requires_payment: paid,
       success_message: input.success_message?.trim() || null,
+      program_id: linkedProgram?.id ?? null,
     })
     .select('id')
     .single();
@@ -187,6 +207,15 @@ export async function createForm(input: {
   }
 
   const formId = (form as { id: string }).id;
+
+  if (linkedProgram && !linkedProgram.form_id) {
+    await db
+      .from('programs')
+      .update({ form_id: formId })
+      .eq('id', linkedProgram.id)
+      .eq('organization_id', ctx.orgId)
+      .is('form_id', null);
+  }
   const { error: versionError } = await db.from('form_versions').insert({
     form_id: formId,
     version: 1,

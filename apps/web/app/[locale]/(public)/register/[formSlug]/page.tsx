@@ -4,7 +4,7 @@ import { parseFormSchema } from '@ca-tempo/domain';
 import { createServiceClient } from '@/lib/supabase/service';
 import { createClient } from '@/lib/supabase/server';
 import { Link, routing } from '@/i18n/routing';
-import { resolveWaiverTemplateId } from './registration-helpers';
+import { loadProgram, resolveWaiverTemplateId } from './registration-helpers';
 import { RegisterForm, type KnownAthlete, type KnownGuardian, type ProgramOption, type WaiverInfo } from './register-form';
 import { AthleticCard } from '@/components/athletic-card';
 
@@ -41,12 +41,7 @@ export default async function RegisterPage({ params }: PageProps) {
 
   const schema = parseFormSchema(version.schema);
 
-  const { data: program } = await svc
-    .from('programs')
-    .select('id, waiver_template_id')
-    .eq('form_id', form.id)
-    .eq('status', 'published')
-    .maybeSingle();
+  const program = await loadProgram(svc, form.id);
 
   let options: ProgramOption[] = [];
   if (program) {
