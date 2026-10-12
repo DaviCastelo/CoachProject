@@ -10,6 +10,31 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV === 'development',
 });
 
+/*
+ * A CSP precisa liberar o Supabase que ESTE ambiente usa, não um padrão
+ * genérico. Com `https://*.supabase.co` fixo no código, desenvolver contra o
+ * Supabase local era impossível: o navegador bloqueava o próprio login, com
+ * "violates the following Content Security Policy directive" no console e um
+ * "não foi possível entrar" inútil na tela.
+ *
+ * Derivar da variável de ambiente conserta o local e ainda aperta produção,
+ * que passa a liberar o projeto exato em vez de qualquer subdomínio da
+ * Supabase.
+ */
+function supabaseOrigins(): string[] {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return ['https://*.supabase.co', 'wss://*.supabase.co'];
+
+  try {
+    const { origin, protocol, host } = new URL(raw);
+    // Realtime usa WebSocket no mesmo host, trocando o esquema.
+    const ws = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}`;
+    return [origin, ws];
+  } catch {
+    return ['https://*.supabase.co', 'wss://*.supabase.co'];
+  }
+}
+
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   {
@@ -27,7 +52,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://*.supabase.co",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.sentry.io https://accounts.google.com",
+      `connect-src 'self' ${supabaseOrigins().join(' ')} https://*.posthog.com https://*.sentry.io https://accounts.google.com`,
       "frame-src https://accounts.google.com",
     ].join('; '),
   },

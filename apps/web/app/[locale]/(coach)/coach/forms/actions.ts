@@ -148,6 +148,7 @@ export async function createForm(input: {
   name: string;
   type: string;
   requires_waiver?: boolean;
+  requires_payment?: boolean;
   success_message?: string;
 }): Promise<CreateFormResult> {
   const ctx = await requireRole(['owner', 'admin']);
@@ -175,6 +176,7 @@ export async function createForm(input: {
       type: input.type,
       status: 'draft',
       requires_waiver: input.requires_waiver ?? false,
+      requires_payment: input.requires_payment ?? false,
       success_message: input.success_message?.trim() || null,
     })
     .select('id')
@@ -205,6 +207,7 @@ export type SaveDraftMeta = {
   description?: string | null;
   success_message?: string | null;
   requires_waiver?: boolean;
+  requires_payment?: boolean;
 };
 
 export async function saveDraft(
@@ -232,6 +235,9 @@ export async function saveDraft(
     if (meta.description !== undefined) patch.description = meta.description;
     if (meta.success_message !== undefined) patch.success_message = meta.success_message;
     if (meta.requires_waiver !== undefined) patch.requires_waiver = meta.requires_waiver;
+    // É esta marcação que faz a aprovação emitir a fatura sozinha. Sem ela
+    // gravável, a automação ficava escrita e fora de alcance.
+    if (meta.requires_payment !== undefined) patch.requires_payment = meta.requires_payment;
     if (Object.keys(patch).length > 0) {
       const { error } = await db
         .from('forms')
