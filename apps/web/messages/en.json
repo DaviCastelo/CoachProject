@@ -96,7 +96,12 @@
     "empty": "No registrations yet.",
     "search": "Search by name",
     "filterStatus": "Status",
-    "allStatuses": "All statuses"
+    "allStatuses": "All statuses",
+    "athleteNew": "New athlete",
+    "athleteKnown": "Athlete already on file",
+    "guardianNew": "New guardian email",
+    "guardianKnown": "Guardian email already on file",
+    "alreadyHasLogin": "This family already has a login. The portal shows this athlete."
   },
   "coach": {
     "dashboardTitle": "Dashboard",
@@ -417,6 +422,10 @@
     "incompleteMapping": "This form is not fully configured yet (athlete name and date of birth must be mapped). Please contact the organizer.",
     "configError": "Registration is temporarily unavailable. Please try again later or contact the organizer.",
     "genericError": "Something went wrong. Please try again.",
+    "alreadyWithUs": "Already train with us? Sign in",
+    "chooseAthlete": "Who is registering?",
+    "anotherChild": "Another child",
+    "chooseAthleteError": "Choose a child or another child.",
     "checkboxYes": "Yes",
     "errors": {
       "required": "This field is required.",

@@ -2261,6 +2261,7 @@ export type Database = {
       process_registration_submission: {
         Args: {
           p_athlete: Json
+          p_athlete_id?: string
           p_guardian: Json
           p_household?: Json
           p_program_id?: string
@@ -2312,6 +2313,7 @@ export type Database = {
       submit_public_registration: {
         Args: {
           p_athlete: Json
+          p_athlete_id?: string
           p_data: Json
           p_form_version_id: string
           p_guardian: Json

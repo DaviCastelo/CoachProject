@@ -13,6 +13,8 @@ import { buildWaiverPdf } from '@/lib/waiver-pdf';
 
 export type RegistrationExtras = {
   programOptionId?: string | null;
+  /** Atleta escolhido por quem já está logado. Ignorado sem sessão. */
+  athleteId?: string | null;
   waiver?: { signatureType: string; signatureData: string; consent: boolean } | null;
 };
 

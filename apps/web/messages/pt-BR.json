@@ -96,7 +96,12 @@
     "empty": "Nenhuma inscrição ainda.",
     "search": "Buscar por nome",
     "filterStatus": "Status",
-    "allStatuses": "Todos os status"
+    "allStatuses": "Todos os status",
+    "athleteNew": "Atleta novo",
+    "athleteKnown": "Atleta já cadastrado",
+    "guardianNew": "E-mail do responsável novo",
+    "guardianKnown": "E-mail do responsável já conhecido",
+    "alreadyHasLogin": "Esta família já tem login. O portal mostra este atleta."
   },
   "coach": {
     "dashboardTitle": "Painel",
@@ -417,6 +422,10 @@
     "incompleteMapping": "Este formulário ainda não está configurado corretamente (nome e data de nascimento do atleta precisam estar mapeados). Entre em contato com a organização.",
     "configError": "Inscrições temporariamente indisponíveis. Tente mais tarde ou entre em contato com a organização.",
     "genericError": "Algo deu errado. Tente novamente.",
+    "alreadyWithUs": "Já treina com a gente? Entrar",
+    "chooseAthlete": "Quem vai se inscrever?",
+    "anotherChild": "Outra criança",
+    "chooseAthleteError": "Escolha um filho ou outra criança.",
     "checkboxYes": "Sim",
     "errors": {
       "required": "Este campo é obrigatório.",

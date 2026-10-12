@@ -6,13 +6,14 @@ import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { StaticImage } from '@/components/static-image';
+import { BrandLogo } from '@/components/brand-logo';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FieldError } from '@/components/ui/field-error';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BrandLogo } from '@/components/brand-logo';
+import { safeRegisterPath } from '@/lib/auth/register-redirect';
 
 export default function LoginPage() {
   const t = useTranslations('auth');
@@ -49,7 +50,8 @@ export default function LoginPage() {
     if (signInError) {
       setPasswordError(mapAuthError(signInError.message));
     } else {
-      window.location.assign('/auth/home');
+      const next = safeRegisterPath(searchParams.get('redirect'));
+      window.location.assign(next ?? '/auth/home');
     }
   }
 
@@ -62,10 +64,15 @@ export default function LoginPage() {
     setEmailError(null);
     setPasswordError(null);
 
+    const next = safeRegisterPath(searchParams.get('redirect'));
+    const callback = next
+      ? `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`
+      : `${siteUrl}/auth/callback`;
+
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+      options: { emailRedirectTo: callback },
     });
 
     setLoading(false);
@@ -77,10 +84,14 @@ export default function LoginPage() {
   }
 
   async function handleGoogleLogin() {
+    const next = safeRegisterPath(searchParams.get('redirect'));
+    const callback = next
+      ? `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`
+      : `${siteUrl}/auth/callback`;
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${siteUrl}/auth/callback` },
+      options: { redirectTo: callback },
     });
   }
 

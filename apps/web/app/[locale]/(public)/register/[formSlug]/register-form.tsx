@@ -11,6 +11,19 @@ import { Card } from '@/components/ui/card';
 import { SignaturePad } from '@/components/forms/signature-pad';
 import { submitRegistration } from './actions';
 
+export type KnownAthlete = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+};
+
+export type KnownGuardian = {
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
 export type ProgramOption = {
   id: string;
   name: string;
@@ -34,10 +47,16 @@ type Props = Readonly<{
   successMessage: string | null;
   options: ProgramOption[];
   waiver: WaiverInfo | null;
+  knownAthletes?: KnownAthlete[];
+  knownGuardian?: KnownGuardian | null;
 }>;
 
 type Values = Record<string, unknown>;
-type Step = { kind: 'section'; index: number } | { kind: 'options' } | { kind: 'waiver' };
+type Step =
+  | { kind: 'family' }
+  | { kind: 'section'; index: number }
+  | { kind: 'options' }
+  | { kind: 'waiver' };
 
 function defaultValueFor(field: FormField): unknown {
   if (field.type === 'checkbox') return false;
@@ -185,7 +204,15 @@ function WaiverStep({
   );
 }
 
-export function RegisterForm({ formVersionId, schema, successMessage, options, waiver }: Props) {
+export function RegisterForm({
+  formVersionId,
+  schema,
+  successMessage,
+  options,
+  waiver,
+  knownAthletes = [],
+  knownGuardian = null,
+}: Props) {
   const t = useTranslations('register');
   const locale = useLocale();
   const { register, watch, getValues, setValue } = useForm<Values>({
@@ -202,8 +229,9 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
     const s: Step[] = schema.sections.map((_, index) => ({ kind: 'section', index }));
     if (options.length > 0) s.push({ kind: 'options' });
     if (waiver) s.push({ kind: 'waiver' });
+    if (knownAthletes.length > 0) s.unshift({ kind: 'family' });
     return s;
-  }, [schema, options.length, waiver]);
+  }, [schema, options.length, waiver, knownAthletes.length]);
 
   const [stepIdx, setStepIdx] = useState(0);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -212,6 +240,7 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
   const [pending, startTransition] = useTransition();
 
   const [optionId, setOptionId] = useState<string | null>(null);
+  const [athleteChoice, setAthleteChoice] = useState<string | null>(null);
   const [sigType, setSigType] = useState<'drawn' | 'typed'>('drawn');
   const [sigData, setSigData] = useState<string | null>(null);
   const [typedName, setTypedName] = useState('');
@@ -222,6 +251,38 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
   const step = steps[stepIdx];
   const isLast = stepIdx === steps.length - 1;
   const schemaHasSignature = useMemo(() => hasSignatureField(schema), [schema]);
+
+  function fillMapped(mapsTo: string, value: string) {
+    for (const section of schema.sections) {
+      for (const field of section.fields) {
+        if (field.mapsTo === mapsTo) setValue(field.id, value);
+      }
+    }
+  }
+
+  function fillGuardian() {
+    if (!knownGuardian) return;
+    fillMapped('guardian.first_name', knownGuardian.firstName);
+    fillMapped('guardian.last_name', knownGuardian.lastName);
+    fillMapped('guardian.email', knownGuardian.email);
+  }
+
+  function chooseFamily(id: string) {
+    setAthleteChoice(id);
+    setFormError(null);
+    if (id === 'other') {
+      fillMapped('athlete.first_name', '');
+      fillMapped('athlete.last_name', '');
+      fillMapped('athlete.date_of_birth', '');
+    } else {
+      const athlete = knownAthletes.find((item) => item.id === id);
+      if (!athlete) return;
+      fillMapped('athlete.first_name', athlete.firstName);
+      fillMapped('athlete.last_name', athlete.lastName);
+      fillMapped('athlete.date_of_birth', athlete.dateOfBirth.slice(0, 10));
+    }
+    fillGuardian();
+  }
 
   function resolveEffectiveSignature(formValues: Values): { signatureType: 'drawn' | 'typed'; signatureData: string } | null {
     const fromField = extractSignatureFromSchema(schema, formValues);
@@ -265,6 +326,13 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
   }
 
   function stepValid(): boolean {
+    if (step.kind === 'family') {
+      if (!athleteChoice) {
+        setFormError(t('chooseAthleteError'));
+        return false;
+      }
+      return true;
+    }
     if (step.kind === 'section') return validateSection(schema.sections[step.index].fields);
     if (step.kind === 'options') {
       if (!optionId) {
@@ -298,6 +366,7 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
       const effectiveSig = waiver ? resolveEffectiveSignature(getValues()) : null;
       const res = await submitRegistration(formVersionId, getValues(), {
         programOptionId: optionId,
+        athleteId: athleteChoice && athleteChoice !== 'other' ? athleteChoice : null,
         waiver: waiver
           ? {
               signatureType: effectiveSig?.signatureType ?? sigType,
@@ -320,6 +389,38 @@ export function RegisterForm({ formVersionId, schema, successMessage, options, w
   }
 
   function renderStepContent() {
+    if (step.kind === 'family') {
+      return (
+        <fieldset className="space-y-3">
+          <legend className="font-display text-xl uppercase tracking-wide">{t('chooseAthlete')}</legend>
+          {knownAthletes.map((athlete) => (
+            <label
+              key={athlete.id}
+              className="flex cursor-pointer items-center gap-3 rounded-md border border-border p-3 has-[:checked]:border-accent-500"
+            >
+              <input
+                type="radio"
+                name="family-athlete"
+                checked={athleteChoice === athlete.id}
+                onChange={() => chooseFamily(athlete.id)}
+              />
+              <span>
+                {athlete.firstName} {athlete.lastName}
+              </span>
+            </label>
+          ))}
+          <label className="flex cursor-pointer items-center gap-3 rounded-md border border-border p-3 has-[:checked]:border-accent-500">
+            <input
+              type="radio"
+              name="family-athlete"
+              checked={athleteChoice === 'other'}
+              onChange={() => chooseFamily('other')}
+            />
+            <span>{t('anotherChild')}</span>
+          </label>
+        </fieldset>
+      );
+    }
     if (step.kind === 'section') {
       return (
         <SectionStep

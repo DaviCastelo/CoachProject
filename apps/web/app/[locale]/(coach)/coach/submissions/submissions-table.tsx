@@ -44,6 +44,9 @@ export type SubmissionRow = {
   formId: string | null;
   formName: string | null;
   hasWaiver: boolean;
+  athleteKnown: boolean;
+  guardianKnown: boolean;
+  hasLogin: boolean;
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -347,6 +350,21 @@ export function SubmissionsTable({
                 .join(' · ') || 'Registration'}
               {openRow ? ` · ${openRow.status}` : ''}
             </DialogDescription>
+            {openRow ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                  {openRow.athleteKnown ? t('athleteKnown') : t('athleteNew')}
+                </span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+                  {openRow.guardianKnown ? t('guardianKnown') : t('guardianNew')}
+                </span>
+                {openRow.hasLogin ? (
+                  <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs text-success">
+                    {t('alreadyHasLogin')}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
           </DialogHeader>
 
           <div className="max-h-[60vh] overflow-y-auto text-sm">
@@ -443,6 +461,7 @@ export function SubmissionsTable({
                   <FileText className="h-4 w-4" />
                   Waiver PDF
                 </Button>
+                {openRow.athleteId && !openRow.hasLogin ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -460,6 +479,7 @@ export function SubmissionsTable({
                   <KeyRound className="h-4 w-4" />
                   {tg('createAccess')}
                 </Button>
+                ) : null}
               </>
             ) : null}
             {canApprove && openRow ? (
