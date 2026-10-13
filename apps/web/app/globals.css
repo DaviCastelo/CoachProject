@@ -237,7 +237,28 @@
   }
 
   .landing-hero-stage {
+    position: absolute;
+    inset: 0;
     animation: landing-hero-reveal 1.15s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+
+  /* Camada exclusiva do parallax. O palco acima já tem a abertura em
+     clip-path e as fotos abaixo já têm o Ken Burns: `animation` é uma
+     propriedade só, e empilhar três donos numa lista separada por vírgula
+     deixa qualquer ajuste futuro insuportável de ler.
+
+     Ela é mais alta que o hero (8% para cada lado) porque o parallax desloca
+     verticalmente: sem essa sobra, a borda da foto entraria na tela no meio
+     da rolagem. O `overflow-hidden` da section corta o excedente.
+
+     A sobra sai INTEIRA por baixo no início: o deslocamento começa em zero e
+     só cresce. Com a primeira versão, que começava em -5%, a camada subia
+     antes mesmo de rolar e o enquadramento descia junto, cortando o rosto
+     das atletas. Topo e base nunca aparecem porque 6% de 116% é menos que a
+     sobra de 8% de cada lado. */
+  .landing-hero-parallax {
+    position: absolute;
+    inset: -8% 0;
   }
 
   .landing-hero-slide {
@@ -257,10 +278,19 @@
     animation: landing-hero-cycle-b 14s ease-in-out 1.2s infinite;
   }
 
+  /* 14s, igual ao ciclo de troca das fotos, e sem `alternate`.
+     Com 8s em `alternate` o Ken Burns levava 16s para ir e voltar enquanto a
+     troca levava 14s: os dois andavam fora de fase e, no meio de cada
+     transição, o zoom invertia o sentido e dava um solavanco visível. */
+  /* `top`, não um percentual. A foto é retrato (599x827) num hero deitado:
+     o `cover` joga fora mais da metade da altura, então qualquer recuo come
+     direto a cabeça de quem está em quadro. Os rostos ficam entre 7% e 20%
+     da altura da imagem, e é só por ancorar no topo que eles sobrevivem ao
+     corte, ao Ken Burns e ao parallax ao mesmo tempo. */
   .landing-hero-photo {
     object-fit: cover;
-    object-position: center 18%;
-    animation: landing-hero-drift 8s ease-in-out infinite alternate;
+    object-position: center top;
+    animation: landing-hero-drift 14s ease-in-out 1.2s infinite;
   }
 
   .fx-hero-lead {
@@ -283,23 +313,29 @@
     container-type: inline-size;
   }
 
+  /* 80.5% para a linha encostar na trave esquerda, que fica a 80,2% (o SVG
+     começa aos 78% e a boca do gol a 8 das suas 80 unidades). Antes a linha
+     parava em 78% e morria no ar, e o gol ainda flutuava acima dela. */
   .landing-hero-line {
     position: absolute;
     bottom: 0;
     left: 0;
     height: 2px;
-    width: 78%;
+    width: 80.5%;
     transform: scaleX(1);
     transform-origin: left center;
     background: var(--color-accent-500);
   }
 
+  /* `height: auto` deixa a proporção sair do viewBox 80x56, em que a base do
+     gol é a própria borda de baixo. Com altura fixa o SVG era deitado numa
+     caixa de outra proporção e o chão do gol não batia com o do campo. */
   .landing-hero-goal {
     position: absolute;
     right: 0;
     bottom: 0;
     width: 22%;
-    height: 58%;
+    height: auto;
     overflow: visible;
     color: var(--color-accent-500);
   }
@@ -325,13 +361,18 @@
   .landing-hero-ball {
     position: absolute;
     left: 0;
-    bottom: 6%;
+    bottom: 0;
     width: 22px;
     height: 22px;
   }
 
+  /* Estado de repouso: o mesmo quadro de 100% do `fx-shot`, dentro da rede.
+     O destino antigo era 78cqw, que é exatamente onde o SVG do gol começa:
+     somada a metade da bola, ela parava encostada na trave por fora. Toda a
+     trajetória passou a ser medida em cqw, inclusive na vertical, para a
+     geometria continuar valendo em qualquer largura de campo. */
   .fx-shot {
-    transform: translate3d(78cqw, -1.45rem, 0) scale(0.58) rotate(300deg);
+    transform: translate3d(90.5cqw, -8.25cqw, 0) scale(0.58) rotate(300deg);
   }
 
   .landing-hero-ball svg {
@@ -428,12 +469,25 @@
     }
   }
 
+  /* Zoom contido (1,04 a 1,10). Escala cresce a partir do centro, então cada
+     ponto percentual a mais empurra o topo da foto para fora da tela: com
+     1,14 a cabeça das atletas encostava na borda de cima no pico do ciclo. */
   @keyframes landing-hero-drift {
+    0%,
+    100% {
+      transform: scale(1.04) translate3d(0, 0, 0);
+    }
+    50% {
+      transform: scale(1.1) translate3d(-1.2%, -0.6%, 0);
+    }
+  }
+
+  @keyframes landing-hero-parallax {
     from {
-      transform: scale(1.08) translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
     }
     to {
-      transform: scale(1.14) translate3d(-1.5%, -1%, 0);
+      transform: translate3d(0, 6%, 0);
     }
   }
 
@@ -479,34 +533,42 @@
     }
   }
 
+  /* O travessão fica a 13,75cqw do chão e a boca do gol vai de 80,2 a 97,8cqw.
+     A bola passa por baixo do travessão o caminho todo e cruza a linha entre
+     85% e 100%, parando no ângulo. */
   @keyframes fx-shot {
     0% {
       transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
     }
-    25% {
-      transform: translate3d(28cqw, -2.6rem, 0) scale(0.9) rotate(70deg);
+    30% {
+      transform: translate3d(26cqw, -5.4cqw, 0) scale(0.88) rotate(95deg);
     }
-    50% {
-      transform: translate3d(48cqw, -4rem, 0) scale(0.78) rotate(150deg);
+    60% {
+      transform: translate3d(54cqw, -8.6cqw, 0) scale(0.75) rotate(190deg);
     }
-    75% {
-      transform: translate3d(66cqw, -2.4rem, 0) scale(0.66) rotate(230deg);
+    85% {
+      transform: translate3d(76cqw, -9cqw, 0) scale(0.64) rotate(258deg);
     }
     100% {
-      transform: translate3d(78cqw, -1.45rem, 0) scale(0.58) rotate(300deg);
+      transform: translate3d(90.5cqw, -8.25cqw, 0) scale(0.58) rotate(300deg);
     }
   }
 
   @keyframes landing-hero-net {
-    0%,
-    86% {
+    0% {
       transform: translateX(0);
     }
-    93% {
-      transform: translateX(4px);
+    30% {
+      transform: translateX(3.5px);
+    }
+    62% {
+      transform: translateX(-1.6px);
+    }
+    84% {
+      transform: translateX(0.7px);
     }
     100% {
-      transform: translateX(1px);
+      transform: translateX(0);
     }
   }
 
@@ -545,6 +607,169 @@
     transform: scale(1.04);
   }
 
+  /* Entrada escalonada. Cada item tem a própria linha do tempo de scroll, e
+     itens da mesma fileira entram no mesmo instante: sem deslocar a faixa
+     por item, não há escalonamento nenhum, só um bloco aparecendo. O `--i`
+     vem inline do React e empurra a faixa de cada um 7% para a frente.
+
+     Estado padrão é o final (visível). Quem não tem `animation-timeline`
+     recebe a lista pronta em vez de uma lista invisível. */
+  .fx-stagger-item {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Trilho dourado atrás dos passos do "como funciona". Só no layout de três
+     colunas: empilhado no celular ele seria uma linha horizontal cortando o
+     primeiro passo. */
+  .fx-track {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 1.5rem;
+    height: 2px;
+    width: 100%;
+    transform: scaleX(1);
+    transform-origin: left center;
+    background: linear-gradient(
+      90deg,
+      var(--color-accent-500),
+      color-mix(in srgb, var(--color-accent-500) 15%, transparent)
+    );
+  }
+
+  @media (min-width: 768px) {
+    .fx-track {
+      display: block;
+    }
+  }
+
+  /* Barra de progresso de leitura. z-51 para passar por cima do header
+     grudado (z-50) sem entrar na faixa do atalho "ir para o conteúdo" (60). */
+  .fx-progress {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 51;
+    height: 3px;
+    transform: scaleX(0);
+    transform-origin: left center;
+    background: linear-gradient(90deg, var(--color-accent-600), var(--color-accent-500));
+    pointer-events: none;
+  }
+
+  /* Corte diagonal no topo da seção. O -margin fecha a fatia que o clip
+     tirou, senão sobra uma faixa do fundo anterior.
+
+     Sem `padding-top` aqui de propósito: esta regra sai depois das utilidades
+     do Tailwind na mesma camada, então venceria o `py-*` de quem chama e a
+     seção perderia o respiro de cima sem ninguém entender por quê. Quem usa
+     o corte declara o próprio padding já contando com a fatia. */
+  .fx-cut-top {
+    --cut: clamp(1.25rem, 4vw, 3.5rem);
+    position: relative;
+    margin-top: calc(var(--cut) * -1);
+    clip-path: polygon(0 var(--cut), 100% 0, 100% 100%, 0 100%);
+  }
+
+  /* Fio dourado em cima do corte. Entre dois tons de preto quase iguais
+     (ink-950 e ink-900) a diagonal some; é a linha que faz ela existir. */
+  .fx-cut-top::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 2;
+    height: calc(var(--cut) + 2px);
+    background: var(--color-accent-500);
+    clip-path: polygon(0 var(--cut), 100% 0, 100% 2px, 0 calc(var(--cut) + 2px));
+    pointer-events: none;
+  }
+
+  /*
+   * Trecho que é escuro nos DOIS temas (faixa de números, fundadores, CTA
+   * final). No tema claro `--foreground` é quase preto, então tudo que usa
+   * `text-foreground` ou `text-muted-foreground` dentro de uma seção
+   * `bg-ink-900` sai preto sobre preto. O título "QUEM LIDERA" já estava
+   * ilegível assim antes desta mudança, e os nomes dos fundadores entrariam
+   * no mesmo buraco.
+   *
+   * Em vez de trocar classe por classe, redefine aqui as mesmas variáveis de
+   * runtime que o `.dark` redefine: `text-muted-foreground`, `border-border`
+   * e companhia passam a resolver para a versão clara dentro da subárvore.
+   */
+  .on-dark {
+    --foreground: var(--color-ink-50);
+    --muted-foreground: var(--color-ink-400);
+    --card: var(--color-ink-900);
+    --card-foreground: var(--color-ink-50);
+    --border: var(--color-ink-700);
+    color: var(--color-ink-50);
+  }
+
+  .fx-tilt {
+    transition: transform 300ms ease;
+  }
+
+  .fx-tilt:hover {
+    transform: translateY(-4px);
+  }
+
+  .fx-cta-photo {
+    transform: scale(1.06);
+  }
+
+  /* Brilho que atravessa o botão no hover. `::after` em cima e
+     `pointer-events: none` para não roubar o clique do próprio botão. */
+  .fx-sweep {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fx-sweep::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-130%) skewX(-18deg);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+  @keyframes fx-stagger-in {
+    from {
+      opacity: 0;
+      transform: translateY(26px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fx-cta-zoom {
+    from {
+      transform: scale(1.02);
+    }
+    to {
+      transform: scale(1.16);
+    }
+  }
+
+  @keyframes fx-progress {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @keyframes fx-sweep {
+    to {
+      transform: translateX(130%) skewX(-18deg);
+    }
+  }
+
   .fx-pop,
   .fx-sheet {
     scale: 1;
@@ -553,11 +778,22 @@
     transition-timing-function: ease;
   }
 
+  /* Curto de propósito: o hero já tem a própria abertura, e um fade longo
+     por cima só atrasaria a primeira pintura. */
+  .fx-page {
+    opacity: 1;
+    transition: opacity 180ms ease;
+  }
+
   @starting-style {
     .fx-pop,
     .fx-sheet {
       opacity: 0;
       scale: 0.98;
+    }
+
+    .fx-page {
+      opacity: 0;
     }
   }
 
@@ -625,10 +861,15 @@
       animation: landing-hero-goal-draw 0.5s ease 0.15s forwards;
     }
 
+    /* Atraso de 1,3s = 0,2s de espera + 1,1s de chute, ou seja, o instante
+       exato em que a bola chega. Antes a rede usava a mesma duração do
+       chute e balançava entre 1,15s e 1,22s: reagia uns 80ms ANTES do
+       impacto, que é o tipo de detalhe que faz a cena parecer errada sem
+       dar para dizer por quê. */
     .landing-hero-net {
       transform-box: fill-box;
       transform-origin: left center;
-      animation: landing-hero-net 1.1s linear 0.2s both;
+      animation: landing-hero-net 0.5s ease-out 1.3s both;
     }
 
     .fx-shot {
@@ -636,19 +877,84 @@
       will-change: transform;
     }
 
+    .fx-sweep:hover::after {
+      animation: fx-sweep 0.75s ease;
+    }
+
+    /*
+     * Nada de `animation-duration` aqui.
+     *
+     * Estas animações são guiadas pela rolagem, e numa linha do tempo de
+     * progresso a duração padrão (`auto`) é o que espalha a animação pela
+     * faixa inteira. O código antigo fixava `1ms` em `.fx-rise` e `.fx-rule`,
+     * e com isso elas terminavam no primeiro instante da faixa: medindo o
+     * progresso a cada 40px ao longo de 1600px de rolagem, só apareciam os
+     * valores 0 e 1, nenhum intermediário. Ou seja, a linha dourada nunca
+     * foi desenhada rolando, ela piscava pronta.
+     */
+    /*
+     * Faixas em `cover`, não em `entry`.
+     *
+     * A faixa `entry` tem o tamanho do PRÓPRIO elemento: ela começa quando a
+     * borda de cima dele entra na tela e acaba quando a de baixo entrou. Para
+     * a régua dourada, que tem 2px de altura, isso é uma janela de 2px de
+     * rolagem, ou seja, a animação nunca aconteceu: varrendo 1600px de 30 em
+     * 30 o progresso só assumia 0 e 1, nenhum valor no meio. A linha piscava
+     * pronta em vez de ser desenhada.
+     *
+     * `cover` mede a altura da tela mais a do elemento, então vale o mesmo
+     * para um traço de 2px e para um card de 400px.
+     */
     @supports (animation-timeline: view()) {
       .fx-rise {
         animation: fx-rise linear both;
-        animation-duration: 1ms;
         animation-timeline: view();
-        animation-range: entry 0% entry 40%;
+        animation-range: cover 0% cover 20%;
       }
 
       .fx-rule {
         animation: landing-hero-line linear both;
-        animation-duration: 1ms;
         animation-timeline: view();
-        animation-range: entry 8% entry 42%;
+        animation-range: cover 2% cover 24%;
+      }
+
+      .fx-stagger-item {
+        animation: fx-stagger-in linear both;
+        animation-timeline: view();
+        animation-range: cover calc(2% + var(--i, 0) * 6%) cover calc(28% + var(--i, 0) * 6%);
+      }
+
+      .fx-track {
+        animation: landing-hero-line linear both;
+        animation-timeline: view();
+        animation-range: cover 4% cover 34%;
+      }
+
+      .fx-cta-photo {
+        animation: fx-cta-zoom linear both;
+        animation-timeline: view();
+        animation-range: cover 0% cover 100%;
+      }
+    }
+
+    /*
+     * `scroll(root block)`, não `scroll()`.
+     *
+     * Sem argumento vale `nearest`, e o ancestral mais próximo da camada de
+     * parallax é a própria `section` do hero, que tem `overflow-hidden` e por
+     * isso conta como contêiner de rolagem. Como ela nunca rola, o progresso
+     * ficava preso em zero e o parallax não saía do primeiro quadro.
+     */
+    @supports (animation-timeline: scroll()) {
+      .landing-hero-parallax {
+        animation: landing-hero-parallax linear both;
+        animation-timeline: scroll(root block);
+        animation-range: 0 100vh;
+      }
+
+      .fx-progress {
+        animation: fx-progress linear both;
+        animation-timeline: scroll(root block);
       }
     }
   }
@@ -671,11 +977,29 @@
     .fx-rule,
     .fx-ring::before,
     .landing-hero-ticker-track,
+    .landing-hero-parallax,
+    .fx-stagger-item,
+    .fx-track,
+    .fx-cta-photo,
+    .fx-tilt,
+    .fx-sweep::after,
+    .fx-page,
     .fx-pop,
     .fx-sheet {
       animation: none;
       animation-timeline: auto;
       transition: none;
+    }
+
+    /* Sem a barra o leitor não perde nada; com ela parada em zero ele ganha
+       uma listra morta no topo. */
+    .fx-progress {
+      display: none;
+    }
+
+    .fx-tilt:hover,
+    .fx-cta-photo {
+      transform: none;
     }
 
     .landing-hero-slide-b {

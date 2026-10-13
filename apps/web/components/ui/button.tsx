@@ -9,7 +9,11 @@ const buttonVariants = cva(
   // vencia sempre — `sm`, `default` e `lg` saíam todos com a mesma altura e
   // o `icon` ficava retangular (40 de largura x 56 de altura). Cada `size`
   // define a própria altura, e todas ficam >= 44px (alvo de toque).
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50',
+  // O `active:scale` é a única reação física global: um botão que não afunda
+  // ao ser apertado parece que não registrou o toque, e no celular isso vira
+  // toque repetido. O hover fica por conta de quem chama, porque levantar
+  // linha de tabela é ruído.
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-150 active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {

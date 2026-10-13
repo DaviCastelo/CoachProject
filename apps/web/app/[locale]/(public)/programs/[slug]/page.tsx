@@ -6,7 +6,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { Button } from '@/components/ui/button';
 import { AthleticCard } from '@/components/athletic-card';
 import { PageHero } from '@/components/page-hero';
-import { programImageForSlug } from '@/lib/program-image';
+import { programImage } from '@/lib/program-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +50,7 @@ async function loadProgram(slug: string) {
   const svc = createServiceClient();
   const { data: program } = await svc
     .from('programs')
-    .select('id, slug, name, description, starts_on, ends_on, capacity, min_birth_year, max_birth_year, form_id')
+    .select('id, slug, name, description, starts_on, ends_on, capacity, min_birth_year, max_birth_year, form_id, hero_image_url')
     .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle();
@@ -101,7 +101,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
     .eq('id', program.form_id)
     .maybeSingle();
 
-  const heroImage = programImageForSlug(slug);
+  const heroImage = programImage(program);
 
   const jsonLd = {
     '@context': 'https://schema.org',

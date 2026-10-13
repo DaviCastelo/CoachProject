@@ -11,6 +11,7 @@
     "test": "pnpm -r --if-present test",
     "test:e2e": "playwright test",
     "db:types": "supabase gen types typescript --local > packages/db/src/generated.ts",
+    "images": "node scripts/images.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -21,6 +22,7 @@
     "@axe-core/playwright": "^4.10.1",
     "@playwright/test": "^1.52.0",
     "prettier": "^3.5.3",
+    "sharp": "0.34.5",
     "supabase": "^2.111.0",
     "typescript": "^5.8.3",
     "wait-on": "^8.0.3"

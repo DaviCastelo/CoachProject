@@ -6,6 +6,7 @@ import { slugify, ensureUniqueSlug } from '@ca-tempo/domain';
 import { requireRole } from '@/lib/auth/guards';
 import { createClient } from '@/lib/supabase/server';
 import { isProgramType, isProgramStatus } from './constants';
+import { parseProgramImageUrl } from '@/lib/program-image';
 
 /**
  * Programas e seus preços.
@@ -58,6 +59,7 @@ export type ProgramDetail = {
   endsOn: string | null;
   capacity: number | null;
   formId: string | null;
+  heroImageUrl: string | null;
   options: ProgramOption[];
 };
 
@@ -130,7 +132,7 @@ export async function getProgram(id: string): Promise<ProgramDetail | null> {
   const { data: row } = await sb
     .from('programs')
     .select(
-      'id, slug, name, type, status, description, starts_on, ends_on, capacity, form_id',
+      'id, slug, name, type, status, description, starts_on, ends_on, capacity, form_id, hero_image_url',
     )
     .eq('id', id)
     .eq('organization_id', ctx.orgId)
@@ -177,6 +179,7 @@ export async function getProgram(id: string): Promise<ProgramDetail | null> {
     endsOn: (row.ends_on as string | null) ?? null,
     capacity: (row.capacity as number | null) ?? null,
     formId: (row.form_id as string | null) ?? null,
+    heroImageUrl: (row.hero_image_url as string | null) ?? null,
     options: options.map((o) => ({
       id: o.id as string,
       name: o.name as string,
@@ -304,6 +307,7 @@ export async function updateProgram(
     startsOn?: string | null;
     endsOn?: string | null;
     capacity?: number | null;
+    heroImageUrl?: string;
   },
 ): Promise<ActionResult> {
   const ctx = await requireRole(['owner', 'admin']);
@@ -338,6 +342,11 @@ export async function updateProgram(
   if (patch.startsOn !== undefined) row.starts_on = patch.startsOn || null;
   if (patch.endsOn !== undefined) row.ends_on = patch.endsOn || null;
   if (patch.capacity !== undefined) row.capacity = patch.capacity ?? null;
+  if (patch.heroImageUrl !== undefined) {
+    const foto = parseProgramImageUrl(patch.heroImageUrl, process.env.NEXT_PUBLIC_SUPABASE_URL);
+    if (!foto.ok) return { ok: false, error: foto.error };
+    row.hero_image_url = foto.value;
+  }
 
   const statusFinal = (row.status as string | undefined) ?? (atual.status as string);
   const formFinal =

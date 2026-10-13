@@ -58,8 +58,36 @@ const securityHeaders = [
   },
 ];
 
+/*
+ * O otimizador de imagem só busca host declarado aqui. `programs.hero_image_url`
+ * aponta para o Storage do Supabase, que é o mesmo host já liberado na CSP
+ * acima: as duas listas precisam andar juntas, senão a foto passa num lugar e
+ * é barrada no outro.
+ */
+function supabaseImagePatterns(): NonNullable<NonNullable<NextConfig['images']>['remotePatterns']> {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return [];
+  try {
+    const { protocol, hostname, port } = new URL(raw);
+    return [
+      {
+        protocol: protocol.replace(':', '') as 'http' | 'https',
+        hostname,
+        port: port || undefined,
+        pathname: '/storage/v1/object/public/**',
+      },
+    ];
+  } catch {
+    return [];
+  }
+}
+
 const nextConfig: NextConfig = {
   transpilePackages: ['@ca-tempo/domain', '@ca-tempo/db'],
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: supabaseImagePatterns(),
+  },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];
   },
