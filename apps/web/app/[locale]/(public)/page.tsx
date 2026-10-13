@@ -4,7 +4,6 @@ import { StaticImage } from '@/components/static-image';
 import { createServiceClient } from '@/lib/supabase/service';
 import { Button } from '@/components/ui/button';
 import { LandingHero } from '@/components/landing-hero';
-import { LandingScenes } from '@/components/landing-scenes';
 import { SectionHeader } from '@/components/section-header';
 import { SkewImageFrame } from '@/components/skew-image-frame';
 import { AthleticCard } from '@/components/athletic-card';
@@ -53,46 +52,42 @@ export default async function LandingPage() {
         </div>
       </LandingHero>
 
-      <LandingScenes />
-
-      <section data-landing-scene className="mx-auto max-w-6xl px-4 py-16">
+      <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="scene-head">
           <SectionHeader className="mb-4" eyebrow={t('meetTeamEyebrow')} title={t('meetTeam')} />
-          <span className="scene-rule" aria-hidden="true" />
+          <span className="fx-rule" aria-hidden="true" />
         </div>
-        <div className="scene-cut mx-auto max-w-4xl">
+        <div className="mx-auto max-w-4xl">
           <SkewImageFrame
             src="/images/team-poster.png"
             alt="CA Tempo coaching team"
             width={1200}
             height={800}
-            className="scene-poster mx-auto shadow-2xl shadow-accent-500/10"
+            className="mx-auto shadow-2xl shadow-accent-500/10"
             imageClassName="max-h-[70vh]"
             sizes="(max-width: 768px) 100vw, 900px"
           />
         </div>
       </section>
 
-      <section data-landing-scene className="bg-ink-900 py-16">
+      <section className="bg-ink-900 py-16">
         <div className="mx-auto max-w-6xl px-4">
           <div className="scene-head">
             <SectionHeader className="mb-4" eyebrow={t('foundersEyebrow')} title={t('foundersTitle')} />
-            <span className="scene-rule" aria-hidden="true" />
+            <span className="fx-rule" aria-hidden="true" />
           </div>
           <div className="grid items-center gap-8 md:grid-cols-2">
-            <div className="scene-photo">
-              <SkewImageFrame
-                src="/images/founders.png"
-                alt="CA Tempo founders"
-                width={600}
-                height={800}
-                className="mx-auto max-w-sm"
-                sizes="(max-width: 768px) 80vw, 400px"
-              />
-            </div>
-            <div className="scene-copy text-center md:text-left">
+            <SkewImageFrame
+              src="/images/founders.png"
+              alt="CA Tempo founders"
+              width={600}
+              height={800}
+              className="mx-auto max-w-sm"
+              sizes="(max-width: 768px) 80vw, 400px"
+            />
+            <div className="text-center md:text-left">
               <div className="mb-4 flex justify-center md:justify-start">
-                <SpeedLines className="scene-streak" count={4} />
+                <SpeedLines count={4} />
               </div>
               <p className="text-lg text-muted-foreground leading-relaxed">{t('foundersDescription')}</p>
             </div>
@@ -100,17 +95,17 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <section data-landing-scene className="mx-auto max-w-6xl px-4 py-16">
+      <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="scene-head">
           <SectionHeader className="mb-4" title={t('featuredPrograms')} showSpeedLines={false} />
-          <span className="scene-rule" aria-hidden="true" />
+          <span className="fx-rule" aria-hidden="true" />
         </div>
         {programs.length === 0 ? (
           <p className="text-center text-muted-foreground">{t('viewAllPrograms')}</p>
         ) : (
           <div className="mb-8 grid gap-4 md:grid-cols-3">
             {programs.map((p) => (
-              <Link key={p.slug} href={`/programs/${p.slug}`} className="scene-card block">
+              <Link key={p.slug} href={`/programs/${p.slug}`} className="fx-ring block">
                 <AthleticCard lift className="overflow-hidden">
                   <div className="relative h-40">
                     <StaticImage

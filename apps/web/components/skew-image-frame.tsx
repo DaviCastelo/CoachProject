@@ -28,7 +28,7 @@ export function SkewImageFrame(
   } = props;
 
   return (
-    <div className={cn('skew-frame relative', className)}>
+    <div className={cn('skew-frame fx-frame relative', className)}>
       <div className={OVERLAY_CLASS} aria-hidden />
       <div className="skew-frame-inner">
         <StaticImage

@@ -41,10 +41,10 @@ export function LandingHero({ lead, trail, subtitle, ticker, children }: Landing
 
       <div className="relative z-10 flex min-h-[70vh] flex-col items-center justify-center px-4 py-16 text-center md:min-h-[85vh]">
         <h1 className="mb-4 flex flex-col items-center font-display text-5xl uppercase leading-none tracking-wide text-ink-50 sm:text-6xl md:flex-row md:gap-4 md:text-7xl lg:text-8xl">
-          <span className="landing-hero-word-left">{lead}</span>
-          <span className="landing-hero-word-right">{trail}</span>
+          <span className="fx-hero-lead">{lead}</span>
+          <span className="fx-hero-trail">{trail}</span>
         </h1>
-        <p className="landing-hero-subtitle mb-6 max-w-lg text-lg text-ink-200 md:text-xl">{subtitle}</p>
+        <p className="fx-hero-in mb-6 max-w-lg text-lg text-ink-200 md:text-xl">{subtitle}</p>
         <div className="landing-hero-pitch" aria-hidden="true">
           <span className="landing-hero-line" />
           <svg className="landing-hero-goal" viewBox="0 0 80 64">
@@ -54,18 +54,18 @@ export function LandingHero({ lead, trail, subtitle, ticker, children }: Landing
             </g>
             <path className="landing-hero-frame" d="M8 56 V10 H72 V56" />
           </svg>
-          <span className="landing-hero-ball">
+          <span className="landing-hero-ball fx-shot">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="12" cy="12" r="10.2" fill="#f7f4ee" stroke="#111" strokeWidth="1.4" />
               <polygon points="12,5.2 16.2,8.2 14.6,13.4 9.4,13.4 7.8,8.2" fill="#111" />
             </svg>
           </span>
         </div>
-        <div className="landing-hero-actions mt-5">{children}</div>
+        <div className="fx-hero-in mt-5">{children}</div>
       </div>
 
-      <div className="landing-hero-ticker" aria-hidden="true">
-        <div className="landing-hero-ticker-track">
+      <div className="landing-hero-ticker fx-ticker" tabIndex={0} aria-label={ticker.join(', ')}>
+        <div className="landing-hero-ticker-track fx-ticker-track" aria-hidden="true">
           {loop.map((item, index) => (
             <span key={`${item}-${index}`} className="landing-hero-ticker-item">
               {item}

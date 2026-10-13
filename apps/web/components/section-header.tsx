@@ -21,7 +21,9 @@ export function SectionHeader({
       ) : null}
       <div className="flex items-center justify-center gap-4">
         {showSpeedLines ? <SpeedLines className="hidden sm:flex" /> : null}
-        <h2 className="font-display text-4xl uppercase tracking-wide md:text-5xl">{title}</h2>
+        <h2 className="fx-rise-mask font-display text-4xl uppercase tracking-wide md:text-5xl">
+          <span className="fx-rise">{title}</span>
+        </h2>
         {showSpeedLines ? <SpeedLines className="hidden sm:flex" /> : null}
       </div>
     </div>
