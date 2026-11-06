@@ -106,6 +106,53 @@ async function loadFormForOrg(formId: string, orgId: string): Promise<FormRow | 
   return (data as FormRow | null) ?? null;
 }
 
+/*
+ * Formulário pago só pode ir ao ar com um preço que a família consiga escolher.
+ * Publicar com o programa em rascunho deixava a inscrição entrar sem preço, a
+ * aprovação passar e a fatura nunca sair, sem nenhum aviso para ninguém.
+ */
+async function paidFormProblem(formId: string, orgId: string): Promise<string | null> {
+  const db = await getDb();
+
+  const { data: form } = await db
+    .from('forms')
+    .select('program_id')
+    .eq('id', formId)
+    .eq('organization_id', orgId)
+    .maybeSingle();
+
+  const linkedId = (form as { program_id: string | null } | null)?.program_id ?? null;
+  const match = linkedId ? `id.eq.${linkedId},form_id.eq.${formId}` : `form_id.eq.${formId}`;
+
+  const { data } = await db
+    .from('programs')
+    .select('name, status, program_options(is_active)')
+    .eq('organization_id', orgId)
+    .or(match);
+
+  const programs = (data ?? []) as {
+    name: string;
+    status: string;
+    program_options: { is_active: boolean }[] | null;
+  }[];
+
+  if (programs.length === 0) {
+    return 'This form charges a fee but has no program. Link a program before publishing.';
+  }
+
+  const published = programs.filter((p) => p.status === 'published');
+  if (published.length === 0) {
+    return `The program "${programs[0].name}" is not published yet. Publish it first, then publish this form.`;
+  }
+
+  const priced = published.some((p) => (p.program_options ?? []).some((o) => o.is_active));
+  if (!priced) {
+    return `The program "${published[0].name}" has no active price. Add one before publishing this form.`;
+  }
+
+  return null;
+}
+
 async function loadVersions(formId: string): Promise<FormVersionRow[]> {
   const db = await getDb();
   const { data } = await db
@@ -318,6 +365,11 @@ export async function publishForm(formId: string): Promise<PublishResult> {
   } catch (err) {
     if (err instanceof ZodError) return { ok: false, error: zodErrorMessage(err) };
     return { ok: false, error: 'Invalid schema.' };
+  }
+
+  if (form.requires_payment) {
+    const problem = await paidFormProblem(formId, ctx.orgId);
+    if (problem) return { ok: false, error: problem };
   }
 
   const now = new Date().toISOString();
