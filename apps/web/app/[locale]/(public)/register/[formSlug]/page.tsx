@@ -21,7 +21,7 @@ export default async function RegisterPage({ params }: PageProps) {
 
   const { data: form } = await svc
     .from('forms')
-    .select('id, organization_id, name, description, status, success_message, requires_waiver')
+    .select('id, organization_id, name, description, status, success_message, requires_waiver, requires_payment')
     .eq('slug', formSlug)
     .eq('status', 'published')
     .maybeSingle();
@@ -68,6 +68,11 @@ export default async function RegisterPage({ params }: PageProps) {
     }
   }
 
+  // Formulário pago sem preço disponível, por exemplo com o programa de volta
+  // em rascunho. Mostrar os campos faria a família preencher tudo para só
+  // então ser recusada pela RPC.
+  const closed = form.requires_payment && options.length === 0;
+
   const family = await loadKnownFamily(form.organization_id);
   const returnPath =
     locale === routing.defaultLocale
@@ -82,7 +87,7 @@ export default async function RegisterPage({ params }: PageProps) {
           <p className="mb-6 text-muted-foreground">{form.description}</p>
         ) : null}
 
-        {family.signedIn ? null : (
+        {family.signedIn || closed ? null : (
           <p className="mb-6 text-sm">
             <Link
               href={{ pathname: '/login', query: { redirect: returnPath } }}
@@ -93,15 +98,19 @@ export default async function RegisterPage({ params }: PageProps) {
           </p>
         )}
 
-        <RegisterForm
-          formVersionId={version.id}
-          schema={schema}
-          successMessage={form.success_message}
-          options={options}
-          waiver={waiver}
-          knownAthletes={family.athletes}
-          knownGuardian={family.guardian}
-        />
+        {closed ? (
+          <p className="text-muted-foreground">{t('closed')}</p>
+        ) : (
+          <RegisterForm
+            formVersionId={version.id}
+            schema={schema}
+            successMessage={form.success_message}
+            options={options}
+            waiver={waiver}
+            knownAthletes={family.athletes}
+            knownGuardian={family.guardian}
+          />
+        )}
       </AthleticCard>
     </main>
   );
