@@ -94,7 +94,12 @@ export function LandingHero({ lead, trail, subtitle, ticker, children }: Landing
         <div className="fx-hero-in mt-5">{children}</div>
       </div>
 
-      <div className="landing-hero-ticker fx-ticker" tabIndex={0} aria-label={ticker.join(', ')}>
+      <div
+        className="landing-hero-ticker fx-ticker"
+        role="group"
+        tabIndex={0}
+        aria-label={ticker.join(', ')}
+      >
         <div className="landing-hero-ticker-track fx-ticker-track" aria-hidden="true">
           {loop.map((item, index) => (
             <span key={`${item}-${index}`} className="landing-hero-ticker-item">
