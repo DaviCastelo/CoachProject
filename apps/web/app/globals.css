@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* O tema do site vem da classe `.dark`. Sem esta linha, `dark:` segue a
+   preferência do sistema operacional: com o site escuro num Windows claro,
+   o texto dourado caía na versão do tema claro e reprovava no contraste. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-ink-950: #0a0a0a;
   --color-ink-900: #141414;
@@ -90,6 +95,23 @@
     --popover-foreground: var(--card-foreground);
     --radius: 8px;
 
+    /* Gráficos. O dourado da marca (#c8a24a) dá só 2,4:1 sobre o branco, então
+       o tema claro usa um passo mais escuro da mesma cor. A escala
+       --viz-ramp-* passou no validador de paleta nos dois temas. */
+    --viz-1: #8f6e24;
+    --viz-soft: #e3cf9f;
+    --viz-muted: #a3a3a3;
+    --viz-grid: #ececec;
+    --viz-track: #f0ece2;
+    --viz-ramp-1: #d0ad58;
+    --viz-ramp-2: #b8913a;
+    --viz-ramp-3: #8f6e24;
+    --viz-ramp-4: #5f4915;
+    --viz-on-ramp-1: #0a0a0a;
+    --viz-on-ramp-2: #0a0a0a;
+    --viz-on-ramp-3: #ffffff;
+    --viz-on-ramp-4: #ffffff;
+
     /* Estados no tema claro (passam AA sobre papel branco) */
     --success: #16794a;
     --warning: #b45309;
@@ -122,6 +144,21 @@
     --ring: var(--color-accent-500);
     --popover: var(--card);
     --popover-foreground: var(--card-foreground);
+
+    /* Gráficos no escuro: a escala inverte, porque aqui "mais" é mais claro. */
+    --viz-1: #c8a24a;
+    --viz-soft: #5a4a24;
+    --viz-muted: #6b6b6b;
+    --viz-grid: #262626;
+    --viz-track: #2a2620;
+    --viz-ramp-1: #7d6124;
+    --viz-ramp-2: #b08a35;
+    --viz-ramp-3: #d9b75f;
+    --viz-ramp-4: #f0dca6;
+    --viz-on-ramp-1: #ffffff;
+    --viz-on-ramp-2: #0a0a0a;
+    --viz-on-ramp-3: #0a0a0a;
+    --viz-on-ramp-4: #0a0a0a;
 
     /* Estados no tema escuro: versões claras das mesmas cores, para passar
        AA (>=4.5:1) sobre bg-card (#141414) e bg-background (#0a0a0a). */
@@ -1064,4 +1101,103 @@
 
 .schedule-calendar .fc-list-day-cushion {
   background: var(--muted);
+}
+
+/*
+ * Painel. Cada gráfico anima uma vez, quando aparece na tela.
+ *
+ * Tudo fica dentro de `no-preference`: com "reduzir movimento" ligado nenhuma
+ * dessas regras existe, e os gráficos já nascem prontos.
+ *
+ * `data-in` é marcado pelo componente Reveal. Antes disso o card fica
+ * escondido, o que evita o gráfico aparecer cheio e recomeçar do zero.
+ */
+.viz-hero {
+  background-image: radial-gradient(
+    120% 90% at 100% 0%,
+    color-mix(in srgb, var(--color-accent-500) 12%, transparent),
+    transparent 60%
+  );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    transition:
+      opacity 500ms ease,
+      transform 500ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: calc(var(--reveal-i, 0) * 60ms);
+  }
+
+  [data-reveal]:not([data-in]) {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  /* Revela da esquerda para a direita. Desenhar o traço com stroke-dashoffset
+     não funciona aqui: `non-scaling-stroke` mede o tracejado em pixels de
+     tela e a linha aparece toda picotada. */
+  .viz-plot {
+    clip-path: inset(-20px -20px -20px -20px);
+    transition: clip-path 1100ms cubic-bezier(0.3, 0.7, 0.2, 1) 150ms;
+  }
+
+  [data-reveal]:not([data-in]) .viz-plot {
+    clip-path: inset(-20px 100% -20px -20px);
+  }
+
+  .viz-col {
+    transform-origin: bottom;
+    transition:
+      transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      height 400ms ease,
+      background-color 150ms ease;
+    transition-delay: calc(var(--i, 0) * 16ms + 120ms), 0ms, 0ms;
+  }
+
+  [data-reveal]:not([data-in]) .viz-col {
+    transform: scaleY(0);
+  }
+
+  .viz-fill {
+    transform-origin: left;
+    transition:
+      transform 800ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      width 400ms ease;
+    transition-delay: calc(var(--i, 0) * 70ms + 150ms), 0ms;
+  }
+
+  [data-reveal]:not([data-in]) .viz-fill {
+    transform: scaleX(0);
+  }
+
+  .viz-cell {
+    transition: opacity 300ms ease;
+    transition-delay: calc(var(--i, 0) * 4ms + 100ms);
+  }
+
+  [data-reveal]:not([data-in]) .viz-cell {
+    opacity: 0;
+  }
+
+  /* O ponto de hoje respira: é o único movimento contínuo da tela. */
+  .viz-pulse::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: var(--viz-1);
+    animation: viz-pulse 2.4s ease-out infinite;
+  }
+
+  @keyframes viz-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.55;
+    }
+    70%,
+    100% {
+      transform: scale(3.2);
+      opacity: 0;
+    }
+  }
 }

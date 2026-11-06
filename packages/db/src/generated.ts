@@ -2353,6 +2353,26 @@ export type Database = {
         }
         Returns: string
       }
+      dashboard_finance: {
+        Args: {
+          p_from: string
+          p_org: string
+          p_prev_from: string
+          p_prev_to: string
+          p_to: string
+        }
+        Returns: Json
+      }
+      dashboard_operations: {
+        Args: {
+          p_from: string
+          p_org: string
+          p_prev_from: string
+          p_prev_to: string
+          p_to: string
+        }
+        Returns: Json
+      }
       enqueue_notification: {
         Args: {
           p_body: string
