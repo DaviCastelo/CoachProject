@@ -23,6 +23,7 @@ type SubmitErrorCode = Extract<SubmitResult, { ok: false; error: string }>['erro
 function mapRpcError(message: string): SubmitErrorCode {
   const lower = message.toLowerCase();
   if (lower.includes('form_not_found')) return 'not_found';
+  if (lower.includes('paid_form_not_ready')) return 'closed';
   if (lower.includes('first_name, last_name and date_of_birth')) return 'incomplete_mapping';
   if (lower.includes('forbidden')) return 'server_error';
   if (isRlsViolation({ message })) return 'config_error';
