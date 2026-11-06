@@ -202,7 +202,7 @@ export default function LoginPage() {
 
       <div className="relative hidden min-h-dvh flex-1 lg:block">
         <StaticImage
-          src="/images/hero-action-2.png"
+          src="/images/hero-action-2.webp"
           alt="Athletes in training"
           fill
           className="object-cover object-center"

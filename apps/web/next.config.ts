@@ -51,15 +51,47 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.posthog.com https://*.sentry.io",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.supabase.co",
+      // Miniatura e foto da biblioteca vêm do Storage por URL assinada, e a
+      // capa dos links do YouTube vem do i.ytimg.com. `media-src` não herda
+      // de `img-src`: sem ele o player de vídeo cai no `default-src 'self'`.
+      `img-src 'self' data: blob: https://*.supabase.co https://i.ytimg.com ${supabaseOrigins()[0]}`,
+      `media-src 'self' blob: ${supabaseOrigins()[0]}`,
       `connect-src 'self' ${supabaseOrigins().join(' ')} https://*.posthog.com https://*.sentry.io https://accounts.google.com`,
       "frame-src https://accounts.google.com",
     ].join('; '),
   },
 ];
 
+/*
+ * O otimizador de imagem só busca host declarado aqui. `programs.hero_image_url`
+ * aponta para o Storage do Supabase, que é o mesmo host já liberado na CSP
+ * acima: as duas listas precisam andar juntas, senão a foto passa num lugar e
+ * é barrada no outro.
+ */
+function supabaseImagePatterns(): NonNullable<NonNullable<NextConfig['images']>['remotePatterns']> {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return [];
+  try {
+    const { protocol, hostname, port } = new URL(raw);
+    return [
+      {
+        protocol: protocol.replace(':', '') as 'http' | 'https',
+        hostname,
+        port: port || undefined,
+        pathname: '/storage/v1/object/public/**',
+      },
+    ];
+  } catch {
+    return [];
+  }
+}
+
 const nextConfig: NextConfig = {
   transpilePackages: ['@ca-tempo/domain', '@ca-tempo/db'],
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: supabaseImagePatterns(),
+  },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];
   },

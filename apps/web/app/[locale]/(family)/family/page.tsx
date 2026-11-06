@@ -20,7 +20,7 @@ export default async function FamilyHomePage() {
       ) : (
         <section className="relative aspect-[3/1] overflow-hidden rounded-xl border border-border">
           <StaticImage
-            src="/images/hero-action-2.png"
+            src="/images/hero-action-2.webp"
             alt=""
             fill
             className="object-cover object-center"

@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   FileText,
+  FolderOpen,
   Users,
   CalendarDays,
   Megaphone,
@@ -35,6 +36,7 @@ type NavItem = {
     | '/coach/payments'
     | '/coach/programs'
     | '/coach/forms'
+    | '/coach/library'
     | '/family'
     | '/family/registrations'
     | '/family/groups'
@@ -68,6 +70,7 @@ export function AppShell({ children, variant, pendingRegistrations }: AppShellPr
           // primeiro na tela de dinheiro.
           { href: '/coach/programs', label: t('programs'), icon: Package },
           { href: '/coach/forms', label: t('forms'), icon: FileText },
+          { href: '/coach/library', label: t('library'), icon: FolderOpen },
           { href: '/coach/announcements', label: t('announcements'), icon: Megaphone },
         ]
       : [

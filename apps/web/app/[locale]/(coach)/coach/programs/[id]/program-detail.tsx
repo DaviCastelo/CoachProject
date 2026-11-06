@@ -52,6 +52,7 @@ export function ProgramDetailClient({ program, forms, canManage }: Props) {
   const [capacity, setCapacity] = useState(
     program.capacity === null ? '' : String(program.capacity),
   );
+  const [heroImageUrl, setHeroImageUrl] = useState(program.heroImageUrl ?? '');
 
   // Edição no próprio lugar. Mudar o preço de uma opção NÃO mexe em fatura
   // já emitida: a fatura copia o valor no momento da emissão. O que muda é
@@ -77,6 +78,7 @@ export function ProgramDetailClient({ program, forms, canManage }: Props) {
         startsOn: startsOn || null,
         endsOn: endsOn || null,
         capacity: capacity.trim() === '' ? null : Number(capacity),
+        heroImageUrl,
       });
       if (res.ok) {
         toast.success(t('saved'));
@@ -463,6 +465,24 @@ export function ProgramDetailClient({ program, forms, canManage }: Props) {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
+              </div>
+
+              {/* Sem este campo a coluna `hero_image_url` existia no banco e
+                  nenhuma tela escrevia nela: todo programa caía no sorteio
+                  entre quatro fotos de banco, e dois programas de nome
+                  parecido saíam com a mesma. */}
+              <div className="space-y-1.5">
+                <Label htmlFor="p-photo">{t('heroImageLabel')}</Label>
+                <Input
+                  id="p-photo"
+                  value={heroImageUrl}
+                  onChange={(e) => setHeroImageUrl(e.target.value)}
+                  placeholder="/images/gallery-1.webp"
+                  aria-describedby="p-photo-help"
+                />
+                <p id="p-photo-help" className="text-xs text-muted-foreground">
+                  {t('heroImageHelp')}
+                </p>
               </div>
 
               <Button type="submit" disabled={pending}>

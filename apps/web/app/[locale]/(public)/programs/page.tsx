@@ -5,7 +5,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { PageHero } from '@/components/page-hero';
 import { AthleticCard } from '@/components/athletic-card';
 import { formatDateRange } from '@/lib/format-datetime';
-import { programImageForSlug } from '@/lib/program-image';
+import { programImage } from '@/lib/program-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +15,7 @@ type ProgramRow = {
   description: string | null;
   starts_on: string | null;
   ends_on: string | null;
+  hero_image_url: string | null;
 };
 
 export default async function ProgramsPage() {
@@ -23,7 +24,7 @@ export default async function ProgramsPage() {
   const svc = createServiceClient();
   const { data } = await svc
     .from('programs')
-    .select('slug, name, description, starts_on, ends_on')
+    .select('slug, name, description, starts_on, ends_on, hero_image_url')
     .eq('status', 'published')
     .order('starts_on', { ascending: true });
 
@@ -32,7 +33,7 @@ export default async function ProgramsPage() {
   return (
     <>
       <PageHero
-        imageSrc="/images/gallery-2.png"
+        imageSrc="/images/gallery-2.webp"
         imageAlt="Training session"
         title={t('title')}
         compact
@@ -49,7 +50,7 @@ export default async function ProgramsPage() {
                   <div className="flex gap-0">
                     <div className="relative hidden h-24 w-28 shrink-0 sm:block">
                       <StaticImage
-                        src={programImageForSlug(p.slug)}
+                        src={programImage(p)}
                         alt=""
                         fill
                         className="object-cover"

@@ -1015,6 +1015,140 @@ export type Database = {
           },
         ]
       }
+      library_files: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          external_url: string | null
+          folder_id: string | null
+          height: number | null
+          id: string
+          kind: Database["public"]["Enums"]["library_file_kind"]
+          mime_type: string | null
+          name: string
+          organization_id: string
+          size_bytes: number
+          status: Database["public"]["Enums"]["library_file_status"]
+          storage_key: string | null
+          thumb_key: string | null
+          updated_at: string
+          uploaded_by: string | null
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          external_url?: string | null
+          folder_id?: string | null
+          height?: number | null
+          id?: string
+          kind: Database["public"]["Enums"]["library_file_kind"]
+          mime_type?: string | null
+          name: string
+          organization_id: string
+          size_bytes?: number
+          status?: Database["public"]["Enums"]["library_file_status"]
+          storage_key?: string | null
+          thumb_key?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          external_url?: string | null
+          folder_id?: string | null
+          height?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["library_file_kind"]
+          mime_type?: string | null
+          name?: string
+          organization_id?: string
+          size_bytes?: number
+          status?: Database["public"]["Enums"]["library_file_status"]
+          storage_key?: string | null
+          thumb_key?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_files_folder_id_organization_id_fkey"
+            columns: ["folder_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "library_folders"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "library_files_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_folders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          organization_id: string
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_folders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_folders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_folders_parent_id_organization_id_fkey"
+            columns: ["parent_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "library_folders"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           access_notes: string | null
@@ -2219,6 +2353,26 @@ export type Database = {
         }
         Returns: string
       }
+      dashboard_finance: {
+        Args: {
+          p_from: string
+          p_org: string
+          p_prev_from: string
+          p_prev_to: string
+          p_to: string
+        }
+        Returns: Json
+      }
+      dashboard_operations: {
+        Args: {
+          p_from: string
+          p_org: string
+          p_prev_from: string
+          p_prev_to: string
+          p_to: string
+        }
+        Returns: Json
+      }
       enqueue_notification: {
         Args: {
           p_body: string
@@ -2252,6 +2406,86 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { org: string }; Returns: boolean }
+      library_add_link: {
+        Args: { p_folder: string; p_name: string; p_org: string; p_url: string }
+        Returns: string
+      }
+      library_begin_upload: {
+        Args: {
+          p_duration?: number
+          p_folder: string
+          p_has_thumb?: boolean
+          p_height?: number
+          p_kind: Database["public"]["Enums"]["library_file_kind"]
+          p_mime: string
+          p_name: string
+          p_org: string
+          p_size: number
+          p_width?: number
+        }
+        Returns: {
+          created_at: string
+          duration_seconds: number | null
+          external_url: string | null
+          folder_id: string | null
+          height: number | null
+          id: string
+          kind: Database["public"]["Enums"]["library_file_kind"]
+          mime_type: string | null
+          name: string
+          organization_id: string
+          size_bytes: number
+          status: Database["public"]["Enums"]["library_file_status"]
+          storage_key: string | null
+          thumb_key: string | null
+          updated_at: string
+          uploaded_by: string | null
+          width: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "library_files"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      library_create_folder: {
+        Args: { p_name: string; p_org: string; p_parent: string }
+        Returns: string
+      }
+      library_delete_file: { Args: { p_file: string }; Returns: undefined }
+      library_delete_folder: { Args: { p_folder: string }; Returns: number }
+      library_finish_upload: { Args: { p_file: string }; Returns: undefined }
+      library_folder_depth: { Args: { p_folder: string }; Returns: number }
+      library_folder_height: { Args: { p_folder: string }; Returns: number }
+      library_folder_path: {
+        Args: { p_folder: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
+      library_limits: {
+        Args: { p_org: string }
+        Returns: Record<string, unknown>
+      }
+      library_move_file: {
+        Args: { p_file: string; p_folder: string }
+        Returns: undefined
+      }
+      library_move_folder: {
+        Args: { p_folder: string; p_parent: string }
+        Returns: undefined
+      }
+      library_rename_file: {
+        Args: { p_file: string; p_name: string }
+        Returns: undefined
+      }
+      library_rename_folder: {
+        Args: { p_folder: string; p_name: string }
+        Returns: undefined
+      }
+      library_usage: { Args: { p_org: string }; Returns: Json }
       list_my_group_coaches: {
         Args: never
         Returns: {
@@ -2362,6 +2596,8 @@ export type Database = {
         | "void"
         | "refunded"
         | "uncollectible"
+      library_file_kind: "image" | "video" | "pdf" | "document" | "link"
+      library_file_status: "uploading" | "ready" | "deleting"
       org_role: "owner" | "admin" | "coach" | "staff" | "guardian" | "athlete"
       payment_method:
         | "card"
@@ -2557,6 +2793,8 @@ export const Constants = {
         "refunded",
         "uncollectible",
       ],
+      library_file_kind: ["image", "video", "pdf", "document", "link"],
+      library_file_status: ["uploading", "ready", "deleting"],
       org_role: ["owner", "admin", "coach", "staff", "guardian", "athlete"],
       payment_method: [
         "card",

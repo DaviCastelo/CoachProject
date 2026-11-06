@@ -37,7 +37,10 @@ export function PageHero({
           fill
           priority={priority}
           sizes="100vw"
-          className={cn('object-cover object-center', !compact && 'animate-hero-zoom')}
+          // As fotos são retrato num banner deitado: `object-center` corta
+          // pela metade da imagem e sobra tronco. Ancorar mais em cima é o
+          // que mantém rosto em quadro.
+          className={cn('object-cover object-[center_18%]', !compact && 'animate-hero-zoom')}
         />
         <div
           className={cn('absolute inset-0', compact ? 'hero-overlay-compact' : 'hero-overlay')}
