@@ -31,9 +31,11 @@ jobs:
 
       - run: pnpm test
 
+      # Mesma versão do package.json. Com "latest", o CLI 3.0 entrou sozinho e
+      # derrubou o CI ao recusar o [inbucket] do config.toml.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.111.0
 
       - run: supabase start
 
@@ -76,6 +78,8 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
 
       - uses: supabase/setup-cli@v1
+        with:
+          version: 2.111.0
 
       - run: supabase start
 
