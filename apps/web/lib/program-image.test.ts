@@ -1,7 +1,43 @@
 import { describe, expect, it } from 'vitest';
-import { parseProgramImageUrl, programImage, programImageForSlug } from './program-image';
+import {
+  absoluteImageUrl,
+  ownProgramImage,
+  parseProgramImageUrl,
+  programImage,
+  programImageForSlug,
+} from './program-image';
 
 const SUPABASE = 'https://abcdefgh.supabase.co';
+
+describe('ownProgramImage', () => {
+  it('devolve a imagem cadastrada', () => {
+    expect(ownProgramImage({ hero_image_url: ' /images/programs/x.jpg ' })).toBe(
+      '/images/programs/x.jpg',
+    );
+  });
+
+  it('não sorteia foto quando o programa não tem imagem', () => {
+    expect(ownProgramImage({ hero_image_url: null })).toBeNull();
+    expect(ownProgramImage({ hero_image_url: '  ' })).toBeNull();
+  });
+});
+
+describe('absoluteImageUrl', () => {
+  it('prefixa caminho local com o endereço do site', () => {
+    expect(absoluteImageUrl('/images/programs/x.jpg', 'https://www.catempotraining.com')).toBe(
+      'https://www.catempotraining.com/images/programs/x.jpg',
+    );
+  });
+
+  it('mantém endereço https como está', () => {
+    const url = `${SUPABASE}/storage/v1/object/public/fotos/camp.jpg`;
+    expect(absoluteImageUrl(url, 'https://www.catempotraining.com')).toBe(url);
+  });
+
+  it('sem endereço do site não inventa um', () => {
+    expect(absoluteImageUrl('/images/programs/x.jpg', undefined)).toBeNull();
+  });
+});
 
 describe('programImage', () => {
   it('usa a foto do programa quando ela existe', () => {
