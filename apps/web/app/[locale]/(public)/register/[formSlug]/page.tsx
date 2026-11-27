@@ -120,7 +120,7 @@ export default async function RegisterPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto w-full max-w-xl flex-1 px-4 py-8">
-      <AthleticCard className="accent-border-top overflow-visible p-6">
+      <AthleticCard className="accent-border-top overflow-visible p-4 sm:p-6">
         {poster ? (
           <ProgramPoster src={poster} alt={form.name} priority className="mb-6 max-w-xs" />
         ) : null}

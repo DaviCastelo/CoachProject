@@ -11,6 +11,7 @@ import { CopyButton } from '@/components/copy-button';
 import { formatMoney } from '@/lib/format-money';
 import { formatDate } from '@/lib/format-datetime';
 import { markPaidBulk, type PendingInvoice } from './actions';
+import { ChoiceSelect } from '@/components/ui/choice-select';
 
 const METHODS = ['venmo', 'cash', 'check', 'zelle'] as const;
 
@@ -215,21 +216,14 @@ export function PendingList({ invoices }: { invoices: PendingInvoice[] }) {
             </span>
 
             <span className="ml-auto flex flex-wrap items-center gap-2">
-              <label className="sr-only" htmlFor="bulk-method">
-                {t('methodLabel')}
-              </label>
-              <select
+              <ChoiceSelect
                 id="bulk-method"
                 value={method}
-                onChange={(e) => setMethod(e.target.value)}
-                className="h-11 rounded-md border border-input bg-background px-3 text-sm"
-              >
-                {METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {t(`method_${m}`)}
-                  </option>
-                ))}
-              </select>
+                onValueChange={setMethod}
+                aria-label={t('methodLabel')}
+                className="h-11 w-44"
+                options={METHODS.map((m) => ({ value: m, label: t(`method_${m}`) }))}
+              />
 
               <Button onClick={submit} disabled={pending}>
                 {pending ? t('marking') : t('markAction')}

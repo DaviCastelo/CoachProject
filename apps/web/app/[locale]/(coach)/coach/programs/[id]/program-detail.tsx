@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -22,6 +22,8 @@ import {
   type LinkableForm,
 } from '../actions';
 import { PROGRAM_TYPES, PROGRAM_STATUSES } from '../constants';
+import { ChoiceSelect } from '@/components/ui/choice-select';
+import { DateSelect } from '@/components/ui/date-select';
 
 type Props = { program: ProgramDetail; forms: LinkableForm[]; canManage: boolean };
 
@@ -49,6 +51,15 @@ export function ProgramDetailClient({ program, forms, canManage }: Props) {
   const [description, setDescription] = useState(program.description ?? '');
   const [startsOn, setStartsOn] = useState(program.startsOn ?? '');
   const [endsOn, setEndsOn] = useState(program.endsOn ?? '');
+  // Programa é coisa do ano corrente e dos próximos; um ano para trás cobre
+  // o que já aconteceu e ainda está sendo editado.
+  const programYears = useMemo(() => {
+    const now = new Date().getFullYear();
+    const saved = [program.startsOn, program.endsOn]
+      .filter((d): d is string => Boolean(d))
+      .map((d) => Number(d.slice(0, 4)));
+    return { min: Math.min(now - 1, ...saved), max: Math.max(now + 3, ...saved) };
+  }, [program.startsOn, program.endsOn]);
   const [capacity, setCapacity] = useState(
     program.capacity === null ? '' : String(program.capacity),
   );
@@ -375,76 +386,74 @@ export function ProgramDetailClient({ program, forms, canManage }: Props) {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="p-type">{t('typeLabel')}</Label>
-                  <select
+                  <ChoiceSelect
                     id="p-type"
                     value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    {PROGRAM_TYPES.map((v) => (
-                      <option key={v} value={v}>
-                        {t(`type_${v}`)}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={setType}
+                    options={PROGRAM_TYPES.map((v) => ({ value: v, label: t(`type_${v}`) }))}
+                  />
                 </div>
 
                 <div className="space-y-1.5">
                   <Label htmlFor="p-status">{t('statusLabel')}</Label>
-                  <select
+                  <ChoiceSelect
                     id="p-status"
                     value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
-                  >
-                    {PROGRAM_STATUSES.map((v) => (
-                      <option key={v} value={v}>
-                        {t(`status_${v}`)}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={setStatus}
+                    options={PROGRAM_STATUSES.map((v) => ({ value: v, label: t(`status_${v}`) }))}
+                  />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="p-form">{t('formLabel')}</Label>
-                <select
+                <ChoiceSelect
                   id="p-form"
                   value={formId}
-                  onChange={(e) => setFormId(e.target.value)}
-                  className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">{t('formNone')}</option>
-                  {forms.map((f) => (
-                    <option key={f.id} value={f.id} disabled={!!f.takenBy}>
-                      {f.name}
-                      {f.takenBy ? ` — ${t('formTaken', { program: f.takenBy })}` : ''}
-                      {f.requiresPayment ? '' : ` — ${t('formNotPaid')}`}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setFormId}
+                  options={[
+                    { value: '', label: t('formNone') },
+                    ...forms.map((f) => ({
+                      value: f.id,
+                      disabled: !!f.takenBy,
+                      label:
+                        f.name +
+                        (f.takenBy ? ` · ${t('formTaken', { program: f.takenBy })}` : '') +
+                        (f.requiresPayment ? '' : ` · ${t('formNotPaid')}`),
+                    })),
+                  ]}
+                />
                 <p className="text-xs text-muted-foreground">{t('formHelp')}</p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 lg:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="p-starts">{t('startsOnLabel')}</Label>
-                  <Input
+                  <DateSelect
                     id="p-starts"
-                    type="date"
                     value={startsOn}
-                    onChange={(e) => setStartsOn(e.target.value)}
+                    onChange={setStartsOn}
+                    minYear={programYears.min}
+                    maxYear={programYears.max}
+                    yearOrder="asc"
+                    clearable
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="p-ends">{t('endsOnLabel')}</Label>
-                  <Input
+                  <DateSelect
                     id="p-ends"
-                    type="date"
                     value={endsOn}
-                    onChange={(e) => setEndsOn(e.target.value)}
+                    onChange={setEndsOn}
+                    minYear={programYears.min}
+                    maxYear={programYears.max}
+                    yearOrder="asc"
+                    clearable
                   />
                 </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="p-cap">{t('capacityLabel')}</Label>
                   <Input

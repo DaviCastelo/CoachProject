@@ -41,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DateTimeSelect } from '@/components/ui/date-time-select';
 
 type Props = Readonly<{
   sessions: SessionListItem[];
@@ -92,6 +93,12 @@ export function ScheduleClient({ sessions, groups, canEdit }: Props) {
 
   function submit() {
     setError(null);
+    // Data e hora agora vêm de listas separadas: até as duas estarem
+    // escolhidas o valor é '', e `new Date('')` estouraria no toISOString.
+    if (!startsAt || !endsAt) {
+      setError(t('errorDateTimeRequired'));
+      return;
+    }
     startTransition(async () => {
       const res = await createSession({
         title,
@@ -165,24 +172,14 @@ export function ScheduleClient({ sessions, groups, canEdit }: Props) {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="s-start">{t('startsAt')}</Label>
-          <Input
-            id="s-start"
-            type="datetime-local"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-          />
+          <DateTimeSelect id="s-start" value={startsAt} onChange={setStartsAt} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="s-end">{t('endsAt')}</Label>
-          <Input
-            id="s-end"
-            type="datetime-local"
-            value={endsAt}
-            onChange={(e) => setEndsAt(e.target.value)}
-          />
+          <DateTimeSelect id="s-end" value={endsAt} onChange={setEndsAt} />
         </div>
       </div>
 

@@ -31,6 +31,7 @@ import {
   type RegistrationDetails,
   type AssignableGroup,
 } from './actions';
+import { ChoiceSelect } from '@/components/ui/choice-select';
 
 export type SubmissionRow = {
   id: string;
@@ -49,6 +50,15 @@ export type SubmissionRow = {
   hasLogin: boolean;
 };
 
+const REGISTRATION_STATUSES = [
+  'pending',
+  'approved',
+  'rejected',
+  'waitlisted',
+  'canceled',
+  'completed',
+] as const;
+
 const STATUS_STYLE: Record<string, string> = {
   pending: 'bg-warning/15 text-warning',
   approved: 'bg-success/15 text-success',
@@ -58,17 +68,37 @@ const STATUS_STYLE: Record<string, string> = {
   completed: 'bg-muted text-muted-foreground',
 };
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, label }: { status: string; label: string }) {
   return (
     <span
-      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
         STATUS_STYLE[status] ?? 'bg-muted text-muted-foreground'
       }`}
     >
-      {status}
+      {label}
     </span>
   );
 }
+
+/*
+ * Colunas do atleta com nome traduzido. Chave fora da lista (resposta de
+ * campo criado pelo coach) cai no nome da própria chave, como antes.
+ */
+const ATHLETE_FIELD_KEYS = [
+  'first_name',
+  'last_name',
+  'date_of_birth',
+  'gender',
+  'current_club',
+  'playing_level',
+  'jersey_size',
+  'allergies',
+  'medical_notes',
+  'dominant_foot',
+  'position',
+  'school',
+  'grade',
+] as const;
 
 function prettyLabel(key: string): string {
   const s = key.replace(/_/g, ' ');
@@ -116,6 +146,10 @@ export function SubmissionsTable({
   const router = useRouter();
   const t = useTranslations('submissions');
   const tg = useTranslations('groups');
+  const statusLabel = (status: string) =>
+    (REGISTRATION_STATUSES as readonly string[]).includes(status) ? t(`status_${status}`) : status;
+  const athleteLabel = (key: string) =>
+    (ATHLETE_FIELD_KEYS as readonly string[]).includes(key) ? t(`field_${key}`) : prettyLabel(key);
   const locale = useLocale();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -224,7 +258,7 @@ export function SubmissionsTable({
   async function openWaiver(athleteId: string) {
     const url = await getWaiverUrl(athleteId);
     if (url) window.open(url, '_blank', 'noopener,noreferrer');
-    else setError('No signed waiver PDF found for this athlete.');
+    else setError(t('noWaiver'));
   }
 
   const filteredRows = useMemo(() => {
@@ -249,7 +283,7 @@ export function SubmissionsTable({
     if (idx === undefined) {
       idx = groups.length;
       groupIndex.set(key, idx);
-      groups.push({ key, name: r.formName ?? 'Sem formulário', rows: [] });
+      groups.push({ key, name: r.formName ?? t('noForm'), rows: [] });
     }
     groups[idx].rows.push(r);
   }
@@ -270,19 +304,16 @@ export function SubmissionsTable({
           aria-label={t('search')}
           className="sm:flex-1"
         />
-        <select
+        <ChoiceSelect
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onValueChange={setStatusFilter}
           aria-label={t('filterStatus')}
-          className="h-12 rounded-md border border-input bg-background px-3 text-sm"
-        >
-          <option value="all">{t('allStatuses')}</option>
-          {['pending', 'approved', 'rejected', 'waitlisted', 'canceled', 'completed'].map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+          className="sm:w-52"
+          options={[
+            { value: 'all', label: t('allStatuses') },
+            ...REGISTRATION_STATUSES.map((s) => ({ value: s, label: t(`status_${s}`) })),
+          ]}
+        />
       </div>
       {error && !athleteAccess ? <FieldError>{error}</FieldError> : null}
       {accessDone ? <p className="text-sm text-success">{accessDone}</p> : null}
@@ -308,7 +339,7 @@ export function SubmissionsTable({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{r.athleteName}</span>
-                  <StatusBadge status={r.status} />
+                  <StatusBadge status={r.status} label={statusLabel(r.status)} />
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {[r.program, r.option].filter(Boolean).join(' · ') || '—'}
@@ -347,8 +378,8 @@ export function SubmissionsTable({
             <DialogDescription>
               {[openRow?.formName, openRow?.program, openRow?.option]
                 .filter(Boolean)
-                .join(' · ') || 'Registration'}
-              {openRow ? ` · ${openRow.status}` : ''}
+                .join(' · ') || t('registration')}
+              {openRow ? ` · ${statusLabel(openRow.status)}` : ''}
             </DialogDescription>
             {openRow ? (
               <div className="mt-2 flex flex-wrap gap-2">
@@ -383,17 +414,17 @@ export function SubmissionsTable({
                 </div>
               </div>
             ) : !details ? (
-              <p className="text-muted-foreground">Details not found.</p>
+              <p className="text-muted-foreground">{t('detailsNotFound')}</p>
             ) : (
               <div className="space-y-4">
                 {details.athlete ? (
                   <div>
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Athlete
+                      {t('sectionAthlete')}
                     </p>
                     <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
                       {Object.entries(details.athlete).map(([k, v]) => (
-                        <DetailRow key={k} label={prettyLabel(k)} value={v} />
+                        <DetailRow key={k} label={athleteLabel(k)} value={v} />
                       ))}
                     </div>
                   </div>
@@ -402,11 +433,11 @@ export function SubmissionsTable({
                 {extraData.length > 0 ? (
                   <div>
                     <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Form answers
+                      {t('sectionAnswers')}
                     </p>
                     <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
                       {extraData.map(([k, v]) => (
-                        <FormAnswerRow key={k} label={prettyLabel(k)} value={v} />
+                        <FormAnswerRow key={k} label={details?.labels[k] ?? prettyLabel(k)} value={v} />
                       ))}
                     </div>
                   </div>
@@ -459,7 +490,7 @@ export function SubmissionsTable({
                   onClick={() => openRow.athleteId && openWaiver(openRow.athleteId)}
                 >
                   <FileText className="h-4 w-4" />
-                  Waiver PDF
+                  {t('waiverPdf')}
                 </Button>
                 {openRow.athleteId && !openRow.hasLogin ? (
                 <Button
@@ -494,7 +525,7 @@ export function SubmissionsTable({
                     ? '…'
                     : pickedGroups.size > 0
                       ? tg('approveAndAssign', { count: pickedGroups.size })
-                      : 'Approve'}
+                      : t('approve')}
                 </Button>
                 <Button
                   type="button"
@@ -503,7 +534,7 @@ export function SubmissionsTable({
                   disabled={pending || openRow.status === 'rejected' || openRow.status === 'canceled'}
                   onClick={() => act(openRow.id, 'rejected')}
                 >
-                  Reject
+                  {t('reject')}
                 </Button>
               </>
             ) : null}
@@ -531,7 +562,7 @@ export function SubmissionsTable({
                 id="sa-email"
                 type="email"
                 autoComplete="off"
-                placeholder="atleta@exemplo.com"
+                placeholder="athlete@example.com"
                 value={athleteAccess?.email ?? ''}
                 onChange={(e) =>
                   athleteAccess && setAthleteAccess({ ...athleteAccess, email: e.target.value })

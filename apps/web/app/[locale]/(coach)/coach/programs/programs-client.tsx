@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { formatMoney } from '@/lib/format-money';
 import { createProgram, type ProgramListItem, type LinkableForm } from './actions';
 import { PROGRAM_TYPES } from './constants';
+import { ChoiceSelect } from '@/components/ui/choice-select';
 
 type Props = {
   programs: ProgramListItem[];
@@ -70,36 +71,29 @@ export function ProgramsClient({ programs, forms, canManage }: Props) {
 
               <div className="space-y-1.5">
                 <Label htmlFor="program-type">{t('typeLabel')}</Label>
-                <select
+                <ChoiceSelect
                   id="program-type"
                   value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  {PROGRAM_TYPES.map((v) => (
-                    <option key={v} value={v}>
-                      {t(`type_${v}`)}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setType}
+                  options={PROGRAM_TYPES.map((v) => ({ value: v, label: t(`type_${v}`) }))}
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="program-form">{t('formLabel')}</Label>
-                <select
+                <ChoiceSelect
                   id="program-form"
                   value={formId}
-                  onChange={(e) => setFormId(e.target.value)}
-                  className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="">{t('formNone')}</option>
-                  {forms.map((f) => (
-                    <option key={f.id} value={f.id} disabled={!!f.takenBy}>
-                      {f.name}
-                      {f.takenBy ? ` — ${t('formTaken', { program: f.takenBy })}` : ''}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setFormId}
+                  options={[
+                    { value: '', label: t('formNone') },
+                    ...forms.map((f) => ({
+                      value: f.id,
+                      disabled: !!f.takenBy,
+                      label: f.name + (f.takenBy ? ` · ${t('formTaken', { program: f.takenBy })}` : ''),
+                    })),
+                  ]}
+                />
                 <p className="text-xs text-muted-foreground">{t('formHelp')}</p>
               </div>
 

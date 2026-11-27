@@ -1,9 +1,13 @@
 import type { FieldType, FormField, FormSchema } from '@ca-tempo/domain';
 
 /**
- * Modelos iniciais de formulário. O conteúdo (rótulos/opções) fica em português
- * porque é o conteúdo do próprio formulário que o treinador vai revisar e editar —
- * não é chrome de UI. Os nomes/descrições dos modelos na tela vêm do i18n.
+ * Modelos iniciais de formulário.
+ *
+ * O conteúdo (rótulos, opções, seções) é o do próprio formulário que a família
+ * lê, e não muda com o idioma do painel. Fica em inglês americano porque o
+ * clube atende famílias nos EUA: antes vinha em português, e um formulário
+ * criado a partir do modelo ia para as famílias com "Nome do responsável". O
+ * coach continua livre para editar. Os nomes dos modelos na tela vêm do i18n.
  */
 export type TemplateId = 'registration' | 'camp' | 'evaluation';
 
@@ -33,44 +37,44 @@ function field(spec: FieldSpec): FormField {
   };
 }
 
-const GENDER = ['Masculino', 'Feminino', 'Outro'];
-const RELATIONSHIP = ['Mãe', 'Pai', 'Responsável legal'];
-const JERSEY = ['PP', 'P', 'M', 'G', 'GG'];
+const GENDER = ['Female', 'Male', 'Other'];
+const RELATIONSHIP = ['Mother', 'Father', 'Legal guardian'];
+const JERSEY = ['Youth S', 'Youth M', 'Youth L', 'Adult S', 'Adult M', 'Adult L', 'Adult XL'];
 
 function registrationSchema(): FormSchema {
   return {
     sections: [
       {
-        id: 'atleta',
-        title: 'Dados do atleta',
-        description: 'Informações da criança/atleta.',
+        id: 'athlete',
+        title: 'Athlete',
+        description: 'About the player.',
         fields: [
-          field({ id: 'atleta_nome', type: 'text', label: 'Nome do atleta', required: true, mapsTo: 'athlete.first_name' }),
-          field({ id: 'atleta_sobrenome', type: 'text', label: 'Sobrenome do atleta', required: true, mapsTo: 'athlete.last_name' }),
-          field({ id: 'atleta_nascimento', type: 'dob', label: 'Data de nascimento', required: true, mapsTo: 'athlete.date_of_birth' }),
-          field({ id: 'atleta_genero', type: 'radio', label: 'Gênero', options: GENDER, mapsTo: 'athlete.gender' }),
-          field({ id: 'atleta_clube', type: 'text', label: 'Clube atual', mapsTo: 'athlete.current_club' }),
+          field({ id: 'athlete_first_name', type: 'text', label: 'Athlete first name', required: true, mapsTo: 'athlete.first_name' }),
+          field({ id: 'athlete_last_name', type: 'text', label: 'Athlete last name', required: true, mapsTo: 'athlete.last_name' }),
+          field({ id: 'athlete_dob', type: 'dob', label: 'Date of birth', required: true, mapsTo: 'athlete.date_of_birth' }),
+          field({ id: 'athlete_gender', type: 'radio', label: 'Gender', options: GENDER, mapsTo: 'athlete.gender' }),
+          field({ id: 'athlete_club', type: 'text', label: 'Current club', mapsTo: 'athlete.current_club' }),
         ],
       },
       {
-        id: 'responsavel',
-        title: 'Responsável',
-        description: 'Quem podemos contatar sobre o atleta.',
+        id: 'guardian',
+        title: 'Parent or guardian',
+        description: 'Who we should contact about the athlete.',
         fields: [
-          field({ id: 'resp_nome', type: 'text', label: 'Nome do responsável', required: true, mapsTo: 'guardian.first_name' }),
-          field({ id: 'resp_sobrenome', type: 'text', label: 'Sobrenome do responsável', required: true, mapsTo: 'guardian.last_name' }),
-          field({ id: 'resp_email', type: 'email', label: 'E-mail do responsável', required: true, mapsTo: 'guardian.email' }),
-          field({ id: 'resp_telefone', type: 'phone', label: 'Telefone do responsável', required: true, mapsTo: 'guardian.phone' }),
-          field({ id: 'resp_parentesco', type: 'radio', label: 'Parentesco', options: RELATIONSHIP, mapsTo: 'guardian.relationship' }),
+          field({ id: 'guardian_first_name', type: 'text', label: 'First name', required: true, mapsTo: 'guardian.first_name' }),
+          field({ id: 'guardian_last_name', type: 'text', label: 'Last name', required: true, mapsTo: 'guardian.last_name' }),
+          field({ id: 'guardian_email', type: 'email', label: 'Email', required: true, mapsTo: 'guardian.email' }),
+          field({ id: 'guardian_phone', type: 'phone', label: 'Phone', required: true, mapsTo: 'guardian.phone' }),
+          field({ id: 'guardian_relationship', type: 'radio', label: 'Relationship to the athlete', options: RELATIONSHIP, mapsTo: 'guardian.relationship' }),
         ],
       },
       {
-        id: 'saude',
-        title: 'Saúde',
-        description: 'Ajuda a equipe a cuidar melhor do atleta.',
+        id: 'health',
+        title: 'Health',
+        description: 'Helps our coaches take good care of your athlete.',
         fields: [
-          field({ id: 'saude_alergias', type: 'textarea', label: 'Alergias', mapsTo: 'athlete.allergies', helpText: 'Deixe em branco se não houver.' }),
-          field({ id: 'saude_obs', type: 'textarea', label: 'Observações médicas', mapsTo: 'athlete.medical_notes' }),
+          field({ id: 'health_allergies', type: 'textarea', label: 'Allergies', mapsTo: 'athlete.allergies', helpText: 'Leave blank if none.' }),
+          field({ id: 'health_notes', type: 'textarea', label: 'Medical notes', mapsTo: 'athlete.medical_notes' }),
         ],
       },
     ],
@@ -81,30 +85,30 @@ function campSchema(): FormSchema {
   return {
     sections: [
       {
-        id: 'atleta',
-        title: 'Dados do atleta',
+        id: 'athlete',
+        title: 'Athlete',
         fields: [
-          field({ id: 'atleta_nome', type: 'text', label: 'Nome do atleta', required: true, mapsTo: 'athlete.first_name' }),
-          field({ id: 'atleta_sobrenome', type: 'text', label: 'Sobrenome do atleta', required: true, mapsTo: 'athlete.last_name' }),
-          field({ id: 'atleta_nascimento', type: 'dob', label: 'Data de nascimento', required: true, mapsTo: 'athlete.date_of_birth' }),
-          field({ id: 'atleta_camiseta', type: 'select', label: 'Tamanho da camiseta', options: JERSEY, mapsTo: 'athlete.jersey_size' }),
+          field({ id: 'athlete_first_name', type: 'text', label: 'Athlete first name', required: true, mapsTo: 'athlete.first_name' }),
+          field({ id: 'athlete_last_name', type: 'text', label: 'Athlete last name', required: true, mapsTo: 'athlete.last_name' }),
+          field({ id: 'athlete_dob', type: 'dob', label: 'Date of birth', required: true, mapsTo: 'athlete.date_of_birth' }),
+          field({ id: 'athlete_jersey', type: 'select', label: 'Jersey size', options: JERSEY, mapsTo: 'athlete.jersey_size' }),
         ],
       },
       {
         id: 'camp',
-        title: 'Sobre o camp',
+        title: 'About the camp',
         fields: [
-          field({ id: 'camp_turma', type: 'radio', label: 'Turma', required: true, options: ['Manhã', 'Tarde'] }),
-          field({ id: 'camp_alergias', type: 'textarea', label: 'Alergias / restrições alimentares', mapsTo: 'athlete.allergies' }),
+          field({ id: 'camp_session', type: 'radio', label: 'Session', required: true, options: ['Morning', 'Afternoon'] }),
+          field({ id: 'camp_allergies', type: 'textarea', label: 'Allergies or dietary restrictions', mapsTo: 'athlete.allergies' }),
         ],
       },
       {
-        id: 'responsavel',
-        title: 'Responsável',
+        id: 'guardian',
+        title: 'Parent or guardian',
         fields: [
-          field({ id: 'resp_nome', type: 'text', label: 'Nome do responsável', required: true, mapsTo: 'guardian.first_name' }),
-          field({ id: 'resp_email', type: 'email', label: 'E-mail do responsável', required: true, mapsTo: 'guardian.email' }),
-          field({ id: 'resp_telefone', type: 'phone', label: 'Telefone do responsável', required: true, mapsTo: 'guardian.phone' }),
+          field({ id: 'guardian_first_name', type: 'text', label: 'Parent or guardian first name', required: true, mapsTo: 'guardian.first_name' }),
+          field({ id: 'guardian_email', type: 'email', label: 'Email', required: true, mapsTo: 'guardian.email' }),
+          field({ id: 'guardian_phone', type: 'phone', label: 'Phone', required: true, mapsTo: 'guardian.phone' }),
         ],
       },
     ],
@@ -115,30 +119,30 @@ function evaluationSchema(): FormSchema {
   return {
     sections: [
       {
-        id: 'atleta',
-        title: 'Dados do atleta',
+        id: 'athlete',
+        title: 'Athlete',
         fields: [
-          field({ id: 'atleta_nome', type: 'text', label: 'Nome do atleta', required: true, mapsTo: 'athlete.first_name' }),
-          field({ id: 'atleta_sobrenome', type: 'text', label: 'Sobrenome do atleta', required: true, mapsTo: 'athlete.last_name' }),
-          field({ id: 'atleta_nascimento', type: 'dob', label: 'Data de nascimento', required: true, mapsTo: 'athlete.date_of_birth' }),
-          field({ id: 'atleta_pe', type: 'radio', label: 'Pé dominante', options: ['Direito', 'Esquerdo', 'Ambos'], mapsTo: 'athlete.dominant_foot' }),
-          field({ id: 'atleta_nivel', type: 'radio', label: 'Nível', options: ['Iniciante', 'Intermediário', 'Avançado'], mapsTo: 'athlete.playing_level' }),
+          field({ id: 'athlete_first_name', type: 'text', label: 'Athlete first name', required: true, mapsTo: 'athlete.first_name' }),
+          field({ id: 'athlete_last_name', type: 'text', label: 'Athlete last name', required: true, mapsTo: 'athlete.last_name' }),
+          field({ id: 'athlete_dob', type: 'dob', label: 'Date of birth', required: true, mapsTo: 'athlete.date_of_birth' }),
+          field({ id: 'athlete_foot', type: 'radio', label: 'Dominant foot', options: ['Right', 'Left', 'Both'], mapsTo: 'athlete.dominant_foot' }),
+          field({ id: 'athlete_level', type: 'radio', label: 'Level', options: ['Beginner', 'Intermediate', 'Advanced'], mapsTo: 'athlete.playing_level' }),
         ],
       },
       {
-        id: 'objetivos',
-        title: 'Objetivos',
+        id: 'goals',
+        title: 'Goals',
         fields: [
-          field({ id: 'obj_curto', type: 'textarea', label: 'Objetivos de curto prazo', mapsTo: 'athlete.short_term_goals' }),
-          field({ id: 'obj_longo', type: 'textarea', label: 'Objetivos de longo prazo', mapsTo: 'athlete.long_term_goals' }),
+          field({ id: 'goals_short_term', type: 'textarea', label: 'Short-term goals', mapsTo: 'athlete.short_term_goals' }),
+          field({ id: 'goals_long_term', type: 'textarea', label: 'Long-term goals', mapsTo: 'athlete.long_term_goals' }),
         ],
       },
       {
-        id: 'responsavel',
-        title: 'Contato do responsável',
+        id: 'guardian',
+        title: 'Parent or guardian contact',
         fields: [
-          field({ id: 'resp_nome', type: 'text', label: 'Nome do responsável', required: true, mapsTo: 'guardian.first_name' }),
-          field({ id: 'resp_email', type: 'email', label: 'E-mail do responsável', required: true, mapsTo: 'guardian.email' }),
+          field({ id: 'guardian_first_name', type: 'text', label: 'Parent or guardian first name', required: true, mapsTo: 'guardian.first_name' }),
+          field({ id: 'guardian_email', type: 'email', label: 'Email', required: true, mapsTo: 'guardian.email' }),
         ],
       },
     ],

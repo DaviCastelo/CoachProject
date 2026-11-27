@@ -49,6 +49,7 @@ import {
   type LibraryFolder,
   type LibraryView,
 } from './actions';
+import { ChoiceSelect } from '@/components/ui/choice-select';
 
 type Target = { type: 'folder'; item: LibraryFolder } | { type: 'file'; item: LibraryFile };
 
@@ -576,19 +577,15 @@ export function LibraryClient({ view }: Readonly<{ view: LibraryView }>) {
         {overlay?.mode === 'move' ? (
           <div className="space-y-1.5">
             <Label htmlFor="library-destination">{t('destinationLabel')}</Label>
-            <select
+            <ChoiceSelect
               id="library-destination"
-              className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
               value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-            >
-              <option value={ROOT}>{t('root')}</option>
-              {destinations.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onValueChange={setDestination}
+              options={[
+                { value: ROOT, label: t('root') },
+                ...destinations.map((option) => ({ value: option.id, label: option.label })),
+              ]}
+            />
           </div>
         ) : null}
       </ResponsiveFormOverlay>

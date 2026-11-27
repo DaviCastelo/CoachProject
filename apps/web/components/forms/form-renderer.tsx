@@ -6,7 +6,10 @@ import { useTranslations } from 'next-intl';
 import { isFieldVisible, type FormSchema, type FormField } from '@ca-tempo/domain';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ChoiceSelect } from '@/components/ui/choice-select';
+import { DateSelect } from '@/components/ui/date-select';
 import { SignatureFieldInput } from '@/components/forms/signature-field-input';
+import { choiceCard, choiceInput } from '@/components/forms/choice-styles';
 
 type Values = Record<string, unknown>;
 
@@ -16,11 +19,24 @@ function defaultValueFor(field: FormField): unknown {
   return '';
 }
 
-function getInputType(field: FormField): 'email' | 'tel' | 'date' | 'text' {
+function getInputType(field: FormField): 'email' | 'tel' | 'text' {
   if (field.type === 'email') return 'email';
   if (field.type === 'phone') return 'tel';
-  if (field.type === 'date' || field.type === 'dob') return 'date';
   return 'text';
+}
+
+/*
+ * Faixa de anos da lista de data. Nascimento usa a validação do campo
+ * (2013 a 2019 no Christmas Camp) e, sem ela, os últimos 100 anos. Data comum
+ * vai um pouco para o futuro, para caber "data de início" e afins.
+ */
+function yearRange(field: FormField): { min: number; max: number } {
+  const now = new Date().getFullYear();
+  const isDob = field.type === 'dob';
+  return {
+    min: field.validation?.minYear ?? now - 100,
+    max: field.validation?.maxYear ?? (isDob ? now : now + 5),
+  };
 }
 
 function useErrorText() {
@@ -50,43 +66,79 @@ type FieldControlProps = Readonly<{
   value: unknown;
   setValue: UseFormSetValue<Values>;
   checkboxLabel: string;
+  selectPlaceholder: string;
+  selectNone: string;
+  invalid: boolean;
+  describedBy?: string;
 }>;
 
-function FieldControl({ field, register, value, setValue, checkboxLabel }: FieldControlProps) {
+function FieldControl({
+  field,
+  register,
+  value,
+  setValue,
+  checkboxLabel,
+  selectPlaceholder,
+  selectNone,
+  invalid,
+  describedBy,
+}: FieldControlProps) {
+  const set = (next: unknown) =>
+    setValue(field.id, next, { shouldDirty: true, shouldValidate: true });
+
   if (field.type === 'textarea') {
     return (
       <textarea
         id={field.id}
-        className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        className="flex min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground shadow-sm transition-colors placeholder:text-muted-foreground hover:border-accent-500/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring aria-[invalid=true]:border-danger"
         {...register(field.id)}
       />
     );
   }
 
   if (field.type === 'select' || field.type === 'pass_selector') {
+    const options = (field.options ?? []).map((opt) => ({ value: opt, label: opt }));
     return (
-      <select
+      <ChoiceSelect
         id={field.id}
-        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground"
-        {...register(field.id)}
-      >
-        <option value="">—</option>
-        {(field.options ?? []).map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
+        value={typeof value === 'string' ? value : ''}
+        onValueChange={set}
+        // Campo opcional precisa de um jeito de voltar a "sem resposta".
+        options={field.required ? options : [{ value: '', label: selectNone }, ...options]}
+        placeholder={selectPlaceholder}
+        invalid={invalid}
+        aria-describedby={describedBy}
+      />
+    );
+  }
+
+  if (field.type === 'date' || field.type === 'dob') {
+    const { min, max } = yearRange(field);
+    return (
+      <DateSelect
+        id={field.id}
+        value={typeof value === 'string' ? value : ''}
+        onChange={set}
+        minYear={min}
+        maxYear={max}
+        yearOrder="desc"
+        clearable={!field.required}
+        invalid={invalid}
+        aria-labelledby={`${field.id}-label`}
+        aria-describedby={describedBy}
+      />
     );
   }
 
   if (field.type === 'radio') {
     return (
-      <div className="space-y-1">
+      <div className="grid gap-2 sm:grid-cols-2">
         {(field.options ?? []).map((opt) => (
-          <label key={opt} className="flex items-center gap-2 text-sm">
-            <input type="radio" value={opt} {...register(field.id)} />
-            {opt}
+          <label key={opt} className={choiceCard}>
+            <input type="radio" value={opt} className={choiceInput} {...register(field.id)} />
+            <span className="text-sm">{opt}</span>
           </label>
         ))}
       </div>
@@ -95,9 +147,9 @@ function FieldControl({ field, register, value, setValue, checkboxLabel }: Field
 
   if (field.type === 'checkbox') {
     return (
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" {...register(field.id)} />
-        {field.placeholder ?? checkboxLabel}
+      <label className={choiceCard}>
+        <input type="checkbox" className={choiceInput} {...register(field.id)} />
+        <span className="text-sm">{field.placeholder ?? checkboxLabel}</span>
       </label>
     );
   }
@@ -105,18 +157,19 @@ function FieldControl({ field, register, value, setValue, checkboxLabel }: Field
   if (field.type === 'multiselect') {
     const arr = Array.isArray(value) ? (value as string[]) : [];
     return (
-      <div className="space-y-1">
+      <div className="grid gap-2 sm:grid-cols-2">
         {(field.options ?? []).map((opt) => (
-          <label key={opt} className="flex items-center gap-2 text-sm">
+          <label key={opt} className={choiceCard}>
             <input
               type="checkbox"
+              className={choiceInput}
               checked={arr.includes(opt)}
               onChange={(e) => {
                 const next = e.target.checked ? [...arr, opt] : arr.filter((v) => v !== opt);
                 setValue(field.id, next);
               }}
             />
-            {opt}
+            <span className="text-sm">{opt}</span>
           </label>
         ))}
       </div>
@@ -138,6 +191,8 @@ function FieldControl({ field, register, value, setValue, checkboxLabel }: Field
       id={field.id}
       type={getInputType(field)}
       placeholder={field.placeholder}
+      aria-invalid={invalid || undefined}
+      aria-describedby={describedBy}
       {...register(field.id)}
     />
   );
@@ -154,10 +209,15 @@ export function FormFieldInput({ field, error, register, value, setValue }: Form
     return <p className="text-sm text-muted-foreground">{field.label}</p>;
   }
 
+  const helpId = `${field.id}-help`;
+  const errorId = `${field.id}-error`;
+  const describedBy =
+    [field.helpText ? helpId : null, error ? errorId : null].filter(Boolean).join(' ') || undefined;
+
   return (
     <div className="space-y-1.5">
       {field.label ? (
-        <Label htmlFor={field.id}>
+        <Label id={`${field.id}-label`} htmlFor={field.id}>
           {field.label}
           {field.required ? <span className="text-danger"> *</span> : null}
         </Label>
@@ -169,10 +229,22 @@ export function FormFieldInput({ field, error, register, value, setValue }: Form
         value={value}
         setValue={setValue}
         checkboxLabel={t('checkboxYes')}
+        selectPlaceholder={t('selectPlaceholder')}
+        selectNone={t('selectNone')}
+        invalid={Boolean(error)}
+        describedBy={describedBy}
       />
 
-      {field.helpText ? <p className="text-xs text-muted-foreground">{field.helpText}</p> : null}
-      {error ? <p className="text-xs text-danger">{errorText(error)}</p> : null}
+      {field.helpText ? (
+        <p id={helpId} className="text-xs text-muted-foreground">
+          {field.helpText}
+        </p>
+      ) : null}
+      {error ? (
+        <p id={errorId} className="text-xs text-danger">
+          {errorText(error)}
+        </p>
+      ) : null}
     </div>
   );
 }
