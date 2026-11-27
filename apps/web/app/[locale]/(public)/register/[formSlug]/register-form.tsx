@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import { useLocale, useTranslations } from 'next-intl';
 import { isFieldVisible, validateSubmission, hasSignatureField, extractSignatureFromSchema, type FormSchema, type FormField } from '@ca-tempo/domain';
 import { SectionStep } from '@/components/forms/form-renderer';
+import { choiceCard, choiceInput, choiceInputCentered } from '@/components/forms/choice-styles';
+import { WaiverBody } from '@/components/forms/waiver-body';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -95,21 +97,20 @@ function OptionsStep({ options, optionId, onSelect, locale, label }: OptionsStep
     <fieldset className="space-y-3">
       <legend className="font-display text-xl uppercase tracking-wide">{label}</legend>
       {options.map((opt) => (
-        <label
-          key={opt.id}
-          className="flex cursor-pointer items-start gap-3 rounded-md border border-input p-3"
-        >
+        <label key={opt.id} className={`${choiceCard} p-4`}>
           <input
             type="radio"
             name="pass"
-            className="mt-1"
+            className={`${choiceInput} mt-1`}
             checked={optionId === opt.id}
             onChange={() => onSelect(opt.id)}
           />
           <span className="flex-1">
-            <span className="flex justify-between font-medium">
+            <span className="flex justify-between gap-3 font-medium">
               <span>{opt.name}</span>
-              <span>{formatPrice(opt.price_cents, locale)}</span>
+              <span className="font-display text-lg leading-none text-accent-700 dark:text-accent-500">
+                {formatPrice(opt.price_cents, locale)}
+              </span>
             </span>
             {opt.description ? (
               <span className="block text-sm text-muted-foreground">{opt.description}</span>
@@ -154,25 +155,37 @@ function WaiverStep({
     <div className="space-y-4">
       <h2 className="font-display text-xl uppercase tracking-wide">{waiver.name}</h2>
       <div
-        className="max-h-64 overflow-y-auto whitespace-pre-wrap rounded-md border border-input p-3 text-sm"
+        className="max-h-64 overflow-y-auto rounded-md border border-input bg-background p-4 text-sm"
         onScroll={(e) => {
           const el = e.currentTarget;
           if (el.scrollTop + el.clientHeight >= el.scrollHeight - 8) onScrolledEnd();
         }}
       >
-        {waiver.body}
+        <WaiverBody markdown={waiver.body} />
       </div>
       {!scrolledEnd ? <p className="text-xs text-muted-foreground">{t('scrollToEnd')}</p> : null}
 
       {!hideSignaturePad ? (
         <>
-          <div className="flex gap-4 text-sm">
-            <label className="flex items-center gap-2">
-              <input type="radio" checked={sigType === 'drawn'} onChange={() => onSigTypeChange('drawn')} />
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <label className={`${choiceCard} items-center`}>
+              <input
+                type="radio"
+                name="signature-type"
+                className={choiceInputCentered}
+                checked={sigType === 'drawn'}
+                onChange={() => onSigTypeChange('drawn')}
+              />
               {t('drawSignature')}
             </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" checked={sigType === 'typed'} onChange={() => onSigTypeChange('typed')} />
+            <label className={`${choiceCard} items-center`}>
+              <input
+                type="radio"
+                name="signature-type"
+                className={choiceInputCentered}
+                checked={sigType === 'typed'}
+                onChange={() => onSigTypeChange('typed')}
+              />
               {t('typeName')}
             </label>
           </div>
@@ -191,10 +204,10 @@ function WaiverStep({
         <p className="text-sm text-muted-foreground">{t('signatureFromField')}</p>
       )}
 
-      <label className="flex items-start gap-2 text-sm">
+      <label className={`${choiceCard} text-sm`}>
         <input
           type="checkbox"
-          className="mt-1"
+          className={choiceInput}
           checked={consent}
           onChange={(e) => onConsentChange(e.target.checked)}
         />
@@ -394,12 +407,10 @@ export function RegisterForm({
         <fieldset className="space-y-3">
           <legend className="font-display text-xl uppercase tracking-wide">{t('chooseAthlete')}</legend>
           {knownAthletes.map((athlete) => (
-            <label
-              key={athlete.id}
-              className="flex cursor-pointer items-center gap-3 rounded-md border border-border p-3 has-[:checked]:border-accent-500"
-            >
+            <label key={athlete.id} className={`${choiceCard} items-center`}>
               <input
                 type="radio"
+                className={choiceInputCentered}
                 name="family-athlete"
                 checked={athleteChoice === athlete.id}
                 onChange={() => chooseFamily(athlete.id)}
@@ -409,9 +420,10 @@ export function RegisterForm({
               </span>
             </label>
           ))}
-          <label className="flex cursor-pointer items-center gap-3 rounded-md border border-border p-3 has-[:checked]:border-accent-500">
+          <label className={`${choiceCard} items-center`}>
             <input
               type="radio"
+              className={choiceInputCentered}
               name="family-athlete"
               checked={athleteChoice === 'other'}
               onChange={() => chooseFamily('other')}
@@ -501,7 +513,7 @@ export function RegisterForm({
         </div>
       ) : null}
 
-      <Card className="space-y-4 p-6">{renderStepContent()}</Card>
+      <Card className="space-y-4 p-4 sm:p-6">{renderStepContent()}</Card>
 
       {formError ? (
         <p className="mt-3 text-sm text-danger" role="alert">

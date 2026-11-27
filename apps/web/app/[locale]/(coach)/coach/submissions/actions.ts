@@ -151,6 +151,8 @@ export type RegistrationDetails = {
   option: string | null;
   athlete: Record<string, string> | null;
   data: Record<string, unknown>;
+  /** Rótulo de cada campo como a família viu ("Email", e não "g_email"). */
+  labels: Record<string, string>;
 };
 
 /** Detalhes completos de uma inscrição para o popup (staff). */
@@ -161,7 +163,7 @@ export async function getRegistrationDetails(id: string): Promise<RegistrationDe
   const { data } = await db
     .from('registrations')
     .select(
-      'status, created_at, athletes(first_name, last_name, date_of_birth, gender, current_club, playing_level, jersey_size, allergies, medical_notes), programs(name), program_options(name), form_submissions(data)',
+      'status, created_at, athletes(first_name, last_name, date_of_birth, gender, current_club, playing_level, jersey_size, allergies, medical_notes), programs(name), program_options(name), form_submissions(data, form_versions(schema))',
     )
     .eq('id', id)
     .eq('organization_id', ctx.orgId)
@@ -174,8 +176,18 @@ export async function getRegistrationDetails(id: string): Promise<RegistrationDe
     athletes: Record<string, string | null> | null;
     programs: { name: string } | null;
     program_options: { name: string } | null;
-    form_submissions: { data: Record<string, unknown> } | null;
+    form_submissions: {
+      data: Record<string, unknown>;
+      form_versions: { schema: { sections?: { fields?: { id?: string; label?: string }[] }[] } } | null;
+    } | null;
   };
+
+  const labels: Record<string, string> = {};
+  for (const section of row.form_submissions?.form_versions?.schema?.sections ?? []) {
+    for (const field of section.fields ?? []) {
+      if (field.id && field.label) labels[field.id] = field.label;
+    }
+  }
 
   const athlete = row.athletes
     ? (Object.fromEntries(
@@ -190,5 +202,6 @@ export async function getRegistrationDetails(id: string): Promise<RegistrationDe
     option: row.program_options?.name ?? null,
     athlete,
     data: row.form_submissions?.data ?? {},
+    labels,
   };
 }

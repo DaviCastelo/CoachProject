@@ -58,13 +58,13 @@ export class OfflineGateway implements PaymentGateway {
 
   async refund(): Promise<RefundResult> {
     throw new Error(
-      'Pagamento offline não é estornado pelo sistema. Devolva o dinheiro pelo ' +
-        'Venmo (ou pelo meio em que recebeu) e registre o estorno na tela da fatura.',
+      'Offline payments are not refunded by the system. Return the money through ' +
+        'Venmo (or however you received it) and record the refund on the invoice page.',
     );
   }
 
   verifyWebhook(): WebhookEvent {
-    throw new Error('Pagamento offline não emite webhook: a baixa é manual.');
+    throw new Error('Offline payments have no webhook: mark them as paid manually.');
   }
 }
 

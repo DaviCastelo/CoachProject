@@ -260,8 +260,8 @@ export async function createProgram(input: {
   const sb = await db();
 
   const name = input.name.trim();
-  if (!name) return { ok: false, error: 'Dê um nome ao programa.' };
-  if (!isProgramType(input.type)) return { ok: false, error: 'Tipo de programa inválido.' };
+  if (!name) return { ok: false, error: 'Give the program a name.' };
+  if (!isProgramType(input.type)) return { ok: false, error: 'Invalid program type.' };
 
   const { data: existentes } = await sb
     .from('programs')
@@ -269,7 +269,7 @@ export async function createProgram(input: {
     .eq('organization_id', ctx.orgId);
 
   const base = slugify(name);
-  if (!base) return { ok: false, error: 'O nome não gera um endereço válido.' };
+  if (!base) return { ok: false, error: 'Could not generate a valid link from the name.' };
   const slug = ensureUniqueSlug(
     base,
     ((existentes ?? []) as { slug: string }[]).map((r) => r.slug),
@@ -290,7 +290,7 @@ export async function createProgram(input: {
     .select('id')
     .single();
 
-  if (error || !data) return { ok: false, error: error?.message ?? 'Não foi possível criar.' };
+  if (error || !data) return { ok: false, error: error?.message ?? 'Could not create the program.' };
 
   revalidatePath('/[locale]/coach/programs', 'page');
   return { ok: true, id: data.id as string };
@@ -320,21 +320,21 @@ export async function updateProgram(
     .eq('organization_id', ctx.orgId)
     .maybeSingle();
 
-  if (!atual) return { ok: false, error: 'Programa não encontrado.' };
+  if (!atual) return { ok: false, error: 'Program not found.' };
 
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
   if (patch.name !== undefined) {
     const name = patch.name.trim();
-    if (!name) return { ok: false, error: 'Dê um nome ao programa.' };
+    if (!name) return { ok: false, error: 'Give the program a name.' };
     row.name = name;
   }
   if (patch.type !== undefined) {
-    if (!isProgramType(patch.type)) return { ok: false, error: 'Tipo de programa inválido.' };
+    if (!isProgramType(patch.type)) return { ok: false, error: 'Invalid program type.' };
     row.type = patch.type;
   }
   if (patch.status !== undefined) {
-    if (!isProgramStatus(patch.status)) return { ok: false, error: 'Situação inválida.' };
+    if (!isProgramStatus(patch.status)) return { ok: false, error: 'Invalid status.' };
     row.status = patch.status;
   }
   if (patch.formId !== undefined) row.form_id = patch.formId || null;
@@ -374,7 +374,7 @@ export async function updateProgram(
     if (!count) {
       return {
         ok: false,
-        error: 'Cadastre ao menos uma opção com preço antes de publicar.',
+        error: 'Add at least one priced option before publishing.',
       };
     }
   }
@@ -400,11 +400,11 @@ export async function createOption(
   const sb = await db();
 
   const name = input.name.trim();
-  if (!name) return { ok: false, error: 'Dê um nome à opção.' };
+  if (!name) return { ok: false, error: 'Give the option a name.' };
   if (!Number.isInteger(input.priceCents) || input.priceCents < 1) {
     return {
       ok: false,
-      error: 'O preço precisa ser maior que zero. Para programa gratuito, deixe o formulário sem cobrança.',
+      error: 'The price must be greater than zero. For a free program, leave the form without payment.',
     };
   }
 
@@ -415,7 +415,7 @@ export async function createOption(
     .eq('organization_id', ctx.orgId)
     .maybeSingle();
 
-  if (!prog) return { ok: false, error: 'Programa não encontrado.' };
+  if (!prog) return { ok: false, error: 'Program not found.' };
 
   const { count } = await sb
     .from('program_options')
@@ -449,12 +449,12 @@ export async function updateOption(
 
   if (patch.name !== undefined) {
     const name = patch.name.trim();
-    if (!name) return { ok: false, error: 'Dê um nome à opção.' };
+    if (!name) return { ok: false, error: 'Give the option a name.' };
     row.name = name;
   }
   if (patch.priceCents !== undefined) {
     if (!Number.isInteger(patch.priceCents) || patch.priceCents < 1) {
-      return { ok: false, error: 'O preço precisa ser maior que zero.' };
+      return { ok: false, error: 'The price must be greater than zero.' };
     }
     row.price_cents = patch.priceCents;
   }

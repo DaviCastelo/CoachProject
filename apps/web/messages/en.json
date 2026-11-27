@@ -14,7 +14,8 @@
     "language": "Language",
     "lightTheme": "Light",
     "darkTheme": "Dark",
-    "stepOf": "Step {current} of {total}"
+    "stepOf": "Step {current} of {total}",
+    "close": "Close"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -64,7 +65,8 @@
     "signingIn": "Signing in…",
     "invalidCredentials": "Email or password is incorrect.",
     "emailRequired": "Enter your email address.",
-    "loginFailed": "Could not sign in. Try again."
+    "loginFailed": "Could not sign in. Try again.",
+    "heroAlt": "Athletes training at CA Tempo"
   },
   "landing": {
     "heroTitle": "CA TEMPO TRAINING",
@@ -124,7 +126,35 @@
     "athleteKnown": "Athlete already on file",
     "guardianNew": "New guardian email",
     "guardianKnown": "Guardian email already on file",
-    "alreadyHasLogin": "This family already has a login. The portal shows this athlete."
+    "alreadyHasLogin": "This family already has a login. The portal shows this athlete.",
+    "registration": "Registration",
+    "noForm": "No form",
+    "detailsNotFound": "Details not found.",
+    "sectionAthlete": "Athlete",
+    "sectionAnswers": "Form answers",
+    "waiverPdf": "Waiver PDF",
+    "noWaiver": "No signed waiver PDF found for this athlete.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "status_pending": "Pending",
+    "status_approved": "Approved",
+    "status_rejected": "Rejected",
+    "status_waitlisted": "Waitlisted",
+    "status_canceled": "Canceled",
+    "status_completed": "Completed",
+    "field_first_name": "First name",
+    "field_last_name": "Last name",
+    "field_date_of_birth": "Date of birth",
+    "field_gender": "Gender",
+    "field_current_club": "Current club",
+    "field_playing_level": "Level",
+    "field_jersey_size": "Jersey size",
+    "field_allergies": "Allergies",
+    "field_medical_notes": "Medical notes",
+    "field_dominant_foot": "Dominant foot",
+    "field_position": "Position",
+    "field_school": "School",
+    "field_grade": "Grade"
   },
   "coach": {
     "dashboardTitle": "Dashboard",
@@ -462,7 +492,9 @@
       "maxYear": "Year must be {year} or earlier.",
       "invalid_signature": "Please draw or type a valid signature.",
       "invalid": "Invalid value."
-    }
+    },
+    "selectPlaceholder": "Select…",
+    "selectNone": "No answer"
   },
   "groups": {
     "title": "Groups",
@@ -650,7 +682,8 @@
       "tryout": "Tryout",
       "meeting": "Meeting"
     },
-    "myGroups": "My groups"
+    "myGroups": "My groups",
+    "errorDateTimeRequired": "Choose the date and time for the start and the end."
   },
   "announcements": {
     "title": "Announcements",
@@ -1129,5 +1162,12 @@
     "compareShort_last_month": "vs month before",
     "compareShort_90d": "vs prior 90 days",
     "compareShort_12m": "vs prior 12 months"
+  },
+  "dateSelect": {
+    "month": "Month",
+    "day": "Day",
+    "year": "Year",
+    "time": "Time",
+    "clear": "Clear date"
   }
 }

@@ -68,7 +68,7 @@ export async function dispatchPendingNotifications(limit = 50): Promise<Dispatch
       .from('notifications')
       .update({
         status: 'skipped',
-        error: `não enviada: mais de ${MAX_AGE_DAYS} dias na fila`,
+        error: `not sent: more than ${MAX_AGE_DAYS} days in the queue`,
       })
       .in(
         'id',

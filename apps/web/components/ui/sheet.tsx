@@ -3,6 +3,7 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 const Sheet = DialogPrimitive.Root;
@@ -44,7 +45,7 @@ const SheetContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
+        <CloseLabel />
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </SheetPortal>
@@ -74,3 +75,9 @@ export {
   SheetTitle,
   SheetDescription,
 };
+
+/** O nome do botão de fechar, para leitor de tela, no idioma do site. */
+function CloseLabel() {
+  const t = useTranslations('common');
+  return <span className="sr-only">{t('close')}</span>;
+}

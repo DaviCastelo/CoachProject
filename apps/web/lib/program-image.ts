@@ -75,7 +75,7 @@ export function parseProgramImageUrl(
 
   // Caminho do próprio site: o que está em `apps/web/public/images/`.
   if (value.startsWith('/images/')) {
-    if (value.includes('..')) return { ok: false, error: 'Caminho de imagem inválido.' };
+    if (value.includes('..')) return { ok: false, error: 'Invalid image path.' };
     return { ok: true, value };
   }
 
@@ -83,11 +83,11 @@ export function parseProgramImageUrl(
   try {
     parsed = new URL(value);
   } catch {
-    return { ok: false, error: 'Endereço de imagem inválido.' };
+    return { ok: false, error: 'Invalid image address.' };
   }
 
   if (parsed.protocol !== 'https:') {
-    return { ok: false, error: 'O endereço da imagem precisa começar com https://' };
+    return { ok: false, error: 'The image address must start with https://' };
   }
 
   let allowedHost: string | null = null;
@@ -104,6 +104,6 @@ export function parseProgramImageUrl(
   return {
     ok: false,
     error:
-      'Só entra imagem hospedada no Storage do Supabase ou já publicada em /images/. Outro endereço é bloqueado pelo navegador e a foto não aparece.',
+      'Only images hosted on Supabase Storage or published under /images/ are allowed. Other addresses are blocked by the browser and the image would not show.',
   };
 }

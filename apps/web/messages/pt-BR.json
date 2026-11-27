@@ -14,7 +14,8 @@
     "language": "Idioma",
     "lightTheme": "Claro",
     "darkTheme": "Escuro",
-    "stepOf": "Passo {current} de {total}"
+    "stepOf": "Passo {current} de {total}",
+    "close": "Fechar"
   },
   "nav": {
     "dashboard": "Painel",
@@ -64,7 +65,8 @@
     "signingIn": "Entrando…",
     "invalidCredentials": "E-mail ou senha incorretos.",
     "emailRequired": "Informe seu e-mail.",
-    "loginFailed": "Não foi possível entrar. Tente de novo."
+    "loginFailed": "Não foi possível entrar. Tente de novo.",
+    "heroAlt": "Atletas treinando na CA Tempo"
   },
   "landing": {
     "heroTitle": "CA TEMPO TRAINING",
@@ -124,7 +126,35 @@
     "athleteKnown": "Atleta já cadastrado",
     "guardianNew": "E-mail do responsável novo",
     "guardianKnown": "E-mail do responsável já conhecido",
-    "alreadyHasLogin": "Esta família já tem login. O portal mostra este atleta."
+    "alreadyHasLogin": "Esta família já tem login. O portal mostra este atleta.",
+    "registration": "Inscrição",
+    "noForm": "Sem formulário",
+    "detailsNotFound": "Detalhes não encontrados.",
+    "sectionAthlete": "Atleta",
+    "sectionAnswers": "Respostas do formulário",
+    "waiverPdf": "PDF do waiver",
+    "noWaiver": "Nenhum waiver assinado encontrado para este atleta.",
+    "approve": "Aprovar",
+    "reject": "Recusar",
+    "status_pending": "Pendente",
+    "status_approved": "Aprovada",
+    "status_rejected": "Recusada",
+    "status_waitlisted": "Lista de espera",
+    "status_canceled": "Cancelada",
+    "status_completed": "Concluída",
+    "field_first_name": "Nome",
+    "field_last_name": "Sobrenome",
+    "field_date_of_birth": "Data de nascimento",
+    "field_gender": "Gênero",
+    "field_current_club": "Clube atual",
+    "field_playing_level": "Nível",
+    "field_jersey_size": "Tamanho da camisa",
+    "field_allergies": "Alergias",
+    "field_medical_notes": "Observações médicas",
+    "field_dominant_foot": "Pé dominante",
+    "field_position": "Posição",
+    "field_school": "Escola",
+    "field_grade": "Série"
   },
   "coach": {
     "dashboardTitle": "Painel",
@@ -462,7 +492,9 @@
       "maxYear": "O ano deve ser {year} ou anterior.",
       "invalid_signature": "Desenhe ou digite uma assinatura válida.",
       "invalid": "Valor inválido."
-    }
+    },
+    "selectPlaceholder": "Selecione…",
+    "selectNone": "Sem resposta"
   },
   "groups": {
     "title": "Grupos",
@@ -650,7 +682,8 @@
       "tryout": "Avaliação",
       "meeting": "Reunião"
     },
-    "myGroups": "Meus grupos"
+    "myGroups": "Meus grupos",
+    "errorDateTimeRequired": "Escolha a data e o horário de início e de fim."
   },
   "announcements": {
     "title": "Avisos",
@@ -1129,5 +1162,12 @@
     "compareShort_last_month": "vs mês anterior",
     "compareShort_90d": "vs 90 dias antes",
     "compareShort_12m": "vs 12 meses antes"
+  },
+  "dateSelect": {
+    "month": "Mês",
+    "day": "Dia",
+    "year": "Ano",
+    "time": "Horário",
+    "clear": "Limpar data"
   }
 }

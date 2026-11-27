@@ -856,7 +856,7 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
                 autoComplete="off"
                 value={athleteAccount?.email ?? ''}
                 disabled={athleteAccount?.hasAccount}
-                placeholder="atleta@exemplo.com"
+                placeholder="athlete@example.com"
                 onChange={(e) =>
                   athleteAccount && setAthleteAccount({ ...athleteAccount, email: e.target.value })
                 }
@@ -952,7 +952,7 @@ export function GroupDetailClient({ group, allGroups, orgCoaches, canManage }: P
                   type="email"
                   autoComplete="off"
                   value={nc.email}
-                  placeholder="coach@exemplo.com"
+                  placeholder="coach@example.com"
                   onChange={(e) => setNc({ ...nc, email: e.target.value })}
                 />
                 {fieldError?.field === 'email' ? (
