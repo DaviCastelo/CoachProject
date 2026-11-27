@@ -56,7 +56,12 @@ export type WaiverCtx = {
   consent: boolean;
 };
 
-type ProgramRow = { id: string; name: string; waiver_template_id: string | null };
+type ProgramRow = {
+  id: string;
+  name: string;
+  waiver_template_id: string | null;
+  hero_image_url: string | null;
+};
 
 function str(value: unknown): string {
   return typeof value === 'string' ? value : '';
@@ -132,7 +137,7 @@ export async function loadProgram(
   if (linkedId) {
     const { data: linked } = await svc
       .from('programs')
-      .select('id, name, waiver_template_id')
+      .select('id, name, waiver_template_id, hero_image_url')
       .eq('id', linkedId)
       .eq('status', 'published')
       .maybeSingle();
@@ -141,7 +146,7 @@ export async function loadProgram(
 
   const { data: program } = await svc
     .from('programs')
-    .select('id, name, waiver_template_id')
+    .select('id, name, waiver_template_id, hero_image_url')
     .eq('form_id', formId)
     .eq('status', 'published')
     .maybeSingle();

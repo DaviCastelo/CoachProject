@@ -6,7 +6,8 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { Button } from '@/components/ui/button';
 import { AthleticCard } from '@/components/athletic-card';
 import { PageHero } from '@/components/page-hero';
-import { programImage } from '@/lib/program-image';
+import { ProgramPoster } from '@/components/program-poster';
+import { absoluteImageUrl, ownProgramImage, programImageForSlug } from '@/lib/program-image';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,10 +63,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const program = await loadProgram(slug);
   if (!program) return {};
   const description = program.description ?? 'Register with CA Tempo Training.';
+  const own = ownProgramImage(program);
+  const image = own ? absoluteImageUrl(own, process.env.NEXT_PUBLIC_SITE_URL) : null;
   return {
     title: `${program.name} — CA Tempo Training`,
     description,
-    openGraph: { title: program.name, description, type: 'website' },
+    openGraph: {
+      title: program.name,
+      description,
+      type: 'website',
+      ...(image ? { images: [{ url: image, alt: program.name }] } : {}),
+    },
+    ...(image ? { twitter: { card: 'summary_large_image', images: [image] } } : {}),
   };
 }
 
@@ -101,7 +110,9 @@ export default async function ProgramDetailPage({ params }: PageProps) {
     .eq('id', program.form_id)
     .maybeSingle();
 
-  const heroImage = programImage(program);
+  // O banner é sempre foto do clube. A imagem do programa, quando existe, vai
+  // inteira logo abaixo: flyer como fundo de banner perde as datas e os preços.
+  const poster = ownProgramImage(program);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -117,8 +128,8 @@ export default async function ProgramDetailPage({ params }: PageProps) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <PageHero
-        imageSrc={heroImage}
-        imageAlt={program.name}
+        imageSrc={programImageForSlug(program.slug)}
+        imageAlt=""
         title={program.name}
         compact
       />
@@ -127,6 +138,10 @@ export default async function ProgramDetailPage({ params }: PageProps) {
         <Link href="/programs" className="text-sm text-muted-foreground hover:text-accent-500 transition-colors">
           ← {t('backToAll')}
         </Link>
+
+        {poster ? (
+          <ProgramPoster src={poster} alt={program.name} priority className="mt-6 max-w-md" />
+        ) : null}
 
         {program.description ? (
           <p className="mb-4 mt-4 text-muted-foreground">{program.description}</p>

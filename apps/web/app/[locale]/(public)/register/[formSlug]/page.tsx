@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { parseFormSchema } from '@ca-tempo/domain';
@@ -7,12 +8,48 @@ import { Link, routing } from '@/i18n/routing';
 import { loadProgram, resolveWaiverTemplateId } from './registration-helpers';
 import { RegisterForm, type KnownAthlete, type KnownGuardian, type ProgramOption, type WaiverInfo } from './register-form';
 import { AthleticCard } from '@/components/athletic-card';
+import { ProgramPoster } from '@/components/program-poster';
+import { absoluteImageUrl, ownProgramImage } from '@/lib/program-image';
 
 export const dynamic = 'force-dynamic';
 
 type PageProps = {
   params: Promise<{ locale: string; formSlug: string }>;
 };
+
+/*
+ * É este o link que vai para o grupo das famílias. Sem metadados próprios, o
+ * preview no WhatsApp saía só "CA Tempo Training", sem o nome do evento e sem
+ * imagem.
+ */
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { formSlug } = await params;
+  const svc = createServiceClient();
+  const { data: form } = await svc
+    .from('forms')
+    .select('id, name, description')
+    .eq('slug', formSlug)
+    .eq('status', 'published')
+    .maybeSingle();
+  if (!form) return {};
+
+  const program = await loadProgram(svc, form.id);
+  const own = program ? ownProgramImage(program) : null;
+  const image = own ? absoluteImageUrl(own, process.env.NEXT_PUBLIC_SITE_URL) : null;
+  const description = form.description ?? 'Register with CA Tempo Training.';
+
+  return {
+    title: `${form.name} — CA Tempo Training`,
+    description,
+    openGraph: {
+      title: form.name,
+      description,
+      type: 'website',
+      ...(image ? { images: [{ url: image, alt: form.name }] } : {}),
+    },
+    ...(image ? { twitter: { card: 'summary_large_image', images: [image] } } : {}),
+  };
+}
 
 export default async function RegisterPage({ params }: PageProps) {
   const { locale, formSlug } = await params;
@@ -79,9 +116,14 @@ export default async function RegisterPage({ params }: PageProps) {
       ? `/register/${formSlug}`
       : `/${locale}/register/${formSlug}`;
 
+  const poster = program ? ownProgramImage(program) : null;
+
   return (
     <main className="mx-auto w-full max-w-xl flex-1 px-4 py-8">
       <AthleticCard className="accent-border-top overflow-visible p-6">
+        {poster ? (
+          <ProgramPoster src={poster} alt={form.name} priority className="mb-6 max-w-xs" />
+        ) : null}
         <h1 className="mb-1 font-display text-3xl uppercase tracking-wide">{form.name}</h1>
         {form.description ? (
           <p className="mb-6 text-muted-foreground">{form.description}</p>

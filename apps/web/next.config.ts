@@ -90,6 +90,8 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@ca-tempo/domain', '@ca-tempo/db'],
   images: {
     formats: ['image/avif', 'image/webp'],
+    // 90 é o do flyer de programa: texto miúdo em 75 sai borrado.
+    qualities: [75, 90],
     remotePatterns: supabaseImagePatterns(),
   },
   async headers() {

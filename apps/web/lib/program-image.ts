@@ -27,8 +27,34 @@ export function programImage(program: {
   slug: string;
   hero_image_url?: string | null;
 }): string {
+  return ownProgramImage(program) ?? programImageForSlug(program.slug);
+}
+
+/*
+ * Só a imagem que o próprio programa cadastrou, sem o sorteio.
+ *
+ * Na página do programa e na de inscrição ela aparece inteira, nunca como
+ * fundo de banner: o caso comum é flyer em retrato, cheio de texto, e um
+ * `object-cover` num banner deitado corta justo as datas e os preços.
+ */
+export function ownProgramImage(program: { hero_image_url?: string | null }): string | null {
   const own = program.hero_image_url?.trim();
-  return own ? own : programImageForSlug(program.slug);
+  return own || null;
+}
+
+/*
+ * `og:image` com caminho relativo não vira preview: o WhatsApp e os outros
+ * leitores de link não resolvem `/images/...` contra o site. Sem endereço
+ * absoluto, melhor não declarar imagem nenhuma.
+ */
+export function absoluteImageUrl(src: string, siteUrl: string | undefined): string | null {
+  if (src.startsWith('https://')) return src;
+  if (!siteUrl) return null;
+  try {
+    return new URL(src, siteUrl).toString();
+  } catch {
+    return null;
+  }
 }
 
 /*
